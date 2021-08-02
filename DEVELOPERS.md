@@ -9,7 +9,7 @@ python -m venv .venv
 and activate:
 
 ```
-.venv/scripts/activate
+.venv\scripts\activate
 ```
 
 Then install the necessary packages for development:
