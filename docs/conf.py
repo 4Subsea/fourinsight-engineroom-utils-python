@@ -13,7 +13,10 @@
 import os
 import sys
 from datetime import date
-from importlib import metadata
+try:
+    from importlib import metadata
+except:
+    from importlib_metadata import metadata
 
 sys.path.insert(0, os.path.abspath("../"))
 
