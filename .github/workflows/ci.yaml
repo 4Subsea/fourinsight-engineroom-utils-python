@@ -22,8 +22,8 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
+    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+    - uses: actions/checkout@v2
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
@@ -35,20 +35,20 @@ jobs:
         python -m pip install --upgrade pip
         python -m pip install black isort tox
 
-      - name: black check
-        shell: cmd
-        run: |
-          @echo on
-          black --check .
+    - name: black check
+      shell: cmd
+      run: |
+        @echo on
+        black --check .
 
-      - name: isort check
-        shell: cmd
-        run: |
-          @echo on
-          isort --profile black --check .
+    - name: isort check
+      shell: cmd
+      run: |
+        @echo on
+        isort --profile black --check .
 
-      - name: tox
-        shell: cmd
-        run: |
-          @echo on
-          tox -r
+    - name: tox
+      shell: cmd
+      run: |
+        @echo on
+        tox -r
