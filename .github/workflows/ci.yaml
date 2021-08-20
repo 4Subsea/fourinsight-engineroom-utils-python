@@ -44,12 +44,12 @@ jobs:
 
       - name: black check
         run: |
-          python 38 -m black --check .
+          python38 -m black --check .
 
       - name: isort check
         run: |
-          python 38 -m isort --profile black --check .
+          python38 -m isort --profile black --check .
 
       - name: tox
         run: |
-          pythhon 38 -m tox -r
+          pythhon38 -m tox -r
