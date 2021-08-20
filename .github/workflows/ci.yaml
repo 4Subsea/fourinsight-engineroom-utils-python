@@ -16,44 +16,38 @@ jobs:
   CI:
 
     runs-on: ubuntu-latest
+    strategy:
+      # fail-fast: false
+      matrix:
+        python-version: [3.7, 3.8, 3.9]
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
-      - name: Set up Python 3.7
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
-          python-version: 3.7
-
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.8
-
-      - name: Set up Python 3.9
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.9
+          python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies
         shell: bash
         run: |
-          python38 -m pip install --upgrade pip
-          python38 -m pip install black isort tox
+          python -m pip install --upgrade pip
+          python-m pip install black isort tox
 
       - name: black check
         shell: bash
         run: |
-          python38 -m black --check .
+          black --check .
 
       - name: isort check
         shell: bash
         run: |
-          python38 -m isort --profile black --check .
+          isort --profile black --check .
 
       - name: tox
         shell: bash
         run: |
-          python38 -m tox -r
+          tox -r
