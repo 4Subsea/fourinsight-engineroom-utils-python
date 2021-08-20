@@ -52,4 +52,4 @@ jobs:
 
       - name: tox
         run: |
-          pythhon38 -m tox -r
+          python38 -m tox -r
