@@ -15,16 +15,12 @@ jobs:
   # This workflow contains a single job called "build"
   CI:
 
-    # runs-on: ${{ matrix.os }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       # fail-fast: false
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
         python-version: [3.7, 3.8, 3.9]
-        # exclude:
-        #   - os: ubuntu-latest
-        #     python-version: 3.7
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
