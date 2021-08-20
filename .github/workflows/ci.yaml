@@ -42,3 +42,8 @@ jobs:
       - name: tox
         run: |
           tox -r -e py
+
+      - name: docs
+        run: |
+          tox -r -e docs
+        if: ${{ (matrix.python-version == "3.8") && (matrix.os == windows-latest) }}
