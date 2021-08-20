@@ -46,7 +46,7 @@ jobs:
       - name: black check
         shell: bash
         run: |
-          python36 -m black --check .
+          python38 -m black --check .
 
       - name: isort check
         shell: bash
