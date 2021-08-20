@@ -16,7 +16,7 @@ jobs:
   CI:
 
     # runs-on: ${{ matrix.os }}
-    run-on: ubuntu-latest
+    runs-on: ubuntu-latest
     strategy:
       # fail-fast: false
       matrix:
