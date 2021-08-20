@@ -22,10 +22,20 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+
       - name: Set up Python 3.8
         uses: actions/setup-python@v2
         with:
           python-version: 3.8
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
 
       - name: Install dependencies
         shell: bash
