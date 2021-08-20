@@ -36,19 +36,16 @@ jobs:
           python -m pip install black isort tox
 
       - name: black check
-        shell: cmd
         run: |
           @echo on
           black --check .
 
       - name: isort check
-        shell: cmd
         run: |
           @echo on
           isort --profile black --check .
 
       - name: tox
-        shell: cmd
         run: |
           @echo on
           tox -r
