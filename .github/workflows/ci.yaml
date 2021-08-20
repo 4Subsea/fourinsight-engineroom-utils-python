@@ -15,7 +15,8 @@ jobs:
   # This workflow contains a single job called "build"
   CI:
 
-    runs-on: ${{ matrix.os }}
+    # runs-on: ${{ matrix.os }}
+    rund-on: ubuntu-latest
     strategy:
       # fail-fast: false
       matrix:
