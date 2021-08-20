@@ -52,4 +52,4 @@ jobs:
 
       - name: tox
         run: |
-          tox -r
+          tox -r -e py
