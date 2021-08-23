@@ -1,12 +1,10 @@
-# CI workflow
-
 name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: main
   pull_request:
-    branches: [ main ]
+    branches: main
 
 jobs:
   CI:
@@ -14,11 +12,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
         python-version: [3.7, 3.8, 3.9]
 
     steps:
-
       - uses: actions/checkout@v2
 
       - name: Set up Python ${{ matrix.python-version }}
@@ -31,19 +28,14 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install black isort tox
 
-      - name: black check
+      - name: Style check with isort and black
         run: |
-          black --check .
+          python -m isort --check . --profile black
+          python -m black --check .
 
-      - name: isort check
-        run: |
-          isort --profile black --check .
+      - name: Run tests with tox
+        run: tox -e py
 
-      - name: tox
-        run: |
-          tox -r -e py
-
-      - name: docs
-        run: |
-          tox -r -e docs
-        if: ${{ (matrix.python-version == '3.8') && (matrix.os == 'windows-latest') }}
+      - name: Test doc build with tox
+        run: tox -e docs
+        if: ${{ (matrix.python-version == '3.8') && (matrix.os == 'ubuntu-latest')}}
