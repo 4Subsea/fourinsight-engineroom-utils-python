@@ -11,17 +11,17 @@ from fourinsight.engineroom.utils.core import BaseHandler
 
 @pytest.fixture
 def handler_empty(tmp_path):
-    yield LocalFileHandler(tmp_path / "test.json")
+    return LocalFileHandler(tmp_path / "test.json")
 
 @pytest.fixture
 def handler_w_content():
     path = Path(__file__).parent / "testdata/a_test_file.json"
-    yield LocalFileHandler(path)
+    return LocalFileHandler(path)
 
 
 @pytest.fixture
 def persistent_json(handler_empty):
-    yield PersistentJSON(handler_empty)
+    return PersistentJSON(handler_empty)
 
 
 class Test_LocalFileHandler:
@@ -148,3 +148,14 @@ class Test_PersistentJSON:
             content_out = json.load(f)
 
         assert content_out == content
+
+    def test_push_empty(self, tmp_path):
+        handler = LocalFileHandler(tmp_path / "test.json")
+        persistent_json = PersistentJSON(handler)
+
+        persistent_json.push()
+
+        with open(tmp_path / "test.json", mode="r") as f:
+            content_out = json.load(f)
+
+        assert content_out == {}
