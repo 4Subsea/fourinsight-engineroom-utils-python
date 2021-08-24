@@ -1,27 +1,54 @@
 from pathlib import Path
+from typing import ContextManager
 import pandas as pd
 import json
 
 import pytest
 from unittest.mock import Mock, patch
 
-from fourinsight.engineroom.utils import LocalFileHandler, PersistentJSON
+from azure.core.exceptions import ResourceNotFoundError
+
+from fourinsight.engineroom.utils import LocalFileHandler, AzureBlobHandler, PersistentJSON
 from fourinsight.engineroom.utils.core import BaseHandler
+
+
+REMOTE_FILE_PATH = Path(__file__).parent / "testdata/a_test_file.json"
+REMOTE_CONTENT_TEXT = open(REMOTE_FILE_PATH, mode="r").read()
+REMOTE_CONTENT_DICT = json.load(open(REMOTE_FILE_PATH, mode="r"))
 
 
 @pytest.fixture
 def handler_empty(tmp_path):
     return LocalFileHandler(tmp_path / "test.json")
 
+
 @pytest.fixture
 def handler_w_content():
-    path = Path(__file__).parent / "testdata/a_test_file.json"
-    return LocalFileHandler(path)
+    return LocalFileHandler(REMOTE_FILE_PATH)
+
+
+@pytest.fixture
+@patch("fourinsight.engineroom.utils.core.BlobClient.from_connection_string")
+def azure_blob_handler(mock_from_connection_string):
+    return AzureBlobHandler("some_connection_string", "some_container_name", "some_blob_name")
 
 
 @pytest.fixture
 def persistent_json(handler_empty):
     return PersistentJSON(handler_empty)
+
+
+def test_ensure_testfile_correct():
+    text_expect = "{\n    \"this\": 1,\n    \"is\": \"hei\",\n    \"a\": null,\n    \"test\": 1.2\n}"
+    assert REMOTE_CONTENT_TEXT == text_expect
+
+    dict_expect = {
+        "this": 1,
+        "is": "hei",
+        "a": None,
+        "test": 1.2
+    }
+    assert REMOTE_CONTENT_DICT == dict_expect
 
 
 class Test_LocalFileHandler:
@@ -33,8 +60,7 @@ class Test_LocalFileHandler:
 
     def test_pull(self, handler_w_content):
         text_out = handler_w_content.pull()
-        text_expect = "{\n    \"this\": 1,\n    \"is\": \"hei\",\n    \"a\": null,\n    \"test\": 1.2\n}"
-
+        text_expect = REMOTE_CONTENT_TEXT
         assert text_out == text_expect
 
     def test_pull_non_existing(self):
@@ -48,6 +74,42 @@ class Test_LocalFileHandler:
         handler.push(content)
 
         assert open(tmp_path / "test.json", mode="r").read() == content
+
+
+class Test_AzureBlobHandler:
+    @patch("fourinsight.engineroom.utils.core.BlobClient.from_connection_string")
+    def test__init__(self, mock_from_connection_string):
+        blob_handler = AzureBlobHandler(
+            "some_connection_string", "some_container_name", "some_blob_name"
+        )
+
+        assert blob_handler._conn_str == "some_connection_string"
+        assert blob_handler._container_name == "some_container_name"
+        assert blob_handler._blob_name == "some_blob_name"
+        mock_from_connection_string.assert_called_once_with(
+            "some_connection_string",
+            "some_container_name",
+            "some_blob_name"
+        )
+
+    def test_pull(self, azure_blob_handler):
+        handler = azure_blob_handler
+
+        handler._blob_client.download_blob.return_value.readall.return_value = REMOTE_CONTENT_TEXT
+        content_out = handler.pull()
+
+        handler._blob_client.download_blob.assert_called_once_with(encoding="utf-8")
+        assert content_out == REMOTE_CONTENT_TEXT
+
+    def pull_no_exist(self, azure_blob_handler):
+        handler = azure_blob_handler
+
+        def raise_resource_not_found(*args, **kwargs):
+            raise ResourceNotFoundError
+
+        handler._blob_client.download_blob.side_effect = raise_resource_not_found
+
+        assert handler.pull() is None
 
 
 class Test_PersistentJSON:
@@ -77,15 +139,15 @@ class Test_PersistentJSON:
         assert persistent_json["a"] == 1.0
         assert persistent_json["b"] == "test"
 
+        with pytest.raises(KeyError):
+            persistent_json["non-existing-key"]
+
     def test__setitem__(self, persistent_json):
         persistent_json["a"] = "some value"
         persistent_json["b"] = "some other value"
 
         assert persistent_json["a"] == "some value"
         assert persistent_json["b"] == "some other value"
-
-        with pytest.raises(KeyError):
-            persistent_json["non-existing-key"]
 
     def test__setitem_jsonencode(self, persistent_json):
         with patch.object(persistent_json, "_jsonencoder") as mock_jsonencoder:
