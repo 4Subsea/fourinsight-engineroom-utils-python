@@ -53,6 +53,9 @@ class PersistentJSON(MutableMapping):
         self._jsonencoder = json.JSONEncoder().encode
         self._handler = handler
 
+        if not isinstance(self._handler, BaseHandler):
+            raise TypeError("Handler does not inherit from BaseHandler")
+
         self.pull()
 
     def __repr__(self):
