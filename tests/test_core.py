@@ -17,12 +17,12 @@ REMOTE_CONTENT_DICT = json.load(open(REMOTE_FILE_PATH, mode="r"))
 
 
 @pytest.fixture
-def handler_empty(tmp_path):
+def local_file_handler_empty(tmp_path):
     return LocalFileHandler(tmp_path / "test.json")
 
 
 @pytest.fixture
-def handler_w_content():
+def local_file_handler_w_content():
     return LocalFileHandler(REMOTE_FILE_PATH)
 
 
@@ -44,8 +44,8 @@ def azure_blob_handler(mock_from_connection_string):
 
 
 @pytest.fixture
-def persistent_json(handler_empty):
-    return PersistentJSON(handler_empty)
+def persistent_json(local_file_handler_empty):
+    return PersistentJSON(local_file_handler_empty)
 
 
 def test_ensure_testfile_correct():
@@ -69,8 +69,9 @@ class Test_LocalFileHandler:
         assert handler._path == "./some/path"
         assert isinstance(handler, BaseHandler)
 
-    def test_pull(self, handler_w_content):
-        text_out = handler_w_content.pull()
+    def test_pull(self, local_file_handler_w_content):
+        handler = local_file_handler_w_content
+        text_out = handler.pull()
         text_expect = REMOTE_CONTENT_TEXT
         assert text_out == text_expect
 
@@ -136,9 +137,10 @@ class Test_AzureBlobHandler:
 
 class Test_PersistentJSON:
 
-    def test__init__(self, handler_empty):
+    def test__init__(self, local_file_handler_empty):
+        handler = local_file_handler_empty
         with patch.object(PersistentJSON, "pull") as mock_pull:
-            persistent_json = PersistentJSON(handler_empty)
+            persistent_json = PersistentJSON(handler)
             assert persistent_json._PersistentJSON__dict == {}
             mock_pull.assert_called_once()
 
@@ -191,8 +193,9 @@ class Test_PersistentJSON:
         persistent_json.update({"a": 1.0, "b": "test"})
         assert persistent_json._PersistentJSON__dict == {"a": 1.0, "b": "test"}
 
-    def test_pull(self, handler_w_content):
-        persistent_json = PersistentJSON(handler_w_content)
+    def test_pull(self, local_file_handler_w_content):
+        handler = local_file_handler_w_content
+        persistent_json = PersistentJSON(handler)
         persistent_json.pull()
 
         content_out = persistent_json._PersistentJSON__dict
@@ -205,8 +208,9 @@ class Test_PersistentJSON:
 
         assert content_out == content_expected
 
-    def test_pull_empty(self, handler_empty):
-        persistent_json = PersistentJSON(handler_empty)
+    def test_pull_empty(self, local_file_handler_empty):
+        handler = local_file_handler_empty
+        persistent_json = PersistentJSON(handler)
         persistent_json.pull()
 
         content_out = persistent_json._PersistentJSON__dict
