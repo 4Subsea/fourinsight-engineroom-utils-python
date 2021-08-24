@@ -2,6 +2,9 @@ from abc import ABC, abstractmethod
 import json
 from collections.abc import MutableMapping
 
+from azure.storage.blob import BlobClient
+from azure.core.exceptions import ResourceNotFoundError
+
 
 class BaseHandler(ABC):
     """
@@ -30,6 +33,45 @@ class LocalFileHandler(BaseHandler):
     def push(self, local_content):
         with open(self._path, mode="w") as f:
             f.write(local_content)
+
+
+class AzureBlobHandler(BaseHandler):
+    """
+    Handler for push/pull file content to/from Azure Blob Storage.
+
+    Parameters
+    ----------
+    conn_str : str
+        A connection string to an Azure Storage account.
+    container_name : str
+        The container name for the blob.
+    blob_name : str
+        The name of the blob with which to interact.
+    """
+
+    def __init__(self, conn_str, container_name, blob_name):
+        self._conn_str = conn_str
+        self._container_name = container_name
+        self._blob_name = blob_name
+        self._blob_client = BlobClient.from_connection_string(
+            conn_str, container_name, blob_name
+        )
+
+    def pull(self):
+        """
+        Pull content from blob as text. Returns None if resource is not found.
+        """
+        try:
+            remote_content = self._blob_client.download_blob(encoding="utf-8").readall()
+        except ResourceNotFoundError:
+            remote_content = None
+        return remote_content
+
+    def push(self, local_content):
+        """
+        Push content to blob.
+        """
+        self._blob_client.upload_blob(local_content, overwrite=True)
 
 
 class PersistentJSON(MutableMapping):
