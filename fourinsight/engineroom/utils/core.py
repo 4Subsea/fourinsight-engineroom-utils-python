@@ -94,5 +94,5 @@ class PersistentJSON(MutableMapping):
         """
         Push content to source.
         """
-        local_content = json.dumps(self.__dict)
+        local_content = json.dumps(self.__dict, indent=4)
         self._handler.push(local_content)

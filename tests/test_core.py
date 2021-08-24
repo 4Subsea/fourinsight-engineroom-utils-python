@@ -1,5 +1,6 @@
 from pathlib import Path
 import pandas as pd
+import json
 
 import pytest
 from unittest.mock import Mock, patch
@@ -92,7 +93,7 @@ class Test_PersistentJSON:
             persistent_json["a"] = 1
             mock_jsonencoder.assert_called_once_with(1)
 
-    def test__setitem__raises(self, persistent_json):
+    def test__setitem___datetime_raises(self, persistent_json):
         with pytest.raises(TypeError):
             persistent_json["timestamp"] = pd.to_datetime("2020-01-01 00:00")
 
@@ -128,3 +129,22 @@ class Test_PersistentJSON:
         content_expected = {}
 
         assert content_out == content_expected
+
+    def test_push(self, tmp_path):
+        handler = LocalFileHandler(tmp_path / "test.json")
+        persistent_json = PersistentJSON(handler)
+
+        content = {
+            "this": 1,
+            "is": "hei",
+            "a": None,
+            "test": 1.2
+        }
+
+        persistent_json.update(content)
+        persistent_json.push()
+
+        with open(tmp_path / "test.json", mode="r") as f:
+            content_out = json.load(f)
+
+        assert content_out == content
