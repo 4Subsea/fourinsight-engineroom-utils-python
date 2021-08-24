@@ -1,20 +1,26 @@
 from pathlib import Path
+import pandas as pd
 
 import pytest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from fourinsight.engineroom.utils import LocalFileHandler, PersistentJSON
 from fourinsight.engineroom.utils.core import BaseHandler
 
 
 @pytest.fixture
-def local_file_handler(tmp_path):
+def handler_empty(tmp_path):
     yield LocalFileHandler(tmp_path / "test.json")
+
+@pytest.fixture
+def handler_w_content():
+    path = Path(__file__).parent / "testdata/a_test_file.json"
+    yield LocalFileHandler(path)
 
 
 @pytest.fixture
-def persistent_json(local_file_handler):
-    yield PersistentJSON(local_file_handler)
+def persistent_json(handler_empty):
+    yield PersistentJSON(handler_empty)
 
 
 class Test_LocalFileHandler:
@@ -24,11 +30,8 @@ class Test_LocalFileHandler:
         assert handler._path == "./some/path"
         assert isinstance(handler, BaseHandler)
 
-    def test_pull(self):
-        path = Path(__file__).parent / "testdata/a_test_file.json"
-        handler = LocalFileHandler(path)
-
-        text_out = handler.pull()
+    def test_pull(self, handler_w_content):
+        text_out = handler_w_content.pull()
         text_expect = "{\n    \"this\": 1,\n    \"is\": \"hei\",\n    \"a\": null,\n    \"test\": 1.2\n}"
 
         assert text_out == text_expect
@@ -47,6 +50,12 @@ class Test_LocalFileHandler:
 
 
 class Test_PersistentJSON:
+
+    def test__init__(self, handler_empty):
+        with patch.object(PersistentJSON, "pull") as mock_pull:
+            persistent_json = PersistentJSON(handler_empty)
+            assert persistent_json._PersistentJSON__dict == {}
+            mock_pull.assert_called_once()
 
     def test__init__raises(self):
         with pytest.raises(TypeError):
@@ -77,6 +86,16 @@ class Test_PersistentJSON:
         with pytest.raises(KeyError):
             persistent_json["non-existing-key"]
 
+    def test__setitem_jsonencode(self, persistent_json):
+        with patch.object(persistent_json, "_jsonencoder") as mock_jsonencoder:
+
+            persistent_json["a"] = 1
+            mock_jsonencoder.assert_called_once_with(1)
+
+    def test__setitem__raises(self, persistent_json):
+        with pytest.raises(TypeError):
+            persistent_json["timestamp"] = pd.to_datetime("2020-01-01 00:00")
+
     def test__len__(self, persistent_json):
         assert len(persistent_json) == 0
         persistent_json.update({"a": 1, "b": None})
@@ -86,3 +105,26 @@ class Test_PersistentJSON:
         assert persistent_json._PersistentJSON__dict == {}
         persistent_json.update({"a": 1.0, "b": "test"})
         assert persistent_json._PersistentJSON__dict == {"a": 1.0, "b": "test"}
+
+    def test_pull(self, handler_w_content):
+        persistent_json = PersistentJSON(handler_w_content)
+        persistent_json.pull()
+
+        content_out = persistent_json._PersistentJSON__dict
+        content_expected = {
+            "this": 1,
+            "is": "hei",
+            "a": None,
+            "test": 1.2
+        }
+
+        assert content_out == content_expected
+
+    def test_pull_empty(self, handler_empty):
+        persistent_json = PersistentJSON(handler_empty)
+        persistent_json.pull()
+
+        content_out = persistent_json._PersistentJSON__dict
+        content_expected = {}
+
+        assert content_out == content_expected
