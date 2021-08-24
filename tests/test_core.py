@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import ContextManager
 import pandas as pd
 import json
 
@@ -101,7 +100,7 @@ class Test_AzureBlobHandler:
         handler._blob_client.download_blob.assert_called_once_with(encoding="utf-8")
         assert content_out == REMOTE_CONTENT_TEXT
 
-    def pull_no_exist(self, azure_blob_handler):
+    def test_pull_no_exist(self, azure_blob_handler):
         handler = azure_blob_handler
 
         def raise_resource_not_found(*args, **kwargs):
@@ -110,6 +109,14 @@ class Test_AzureBlobHandler:
         handler._blob_client.download_blob.side_effect = raise_resource_not_found
 
         assert handler.pull() is None
+
+    def test_push(self, azure_blob_handler):
+        handler = azure_blob_handler
+
+        content = "some random content"
+        handler.push(content)
+
+        handler._blob_client.upload_blob.assert_called_once_with(content, overwrite=True)
 
 
 class Test_PersistentJSON:
