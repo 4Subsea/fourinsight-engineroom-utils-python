@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 import json
+from pathlib import Path
 from collections.abc import MutableMapping
 
 from azure.storage.blob import BlobClient
@@ -29,7 +30,7 @@ class LocalFileHandler(BaseHandler):
         File path.
     """
     def __init__(self, path):
-        self._path = path
+        self._path = Path(path)
 
     def pull(self):
         """
@@ -45,6 +46,7 @@ class LocalFileHandler(BaseHandler):
         """
         Push content to file.
         """
+        self._path.parent.mkdir(parents=True, exist_ok=True)
         with open(self._path, mode="w") as f:
             f.write(local_content)
 

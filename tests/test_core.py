@@ -1,6 +1,7 @@
 from pathlib import Path
 import pandas as pd
 import json
+from pathlib import Path
 
 import pytest
 from unittest.mock import Mock, patch
@@ -66,7 +67,7 @@ class Test_LocalFileHandler:
 
     def test__init__(self):
         handler = LocalFileHandler("./some/path")
-        assert handler._path == "./some/path"
+        assert handler._path == Path("./some/path")
         assert isinstance(handler, BaseHandler)
 
     def test_pull(self, local_file_handler_w_content):
