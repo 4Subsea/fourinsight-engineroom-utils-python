@@ -20,10 +20,21 @@ class BaseHandler(ABC):
 
 
 class LocalFileHandler(BaseHandler):
+    """
+    Handler for push/pull file content to/from local file.
+
+    Parameters
+    ----------
+    path : str
+        File path.
+    """
     def __init__(self, path):
         self._path = path
 
     def pull(self):
+        """
+        Pull content from file. Returns None if file is not found.
+        """
         try:
             remote_content = open(self._path, mode="r").read()
         except FileNotFoundError:
@@ -31,6 +42,9 @@ class LocalFileHandler(BaseHandler):
         return remote_content
 
     def push(self, local_content):
+        """
+        Push content to file.
+        """
         with open(self._path, mode="w") as f:
             f.write(local_content)
 
