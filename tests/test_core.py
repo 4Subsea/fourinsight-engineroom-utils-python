@@ -27,6 +27,11 @@ def local_file_handler_w_content():
 
 
 @pytest.fixture
+def persistent_json(local_file_handler_empty):
+    return PersistentJSON(local_file_handler_empty)
+
+
+@pytest.fixture
 @patch("fourinsight.engineroom.utils.core.BlobClient.from_connection_string")
 def azure_blob_handler(mock_from_connection_string):
     connection_string = "some_connection_string"
@@ -41,11 +46,6 @@ def azure_blob_handler(mock_from_connection_string):
     )
 
     return handler
-
-
-@pytest.fixture
-def persistent_json(local_file_handler_empty):
-    return PersistentJSON(local_file_handler_empty)
 
 
 def test_ensure_testfile_correct():
@@ -82,7 +82,7 @@ class Test_LocalFileHandler:
     def test_push(self, tmp_path):
         handler = LocalFileHandler(tmp_path / "test.json")
 
-        content = "this is a test file,\nwith two lines."
+        content = "Some random content\n"
         handler.push(content)
 
         assert open(tmp_path / "test.json", mode="r").read() == content
@@ -142,11 +142,12 @@ class Test_PersistentJSON:
         with patch.object(PersistentJSON, "pull") as mock_pull:
             persistent_json = PersistentJSON(handler)
             assert persistent_json._PersistentJSON__dict == {}
+            assert persistent_json._handler == handler
             mock_pull.assert_called_once()
 
     def test__init__raises(self):
         with pytest.raises(TypeError):
-            PersistentJSON(Mock())
+            PersistentJSON(None)
 
     def test__repr__(self, persistent_json):
         assert str(persistent_json) == "PersistentJSON {}"
