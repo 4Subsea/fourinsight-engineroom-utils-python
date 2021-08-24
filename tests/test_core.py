@@ -29,7 +29,18 @@ def handler_w_content():
 @pytest.fixture
 @patch("fourinsight.engineroom.utils.core.BlobClient.from_connection_string")
 def azure_blob_handler(mock_from_connection_string):
-    return AzureBlobHandler("some_connection_string", "some_container_name", "some_blob_name")
+    connection_string = "some_connection_string"
+    container_name = "some_container_name"
+    blob_name = "some_blob_name"
+    handler = AzureBlobHandler(connection_string, container_name, blob_name)
+
+    handler._blob_client.download_blob.return_value.readall.return_value = REMOTE_CONTENT_TEXT
+
+    mock_from_connection_string.assert_called_once_with(
+        "some_connection_string", "some_container_name", "some_blob_name"
+    )
+
+    return handler
 
 
 @pytest.fixture
@@ -47,6 +58,7 @@ def test_ensure_testfile_correct():
         "a": None,
         "test": 1.2
     }
+
     assert REMOTE_CONTENT_DICT == dict_expect
 
 
@@ -91,14 +103,17 @@ class Test_AzureBlobHandler:
             "some_blob_name"
         )
 
+    def test__init__fixture(self, azure_blob_handler):
+        handler = azure_blob_handler
+        assert handler._conn_str == "some_connection_string"
+        assert handler._container_name == "some_container_name"
+        assert handler._blob_name == "some_blob_name"
+        assert isinstance(handler._blob_client, Mock)
+
     def test_pull(self, azure_blob_handler):
         handler = azure_blob_handler
-
-        handler._blob_client.download_blob.return_value.readall.return_value = REMOTE_CONTENT_TEXT
-        content_out = handler.pull()
-
+        assert handler.pull() == REMOTE_CONTENT_TEXT
         handler._blob_client.download_blob.assert_called_once_with(encoding="utf-8")
-        assert content_out == REMOTE_CONTENT_TEXT
 
     def test_pull_no_exist(self, azure_blob_handler):
         handler = azure_blob_handler
