@@ -12,7 +12,8 @@ next time the application runs.
 .. note::
     File handlers provide an interface to store and load data from text files.
     Custom handlers need to inherit from ``BaseHandler``. In the Cookbook section
-    there is an :ref:`example<example_custom_handler_ftp>` on how you can set up a handler based on FTP.
+    there is an :ref:`example<example_custom_handler_ftp>` on how you can set up a
+    handler based on FTP.
 
 The ``LocalFileHandler`` is used to store the state locally as a JSON file.
 

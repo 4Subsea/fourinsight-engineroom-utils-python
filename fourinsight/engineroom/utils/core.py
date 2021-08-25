@@ -17,7 +17,7 @@ class BaseHandler(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def push(self, local_dict):
+    def push(self, local_content):
         raise NotImplementedError()
 
 
