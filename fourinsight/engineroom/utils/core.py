@@ -1,16 +1,17 @@
-from abc import ABC, abstractmethod
 import json
-from pathlib import Path
+from abc import ABC, abstractmethod
 from collections.abc import MutableMapping
+from pathlib import Path
 
-from azure.storage.blob import BlobClient
 from azure.core.exceptions import ResourceNotFoundError
+from azure.storage.blob import BlobClient
 
 
 class BaseHandler(ABC):
     """
     Abstract class for push/pull file content from a remote/persistent source.
     """
+
     @abstractmethod
     def pull(self):
         raise NotImplementedError()
@@ -29,6 +30,7 @@ class LocalFileHandler(BaseHandler):
     path : str
         File path.
     """
+
     def __init__(self, path):
         self._path = Path(path)
 
@@ -106,6 +108,7 @@ class PersistentJSON(MutableMapping):
     handler : cls
         Handler extended from `BaseHandler`.
     """
+
     def __init__(self, handler):
         self.__dict = {}
         self._jsonencoder = json.JSONEncoder().encode

@@ -1,15 +1,17 @@
-from pathlib import Path
-import pandas as pd
 import json
-
-import pytest
+from pathlib import Path
 from unittest.mock import Mock, patch
 
+import pandas as pd
+import pytest
 from azure.core.exceptions import ResourceNotFoundError
 
-from fourinsight.engineroom.utils import LocalFileHandler, AzureBlobHandler, PersistentJSON
+from fourinsight.engineroom.utils import (
+    AzureBlobHandler,
+    LocalFileHandler,
+    PersistentJSON,
+)
 from fourinsight.engineroom.utils.core import BaseHandler
-
 
 REMOTE_FILE_PATH = Path(__file__).parent / "testdata/a_test_file.json"
 
@@ -38,7 +40,9 @@ def azure_blob_handler_mocked(mock_from_connection_string):
     handler = AzureBlobHandler(connection_string, container_name, blob_name)
 
     remote_content = open(REMOTE_FILE_PATH, mode="r").read()
-    handler._blob_client.download_blob.return_value.readall.return_value = remote_content
+    handler._blob_client.download_blob.return_value.readall.return_value = (
+        remote_content
+    )
 
     mock_from_connection_string.assert_called_once_with(
         "some_connection_string", "some_container_name", "some_blob_name"
@@ -48,7 +52,6 @@ def azure_blob_handler_mocked(mock_from_connection_string):
 
 
 class Test_LocalFileHandler:
-
     def test__init__(self):
         handler = LocalFileHandler("./some/path")
         assert handler._path == Path("./some/path")
@@ -57,7 +60,9 @@ class Test_LocalFileHandler:
     def test_pull(self, local_file_handler_w_content):
         handler = local_file_handler_w_content
         text_out = handler.pull()
-        text_expect = "{\n    \"this\": 1,\n    \"is\": \"hei\",\n    \"a\": null,\n    \"test\": 1.2\n}"
+        text_expect = (
+            '{\n    "this": 1,\n    "is": "hei",\n    "a": null,\n    "test": 1.2\n}'
+        )
         assert text_out == text_expect
 
     def test_pull_non_existing(self):
@@ -84,9 +89,7 @@ class Test_AzureBlobHandler:
         assert blob_handler._container_name == "some_container_name"
         assert blob_handler._blob_name == "some_blob_name"
         mock_from_connection_string.assert_called_once_with(
-            "some_connection_string",
-            "some_container_name",
-            "some_blob_name"
+            "some_connection_string", "some_container_name", "some_blob_name"
         )
 
     def test__init__fixture(self, azure_blob_handler_mocked):
@@ -98,7 +101,10 @@ class Test_AzureBlobHandler:
 
     def test_pull(self, azure_blob_handler_mocked):
         handler = azure_blob_handler_mocked
-        assert handler.pull() == "{\n    \"this\": 1,\n    \"is\": \"hei\",\n    \"a\": null,\n    \"test\": 1.2\n}"
+        assert (
+            handler.pull()
+            == '{\n    "this": 1,\n    "is": "hei",\n    "a": null,\n    "test": 1.2\n}'
+        )
         handler._blob_client.download_blob.assert_called_once_with(encoding="utf-8")
 
     def test_pull_no_exist(self, azure_blob_handler_mocked):
@@ -117,11 +123,12 @@ class Test_AzureBlobHandler:
         content = "some random content"
         handler.push(content)
 
-        handler._blob_client.upload_blob.assert_called_once_with(content, overwrite=True)
+        handler._blob_client.upload_blob.assert_called_once_with(
+            content, overwrite=True
+        )
 
 
 class Test_PersistentJSON:
-
     def test__init__(self, local_file_handler_empty):
         handler = local_file_handler_empty
         with patch.object(PersistentJSON, "pull") as mock_pull:
@@ -185,12 +192,7 @@ class Test_PersistentJSON:
         persistent_json.pull()
 
         content_out = persistent_json._PersistentJSON__dict
-        content_expected = {
-            "this": 1,
-            "is": "hei",
-            "a": None,
-            "test": 1.2
-        }
+        content_expected = {"this": 1, "is": "hei", "a": None, "test": 1.2}
 
         assert content_out == content_expected
 
@@ -208,12 +210,7 @@ class Test_PersistentJSON:
         handler = LocalFileHandler(tmp_path / "test.json")
         persistent_json = PersistentJSON(handler)
 
-        content = {
-            "this": 1,
-            "is": "hei",
-            "a": None,
-            "test": 1.2
-        }
+        content = {"this": 1, "is": "hei", "a": None, "test": 1.2}
 
         persistent_json.update(content)
         persistent_json.push()
