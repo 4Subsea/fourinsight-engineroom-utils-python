@@ -24,6 +24,7 @@ class BaseHandler(ABC):
 class LocalFileHandler(BaseHandler):
     """
     Handler for push/pull file content to/from local file.
+
     Parameters
     ----------
     path : str
@@ -55,6 +56,7 @@ class LocalFileHandler(BaseHandler):
 class AzureBlobHandler(BaseHandler):
     """
     Handler for push/pull file content to/from Azure Blob Storage.
+
     Parameters
     ----------
     conn_str : str
@@ -93,11 +95,14 @@ class AzureBlobHandler(BaseHandler):
 class PersistentJSON(MutableMapping):
     """
     Persistent JSON.
+
     Push/pull a JSON object stored persistently in a "remote" location.
     This class is usefull when loading configurations or keeping persistent
     state.
+
     The class behaves exactly like a `dict` but only accepts values that are
     JSON encodable.
+
     Parameters
     ----------
     handler : cls

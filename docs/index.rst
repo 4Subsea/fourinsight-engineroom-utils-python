@@ -16,3 +16,4 @@ Contents
    getting_started
    basic_usage
    cookbook
+   api
