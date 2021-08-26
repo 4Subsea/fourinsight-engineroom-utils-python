@@ -4,16 +4,20 @@ Cookbook
 
 .. _example_custom_handler_ftp:
 
-Custom file handler
--------------------
+Custom file handler using FTP
+-----------------------------
 
-This example shows how you can set up your own custom file handler using FTP.
+This example shows how you can set up a custom file handler using FTP. The handler
+must inherit from ``BaseHandler``, and override the two abstract methods, ``push()``
+and ``pull()``. If the file content you want to 'pull' does not exist, the pull method
+should return ``None``.
 
 .. code-block:: python
 
     from io import StringIO
     from ftplib import FTP, error_perm
     from fourinsight.engineroom.utils.core import BaseHandler
+
 
     class FTPHandler(BaseHandler):
         """
