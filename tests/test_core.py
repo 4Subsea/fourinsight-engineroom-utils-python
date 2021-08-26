@@ -129,7 +129,6 @@ class Test_AzureBlobHandler:
 
 
 class Test_PersistentJSON:
-
     def test__init__(self, local_file_handler_empty):
         handler = local_file_handler_empty
         persistent_json = PersistentJSON(handler)
