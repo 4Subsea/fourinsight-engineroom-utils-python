@@ -42,7 +42,6 @@ and a ``pull()`` method for interaction with the remote source.
     from fourinsight.engineroom.utils import PersistentJSON
 
 
-    # During initiation, the handler 'pulls' the latest state from the remote source
     state = PersistentJSON(handler)
 
 Values can be updated,

@@ -117,8 +117,6 @@ class PersistentJSON(MutableMapping):
         if not isinstance(self._handler, BaseHandler):
             raise TypeError("Handler does not inherit from BaseHandler")
 
-        self.pull()
-
     def __repr__(self):
         return "PersistentJSON " + repr(self.__dict)
 

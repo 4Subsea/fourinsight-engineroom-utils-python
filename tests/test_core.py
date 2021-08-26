@@ -129,13 +129,12 @@ class Test_AzureBlobHandler:
 
 
 class Test_PersistentJSON:
+
     def test__init__(self, local_file_handler_empty):
         handler = local_file_handler_empty
-        with patch.object(PersistentJSON, "pull") as mock_pull:
-            persistent_json = PersistentJSON(handler)
-            assert persistent_json._PersistentJSON__dict == {}
-            assert persistent_json._handler == handler
-            mock_pull.assert_called_once()
+        persistent_json = PersistentJSON(handler)
+        assert persistent_json._PersistentJSON__dict == {}
+        assert persistent_json._handler == handler
 
     def test__init__raises(self):
         with pytest.raises(TypeError):
