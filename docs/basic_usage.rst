@@ -34,8 +34,8 @@ The ``AzureBlobHandler`` can be used to store the state in *Azure Blob Storage*.
     handler = AzureBlobHandler(<connection-string>, <container-name>, <blob-name>)
 
 The ``PersistentJSON`` class can keep track of state parameters as key:value pairs.
-PersistentJSON behaves similar to dictionaries, but also includes a ``push``
-and a ``pull`` method for interaction with the remote source.
+PersistentJSON behaves similar to dictionaries, but also includes a ``push()``
+and a ``pull()`` method for interaction with the remote source.
 
 .. code-block:: python
 
