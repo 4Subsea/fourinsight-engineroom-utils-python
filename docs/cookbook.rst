@@ -13,7 +13,7 @@ This example shows how you can set up your own custom file handler using FTP.
 
     from io import StringIO
     from ftplib import FTP, error_perm
-    from fourinsight.engineroom.utils.handlers import BaseHandler
+    from fourinsight.engineroom.utils.core import BaseHandler
 
     class FTPHandler(BaseHandler):
         """
