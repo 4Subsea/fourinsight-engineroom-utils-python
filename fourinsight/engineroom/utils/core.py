@@ -3,6 +3,8 @@ from abc import ABC, abstractmethod
 from collections.abc import MutableMapping
 from pathlib import Path
 
+import pandas as pd
+
 from azure.core.exceptions import ResourceNotFoundError
 from azure.storage.blob import BlobClient
 
@@ -155,3 +157,69 @@ class PersistentJSON(MutableMapping):
         """
         local_content = json.dumps(self.__dict, indent=4)
         self._handler.push(local_content)
+
+
+class ResultCollector:
+    _INDEX_DTYPE_MAP = {"auto": int, "timestamp": pd.Timestamp}
+    _VALID_DATA_DTYPES = {float, str}
+
+    def __init__(self, headers, indexing_mode="auto"):
+        self._headers = headers
+        self._indexing_mode = indexing_mode.lower()
+
+        if not self._VALID_DATA_DTYPES.issuperset(self._headers.values()):
+            raise ValueError("Only 'float' and 'str' dtypes are supported.")
+
+        if self._indexing_mode == "auto":
+            index = pd.Int64Index([])
+        elif self._indexing_mode == "timestamp":
+            index = pd.DatetimeIndex([], tz="utc")
+        else:
+            raise ValueError("Unknown indexing mode. Should be 'auto' or 'timestamp'.")
+
+        self._dataframe = pd.DataFrame(
+            columns=headers.keys(), index=index
+        ).astype(self._headers)
+        self._index_counter = 0
+
+    def new_row(self, index=None):
+        next_index = self._next_index(index)
+        row_new = pd.DataFrame(index=[next_index])
+        self._dataframe = self._dataframe.append(row_new, verify_integrity=True, sort=False)
+        self._index_counter += 1
+
+    def _next_index(self, index):
+        if index:
+            next_index = pd.to_datetime(index, utc=True)
+        else:
+            next_index = self._index_counter
+        self._verify_index(next_index)
+        return next_index
+
+    def _verify_index(self, index):
+        expected_dtype = self._INDEX_DTYPE_MAP[self._indexing_mode]
+        if not isinstance(index, expected_dtype):
+            raise TypeError(
+                f"Index dtype '{type(index)}' is not valid when using indexing "
+                + f"mode '{self._indexing_mode}'."
+            )
+
+        if index in (self._dataframe.index):
+            raise ValueError("Index already exists.")
+
+    def collect(self, **results):
+        if not set(self._headers.keys()).issuperset(results):
+            raise KeyError("Keyword must be in headers.")
+
+        self._check_types(results)
+        current_index = self._dataframe.index[-1]
+        row_update = pd.DataFrame(results, index=[current_index])
+        self._dataframe.update(row_update, errors="ignore")
+
+    def _check_types(self, results):
+        for header, value in results.items():
+            if not isinstance(value, self._headers[header]):
+                raise ValueError(f"Invalid dtype in '{header}'")
+
+    # def _result_dtypes(self, results):
+    #     return {key: self._headers[key] for key in results.keys()}
