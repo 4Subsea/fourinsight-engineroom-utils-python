@@ -170,16 +170,10 @@ class ResultCollector:
         if not self._VALID_DATA_DTYPES.issuperset(self._headers.values()):
             raise ValueError("Only 'float' and 'str' dtypes are supported.")
 
-        if self._indexing_mode == "auto":
-            index = pd.Int64Index([])
-        elif self._indexing_mode == "timestamp":
-            index = pd.DatetimeIndex([], tz="utc")
-        else:
-            raise ValueError("Unknown indexing mode. Should be 'auto' or 'timestamp'.")
+        if self._indexing_mode not in ("auto", "timestamp"):
+            raise ValueError("Indexing mode must be 'auto' or 'timestamp'.")
 
-        self._dataframe = pd.DataFrame(
-            columns=headers.keys(), index=index
-        ).astype(self._headers)
+        self._dataframe = pd.DataFrame(columns=headers.keys()).astype(self._headers)
         self._index_counter = 0
 
     def new_row(self, index=None):
