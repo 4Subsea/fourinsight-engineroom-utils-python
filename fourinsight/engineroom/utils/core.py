@@ -26,14 +26,14 @@ class BaseHandler(ABC):
 
 class NullHandler(BaseHandler):
     """
-    NullHandler
+    NullHandler.
     """
 
     def pull(self):
-        raise ValueError("No handler is provided.")
+        raise ValueError("The 'NullHandler' does not provide any push or pull functionality.")
 
     def push(self, local_content):
-        raise ValueError("No handler is provided.")
+        raise ValueError("The 'NullHandler' does not provide any push or pull functionality.")
 
 
 class LocalFileHandler(BaseHandler):
@@ -173,6 +173,25 @@ class PersistentJSON(MutableMapping):
 
 
 class ResultCollector:
+    """
+    Collect and store indexed results.
+
+    This class provides a simple interface to collect, store, and index
+    intermediate results. The results are stored in a pandas.DataFrame internally.
+    Using a handler, the results can be 'pushed' or 'pulled' from a remote source.
+
+    Parameters
+    ----------
+    headers : dict
+        Header names and data types as key/value pairs. The collector will only accept
+        intermediate results defined here.
+    handler:
+        Handler extended from `BaseHandler`. Default handler is NullHandler, which
+        does not provide any push or pull functionality.
+    indexing_mode : str
+        Indexing mode. Should be 'auto' or 'timestamp'.
+    """
+
     _INDEX_DTYPE_MAP = {"auto": int, "timestamp": pd.Timestamp}
     _VALID_DATA_DTYPES = {float, str}
 
@@ -194,6 +213,16 @@ class ResultCollector:
         self._index_counter = 0
 
     def new_row(self, index=None):
+        """
+        Make a new row.
+
+        Parameters
+        ----------
+        index :
+            The new index value. If indexing_mode is set to 'auto', index should be None.
+            If indexing_mode is set to 'timestamp', index should be a unique datetime
+            that is passed on to pandas.to_datetime.
+        """
         next_index = self._next_index(index)
         row_new = pd.DataFrame(index=[next_index])
         self._dataframe = self._dataframe.append(row_new, verify_integrity=True, sort=False)
@@ -219,6 +248,16 @@ class ResultCollector:
             raise ValueError("Index already exists.")
 
     def collect(self, **results):
+        """
+        Collect and store results under the current index.
+
+        Parameters
+        ----------
+        results : keyword arguments
+            The results are passed as keyword arguments, where the keyword must
+            be one of the `headers`. Provided values must be of correct type (provided
+            during initialization).
+        """
         if not set(self._headers.keys()).issuperset(results):
             raise KeyError("Keyword must be in headers.")
 
