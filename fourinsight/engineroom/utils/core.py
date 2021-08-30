@@ -2,6 +2,7 @@ import json
 from abc import ABC, abstractmethod
 from collections.abc import MutableMapping
 from pathlib import Path
+from io import StringIO
 
 import pandas as pd
 
@@ -21,6 +22,18 @@ class BaseHandler(ABC):
     @abstractmethod
     def push(self, local_content):
         raise NotImplementedError()
+
+
+class NullHandler(BaseHandler):
+    """
+    NullHandler
+    """
+
+    def pull(self):
+        raise ValueError("No handler is provided.")
+
+    def push(self, local_content):
+        raise ValueError("No handler is provided.")
 
 
 class LocalFileHandler(BaseHandler):
@@ -163,9 +176,13 @@ class ResultCollector:
     _INDEX_DTYPE_MAP = {"auto": int, "timestamp": pd.Timestamp}
     _VALID_DATA_DTYPES = {float, str}
 
-    def __init__(self, headers, indexing_mode="auto"):
+    def __init__(self, headers, handler=None, indexing_mode="auto"):
         self._headers = headers
         self._indexing_mode = indexing_mode.lower()
+        if handler:
+            self._handler = handler
+        else:
+            self._handler = NullHandler()
 
         if not self._VALID_DATA_DTYPES.issuperset(self._headers.values()):
             raise ValueError("Only 'float' and 'str' dtypes are supported.")
@@ -215,5 +232,34 @@ class ResultCollector:
             if not isinstance(value, self._headers[header]):
                 raise ValueError(f"Invalid dtype in '{header}'")
 
-    # def _result_dtypes(self, results):
-    #     return {key: self._headers[key] for key in results.keys()}
+    def pull(self):
+        """
+        Pull results from source. Remote source overwrites existing values.
+        """
+        if self._indexing_mode == "auto":
+            parse_dates = False
+        else:
+            parse_dates = True
+        dataframe_csv = StringIO(self._handler.pull())
+        df = pd.read_csv(dataframe_csv, index_col=0, parse_dates=parse_dates)
+
+        if not (set(df.columns) == set(self._headers.keys())):
+            raise ValueError("Header is not valid.")
+
+        if (self._indexing_mode == "auto") and not (isinstance(df.index, pd.Int64Index)):
+            raise ValueError(f"Index must be 'Int64Index'.")
+        elif (self._indexing_mode == "timestamp") and not (isinstance(df.index, pd.DatetimeIndex)):
+            raise ValueError("Index must be 'DatetimeIndex'.")
+
+        self._dataframe = df.astype(self._headers)
+
+    def push(self):
+        """
+        Push results to source.
+        """
+        local_content = self._dataframe.to_csv(sep=",", index=True, line_terminator="\n")
+        self._handler.push(local_content)
+
+    def dataframe(self):
+        """Return a copy of internal dataframe"""
+        return self._dataframe.copy(deep=True)
