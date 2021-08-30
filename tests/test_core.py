@@ -3,13 +3,16 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pandas as pd
+import numpy as np
 import pytest
 from azure.core.exceptions import ResourceNotFoundError
 
+from fourinsight.engineroom.utils.core import NullHandler
 from fourinsight.engineroom.utils import (
     AzureBlobHandler,
     LocalFileHandler,
     PersistentJSON,
+    ResultCollector,
 )
 from fourinsight.engineroom.utils.core import BaseHandler
 
@@ -228,3 +231,130 @@ class Test_PersistentJSON:
             content_out = json.load(f)
 
         assert content_out == {}
+
+
+class Test_ResultCollector:
+    def test__init__default(self):
+        headers = {"a": float, "b": str}
+        results = ResultCollector(headers)
+
+        assert results._headers == headers
+        assert results._indexing_mode == "auto"
+        assert isinstance(results._handler, NullHandler)
+        df_expect = pd.DataFrame(columns=headers.keys()).astype(headers)
+        pd.testing.assert_frame_equal(results._dataframe, df_expect)
+
+    @pytest.mark.parametrize("mode", ["auto", "timestamp"])
+    def test__init__auto(self, mode):
+        headers = {"a": float, "b": str}
+        results = ResultCollector(headers, indexing_mode=mode)
+        assert results._indexing_mode == mode
+
+    def test__init__mode_raises(self):
+        with pytest.raises(ValueError):
+            headers = {"a": float, "b": str}
+            ResultCollector(headers, indexing_mode="invalid-mode")
+
+    def test__init___dtype_raises(self):
+        with pytest.raises(ValueError):
+            ResultCollector({"a": tuple})
+
+    def test__init__handler(self, local_file_handler_empty):
+        handler = local_file_handler_empty
+        headers = {"a": float, "b": str}
+        results = ResultCollector(headers, handler=handler)
+        assert results._handler == handler
+
+    def test_new_row_auto(self):
+        headers = {"a": float, "b": str}
+        results = ResultCollector(headers, indexing_mode="auto")
+
+        results.new_row()
+        df_expect = pd.DataFrame(
+            columns=("a", "b"), index=pd.Int64Index([0])
+        ).astype(headers)
+        pd.testing.assert_frame_equal(results._dataframe, df_expect)
+
+        results.new_row()
+        df_expect = pd.DataFrame(
+            columns=("a", "b"), index=pd.Int64Index([0, 1])
+        ).astype(headers)
+        pd.testing.assert_frame_equal(results._dataframe, df_expect)
+
+    def test_new_row_timestamp(self):
+        headers = {"a": float, "b": str}
+        results = ResultCollector(headers, indexing_mode="timestamp")
+
+        results.new_row("2020-01-01 00:00")
+        df_expect = pd.DataFrame(
+            columns=("a", "b"),
+            index=pd.DatetimeIndex(["2020-01-01 00:00"], tz="utc")
+        ).astype(headers)
+        pd.testing.assert_frame_equal(results._dataframe, df_expect)
+
+        results.new_row("2020-01-01 01:00")
+        df_expect = pd.DataFrame(
+            columns=("a", "b"),
+            index=pd.DatetimeIndex(["2020-01-01 00:00", "2020-01-01 01:00"], tz="utc")
+        ).astype(headers)
+        pd.testing.assert_frame_equal(results._dataframe, df_expect)
+
+    def test_new_row_auto_raises(self):
+        headers = {"a": float, "b": str}
+        results = ResultCollector(headers, indexing_mode="auto")
+
+        with pytest.raises(TypeError):
+            results.new_row("2020-01-01 00:00")
+
+    def test_new_row_timestamp_raises(self):
+        headers = {"a": float, "b": str}
+        results = ResultCollector(headers, indexing_mode="timestamp")
+
+        with pytest.raises(TypeError):
+            results.new_row()
+
+    def test_new_row_duplicate_raises(self):
+        headers = {"a": float, "b": str}
+        results = ResultCollector(headers, indexing_mode="timestamp")
+        results.new_row("2020-01-01 00:00")
+
+        with pytest.raises(ValueError):
+            results.new_row("2020-01-01 00:00")
+
+    def test_collect(self):
+        headers = {"a": float, "b": str, "c": float, "d": str}
+        results = ResultCollector(headers, indexing_mode="auto")
+
+        results.new_row()
+        results.collect(a=1.1, b="test")
+        results.new_row()
+        results.collect(a=2.2, b="overridden-value")
+        results.collect(a=3.3, b="updated-value")
+        results.new_row()
+
+        a_expect = np.array([1.1, 3.3, np.nan]).astype(float)
+        b_expect = np.array(["test", "updated-value", np.nan]).astype(str)
+        c_expect = np.array([np.nan, np.nan, np.nan]).astype(float)
+        d_expect = np.array([np.nan, np.nan, np.nan]).astype(str)
+
+        a_out = results._dataframe["a"].values
+        b_out = results._dataframe["b"].values
+        c_out = results._dataframe["c"].values
+        d_out = results._dataframe["d"].values
+
+        np.testing.assert_array_almost_equal(a_out, a_expect)
+        np.testing.assert_array_equal(b_out, b_expect)
+        np.testing.assert_array_almost_equal(c_out, c_expect)
+        np.testing.assert_array_equal(d_out, d_expect)
+
+    def test_collect_raises(self):
+        headers = {"a": float, "b": str}
+        results = ResultCollector(headers, indexing_mode="auto")
+
+        # raise on string
+        with pytest.raises(ValueError):
+            results.collect(a="hei")
+
+        # raise on float
+        with pytest.raises(ValueError):
+            results.collect(b=1.0)

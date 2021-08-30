@@ -230,7 +230,7 @@ class ResultCollector:
         row_new = pd.DataFrame(index=[next_index])
         self._dataframe = self._dataframe.append(
             row_new, verify_integrity=True, sort=False
-        )
+        ).astype(self._headers)
         self._index_counter += 1
 
     def _next_index(self, index):
@@ -293,7 +293,7 @@ class ResultCollector:
         if (self._indexing_mode == "auto") and not (
             isinstance(df.index, pd.Int64Index)
         ):
-            raise ValueError(f"Index must be 'Int64Index'.")
+            raise ValueError("Index must be 'Int64Index'.")
         elif (self._indexing_mode == "timestamp") and not (
             isinstance(df.index, pd.DatetimeIndex)
         ):
