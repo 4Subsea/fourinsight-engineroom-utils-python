@@ -227,20 +227,17 @@ class ResultCollector:
             If indexing_mode is set to 'timestamp', index should be a unique datetime
             that is passed on to pandas.to_datetime.
         """
-        next_index = self._next_index(index)
-        row_new = pd.DataFrame(index=[next_index])
+        if index:
+            index = pd.to_datetime(index, utc=True)
+        else:
+            index = self._index_counter
+        self._verify_index(index)
+
+        row_new = pd.DataFrame(index=[index])
         self._dataframe = self._dataframe.append(
             row_new, verify_integrity=True, sort=False
         ).astype(self._headers)
         self._index_counter += 1
-
-    def _next_index(self, index):
-        if index:
-            next_index = pd.to_datetime(index, utc=True)
-        else:
-            next_index = self._index_counter
-        self._verify_index(next_index)
-        return next_index
 
     def _verify_index(self, index):
         expected_dtype = self._INDEX_DTYPE_MAP[self._indexing_mode]
