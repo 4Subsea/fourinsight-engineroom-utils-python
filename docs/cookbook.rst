@@ -4,13 +4,13 @@ Cookbook
 
 .. _example_custom_handler_ftp:
 
-Custom file handler using FTP
------------------------------
+Set up a custom handler based on FTP
+------------------------------------
 
-This example shows how you can set up a custom file handler using FTP. The handler
+This example shows how you can set up a custom handler based on FTP. The handler
 must inherit from ``BaseHandler``, and override the two abstract methods, ``push()``
-and ``pull()``. If the file content you want to 'pull' does not exist, the pull method
-should return ``None``.
+and ``pull()``. If the file content you want to download does not exist, the ``pull()``
+method should return ``None``.
 
 .. code-block:: python
 
@@ -53,21 +53,28 @@ should return ``None``.
                 self._ftp.mkd(folder)
                 self._ftp.cwd(folder)
         
-        def pull(self):
+        def pull(self, raise_on_missing=True):
             """
-            Pull content from FTP server. Returns None if file is not found.
+            Pull text content from FTP server. Returns None if file is not found.
+
+            Parameters
+            ----------
+            raise_on_missing : bool
+                Raise exception if content can not be pulled from file.
             """
             try:
                 with StringIO() as content_stream:
                     ftplib.retrlines("RETR " + self.path, content_stream.write)
                     content_stream.seek(0)
                     remote_content = content_stream.read()
-            except error_perm:
+            except Exception as e:
                 remote_content = None
+                if raise_on_missing:
+                    raise e
             return remote_content
         
         def push(self, local_content):
             """
-            Push content to FTP server
+            Push text content to FTP server file.
             """
             self._ftp.storlines("STOR " + self._filename, StringIO(local_content))

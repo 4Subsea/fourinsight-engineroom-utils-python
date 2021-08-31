@@ -14,3 +14,6 @@ fourinsight.engineroom.utils
 
 .. autoclass:: PersistentJSON
    :members:
+
+.. autoclass:: ResultCollector
+   :members:

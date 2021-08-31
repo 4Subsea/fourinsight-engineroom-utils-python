@@ -4,15 +4,25 @@ Basic Usage
 Handlers
 --------
 
-``LocalFileHandler`` and ``AzureBlobHandler`` provide an interface to store and
-load text content to/from a source.
+.. _text_content_handlers:
+
+'Push' and 'pull' text content from a source
+............................................
+
+Some of the core functionality provided by ``fourinsight.engineroom.utils`` relies
+on handlers that facilitate downloading and uploading of text content from a source.
+The source can be a local file, an Azure Storage Blob, or other any other suitable
+storage place. Downloading and uploading of the text content is provided by a push/pull
+strategy; content is retrieved from the source by a ``pull()`` request, and uploaded
+to the source by a ``push()``. Two handlers, the ``LocalFileHandler`` and the
+``AzureBlobHandler`` are available out-of-the-box. Custom handlers are easily set
+up by inheriting from ``BaseHandler``.
 
 .. note::
-    Custom handlers need to inherit from ``BaseHandler``. In the Cookbook section
-    there is an :ref:`example<example_custom_handler_ftp>` on how you can set up a
-    handler based on FTP.
+    In the Cookbook section there is an :ref:`example<example_custom_handler_ftp>`
+    on how you can set up a custom handler based on FTP.
 
-The ``LocalFileHandler`` is used to store text in a local file.
+The ``LocalFileHandler`` is used to store text content in a local file.
 
 .. code-block:: python
 
@@ -21,7 +31,7 @@ The ``LocalFileHandler`` is used to store text in a local file.
 
     handler = LocalFileHandler(<file-path>)
 
-The ``AzureBlobHandler`` can be used to store text in *Azure Blob Storage*.
+The ``AzureBlobHandler`` is used to store text content in *Azure Blob Storage*.
 
 .. code-block:: python
 
@@ -34,9 +44,9 @@ The ``AzureBlobHandler`` can be used to store text in *Azure Blob Storage*.
 State
 -----
 
-Sometimes it is useful to be able to remember the current 'state' of your Python
-application. Using the ``PersistentJSON`` class and an appropriate handler, key
-state parameters can be stored persistently at a remote location, and be available
+Sometimes it is useful to remember the current 'state' of your Python application.
+Using the ``PersistentJSON`` class and an appropriate :ref:`handler<text_content_handlers>`,
+key state parameters can be stored persistently at a remote location, and be available
 next time the application runs.
 
 ``PersistentJSON`` behaves similar to dictionaries, and can keep track of state
@@ -89,7 +99,7 @@ Then, the state is available next time you run your script by doing a ``pull()``
     state.pull()
 
 .. warning::
-    The ``push`` method will overwrite the content of the remote source.
+    The ``push()`` method will overwrite the content of the remote source.
 
 
 Collect and store results
@@ -117,12 +127,12 @@ The basic usage is illustrated with the examples below.
     # collect some results for the new row
     results.collect(a=1.5, b="some more text")
 
-    # access the results as a 'pandas.DataFrame'
+    # return the results as a 'pandas.DataFrame'
     df = results.dataframe
 
 
 If you are dealing with time-dependent results, and want to 'stamp' the results
-with a datetime value, this can be done by setting 'indexing_mode' to 'timestamp'
+with a datetime value, this is facilitated by setting 'indexing_mode' to 'timestamp'
 during initialization. Then, a datetime value must be passed to ``new_row()`` when
 collecting results.
 
@@ -138,8 +148,8 @@ collecting results.
     results.collect(a=1.0)
 
 
-By initializing with a suitable handler, results can be pushed and pulled from a
-source.
+By initializing with a suitable :ref:`handler<text_content_handlers>`, results can
+be pushed and pulled from a source.
 
 .. code-block:: python
 
