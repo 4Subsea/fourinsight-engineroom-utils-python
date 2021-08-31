@@ -296,13 +296,13 @@ class Test_ResultCollector:
         results.new_row()
         df_expect = pd.DataFrame(
             columns=("a", "b"), index=pd.Int64Index([0])
-        ).astype(headers)
+        ).astype({"a": float, "b": object})
         pd.testing.assert_frame_equal(results._dataframe, df_expect)
 
         results.new_row()
         df_expect = pd.DataFrame(
             columns=("a", "b"), index=pd.Int64Index([0, 1])
-        ).astype(headers)
+        ).astype({"a": float, "b": object})
         pd.testing.assert_frame_equal(results._dataframe, df_expect)
 
     def test_new_row_timestamp(self):
@@ -313,14 +313,14 @@ class Test_ResultCollector:
         df_expect = pd.DataFrame(
             columns=("a", "b"),
             index=pd.DatetimeIndex(["2020-01-01 00:00"], tz="utc")
-        ).astype(headers)
+        ).astype({"a": float, "b": object})
         pd.testing.assert_frame_equal(results._dataframe, df_expect)
 
         results.new_row("2020-01-01 01:00")
         df_expect = pd.DataFrame(
             columns=("a", "b"),
             index=pd.DatetimeIndex(["2020-01-01 00:00", "2020-01-01 01:00"], tz="utc")
-        ).astype(headers)
+        ).astype({"a": float, "b": object})
         pd.testing.assert_frame_equal(results._dataframe, df_expect)
 
     def test_new_row_auto_raises(self):
@@ -356,20 +356,18 @@ class Test_ResultCollector:
         results.collect(a=3.3, b="updated-value")
         results.new_row()
 
-        a_expect = np.array([1.1, 3.3, np.nan]).astype(float)
-        b_expect = np.array(["test", "updated-value", np.nan]).astype(str)
-        c_expect = np.array([np.nan, np.nan, np.nan]).astype(float)
-        d_expect = np.array([np.nan, np.nan, np.nan]).astype(str)
+        df_out = results._dataframe
+        df_expect = pd.DataFrame(
+            data={
+                "a": [1.1, 3.3, np.nan],
+                "b": ["test", "updated-value", np.nan],
+                "c": [np.nan, np.nan, np.nan],
+                "d": [np.nan, np.nan, np.nan],
+            },
+            index=pd.Int64Index([0, 1, 2])
+        ).astype({"a": float, "b": object, "c": float, "d": object})
 
-        a_out = results._dataframe["a"].values
-        b_out = results._dataframe["b"].values
-        c_out = results._dataframe["c"].values
-        d_out = results._dataframe["d"].values
-
-        np.testing.assert_array_almost_equal(a_out, a_expect)
-        np.testing.assert_array_equal(b_out, b_expect)
-        np.testing.assert_array_almost_equal(c_out, c_expect)
-        np.testing.assert_array_equal(d_out, d_expect)
+        pd.testing.assert_frame_equal(df_out, df_expect)
 
     def test_collect_raises(self):
         headers = {"a": float, "b": str}
@@ -495,7 +493,7 @@ class Test_ResultCollector:
         with open(tmp_path / "results.csv", mode="r") as f:
             csv_out = f.read()
 
-        csv_expect = ",a,b,c,d\n0,1.1,test,,nan\n1,2.2,value,,nan\n"
+        csv_expect = ",a,b,c,d\n0,1.1,test,,\n1,2.2,value,,\n"
         assert csv_out == csv_expect
 
     def test_push_timestamp(self, tmp_path):
@@ -511,7 +509,7 @@ class Test_ResultCollector:
         with open(tmp_path / "results.csv", mode="r") as f:
             csv_out = f.read()
 
-        csv_expect = ",a,b,c,d\n2020-01-01 00:00:00+00:00,1.1,test,,nan\n2020-01-01 01:00:00+00:00,2.2,value,,nan\n"
+        csv_expect = ",a,b,c,d\n2020-01-01 00:00:00+00:00,1.1,test,,\n2020-01-01 01:00:00+00:00,2.2,value,,\n"
         assert csv_out == csv_expect
 
     def test_dataframe_auto(self):
@@ -531,7 +529,7 @@ class Test_ResultCollector:
                 "d": [np.nan, np.nan]
             },
             index=pd.Int64Index([0, 1])
-        ).astype(headers)
+        ).astype({"a": float, "b": object, "c": float, "d": object})
 
         pd.testing.assert_frame_equal(df_out, df_expect)
 
@@ -552,6 +550,6 @@ class Test_ResultCollector:
                 "d": [np.nan, np.nan]
             },
             index=pd.DatetimeIndex(["2020-01-01 00:00", "2020-01-01 01:00"], tz="utc")
-        ).astype(headers)
+        ).astype({"a": float, "b": object, "c": float, "d": object})
 
         pd.testing.assert_frame_equal(df_out, df_expect)
