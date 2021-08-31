@@ -42,7 +42,7 @@ class NullHandler(BaseHandler):
 
 class LocalFileHandler(BaseHandler):
     """
-    Handler for push/pull file content to/from local file.
+    Handler for push/pull text content to/from local file.
 
     Parameters
     ----------
@@ -55,7 +55,12 @@ class LocalFileHandler(BaseHandler):
 
     def pull(self, raise_on_missing=True):
         """
-        Pull content from file. Returns None if file is not found.
+        Pull text content from file. Returns None if file is not found.
+
+        Parameters
+        ----------
+        raise_on_missing : bool
+            Raise exception if content can not be pulled from file.
         """
         try:
             remote_content = open(self._path, mode="r").read()
@@ -76,7 +81,7 @@ class LocalFileHandler(BaseHandler):
 
 class AzureBlobHandler(BaseHandler):
     """
-    Handler for push/pull file content to/from Azure Blob Storage.
+    Handler for push/pull text content to/from Azure Blob Storage.
 
     Parameters
     ----------
@@ -98,7 +103,12 @@ class AzureBlobHandler(BaseHandler):
 
     def pull(self, raise_on_missing=True):
         """
-        Pull content from blob as text. Returns None if resource is not found.
+        Pull text content from blob. Returns None if resource is not found.
+
+        Parameters
+        ----------
+        raise_on_missing : bool
+            Raise exception if content can not be pulled from blob.
         """
         try:
             remote_content = self._blob_client.download_blob(encoding="utf-8").readall()
@@ -166,6 +176,11 @@ class PersistentJSON(MutableMapping):
     def pull(self, raise_on_missing=True):
         """
         Pull content from source. Remote source overwrites existing values.
+
+        Parameters
+        ----------
+        raise_on_missing : bool
+            Raise exception if content can not be pulled from source.
         """
         remote_content = self._handler.pull(raise_on_missing=raise_on_missing)
         if remote_content is None:
@@ -281,6 +296,11 @@ class ResultCollector:
     def pull(self, raise_on_missing=True):
         """
         Pull results from source. Remote source overwrites existing values.
+
+        Parameters
+        ----------
+        raise_on_missing : bool
+            Raise exception if results can not be pulled from source.
         """
         if self._indexing_mode == "auto":
             parse_dates = False
