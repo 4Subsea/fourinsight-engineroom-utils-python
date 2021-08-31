@@ -2,20 +2,19 @@ import json
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-import pandas as pd
 import numpy as np
-from pandas.core.indexes.numeric import Int64Index
+import pandas as pd
 import pytest
 from azure.core.exceptions import ResourceNotFoundError
+from pandas.core.indexes.numeric import Int64Index
 
-from fourinsight.engineroom.utils.core import NullHandler
 from fourinsight.engineroom.utils import (
     AzureBlobHandler,
     LocalFileHandler,
     PersistentJSON,
     ResultCollector,
 )
-from fourinsight.engineroom.utils.core import BaseHandler
+from fourinsight.engineroom.utils.core import BaseHandler, NullHandler
 
 REMOTE_FILE_PATH = Path(__file__).parent / "testdata/a_test_file.json"
 
@@ -294,9 +293,9 @@ class Test_ResultCollector:
         results = ResultCollector(headers, indexing_mode="auto")
 
         results.new_row()
-        df_expect = pd.DataFrame(
-            columns=("a", "b"), index=pd.Int64Index([0])
-        ).astype({"a": float, "b": object})
+        df_expect = pd.DataFrame(columns=("a", "b"), index=pd.Int64Index([0])).astype(
+            {"a": float, "b": object}
+        )
         pd.testing.assert_frame_equal(results._dataframe, df_expect)
 
         results.new_row()
@@ -311,15 +310,14 @@ class Test_ResultCollector:
 
         results.new_row("2020-01-01 00:00")
         df_expect = pd.DataFrame(
-            columns=("a", "b"),
-            index=pd.DatetimeIndex(["2020-01-01 00:00"], tz="utc")
+            columns=("a", "b"), index=pd.DatetimeIndex(["2020-01-01 00:00"], tz="utc")
         ).astype({"a": float, "b": object})
         pd.testing.assert_frame_equal(results._dataframe, df_expect)
 
         results.new_row("2020-01-01 01:00")
         df_expect = pd.DataFrame(
             columns=("a", "b"),
-            index=pd.DatetimeIndex(["2020-01-01 00:00", "2020-01-01 01:00"], tz="utc")
+            index=pd.DatetimeIndex(["2020-01-01 00:00", "2020-01-01 01:00"], tz="utc"),
         ).astype({"a": float, "b": object})
         pd.testing.assert_frame_equal(results._dataframe, df_expect)
 
@@ -364,7 +362,7 @@ class Test_ResultCollector:
                 "c": [np.nan, np.nan, np.nan],
                 "d": [np.nan, np.nan, np.nan],
             },
-            index=pd.Int64Index([0, 1, 2])
+            index=pd.Int64Index([0, 1, 2]),
         ).astype({"a": float, "b": object, "c": float, "d": object})
 
         pd.testing.assert_frame_equal(df_out, df_expect)
@@ -415,11 +413,14 @@ class Test_ResultCollector:
 
         results.pull()
 
-        index_expect = pd.DatetimeIndex([
-            "2020-01-01 00:00:00+00:00",
-            "2020-01-01 01:00:00+00:00",
-            "2020-01-01 02:00:00+00:00"
-        ], tz="utc")
+        index_expect = pd.DatetimeIndex(
+            [
+                "2020-01-01 00:00:00+00:00",
+                "2020-01-01 01:00:00+00:00",
+                "2020-01-01 02:00:00+00:00",
+            ],
+            tz="utc",
+        )
         a_expect = np.array([1.1, 3.3, np.nan]).astype(float)
         b_expect = np.array(["foo", "bar", np.nan]).astype(str)
         c_expect = np.array([np.nan, np.nan, np.nan]).astype(float)
@@ -526,9 +527,9 @@ class Test_ResultCollector:
                 "a": [1.1, 2.2],
                 "b": ["test", "value"],
                 "c": [np.nan, np.nan],
-                "d": [np.nan, np.nan]
+                "d": [np.nan, np.nan],
             },
-            index=pd.Int64Index([0, 1])
+            index=pd.Int64Index([0, 1]),
         ).astype({"a": float, "b": object, "c": float, "d": object})
 
         pd.testing.assert_frame_equal(df_out, df_expect)
@@ -547,9 +548,9 @@ class Test_ResultCollector:
                 "a": [1.1, 2.2],
                 "b": ["test", "value"],
                 "c": [np.nan, np.nan],
-                "d": [np.nan, np.nan]
+                "d": [np.nan, np.nan],
             },
-            index=pd.DatetimeIndex(["2020-01-01 00:00", "2020-01-01 01:00"], tz="utc")
+            index=pd.DatetimeIndex(["2020-01-01 00:00", "2020-01-01 01:00"], tz="utc"),
         ).astype({"a": float, "b": object, "c": float, "d": object})
 
         pd.testing.assert_frame_equal(df_out, df_expect)

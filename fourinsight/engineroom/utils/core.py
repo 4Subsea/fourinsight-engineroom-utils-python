@@ -1,9 +1,9 @@
 import json
+import warnings
 from abc import ABC, abstractmethod
 from collections.abc import MutableMapping
 from io import StringIO
 from pathlib import Path
-import warnings
 
 import pandas as pd
 from azure.core.exceptions import ResourceNotFoundError
@@ -253,7 +253,9 @@ class ResultCollector:
         self._verify_index(index)
 
         row_new = pd.DataFrame(index=[index])
-        self._dataframe = self._dataframe.append(row_new, verify_integrity=True, sort=False)
+        self._dataframe = self._dataframe.append(
+            row_new, verify_integrity=True, sort=False
+        )
         self._index_counter += 1
 
     def _verify_index(self, index):
