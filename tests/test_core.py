@@ -396,7 +396,7 @@ class Test_ResultCollector:
                 "c": [np.nan, np.nan, np.nan],
                 "d": [np.nan, np.nan, np.nan],
             },
-            index=pd.Int64Index([0, 1, 2])
+            index=pd.Int64Index([0, 1, 2]),
         ).astype({"a": float, "b": object, "c": float, "d": float})
 
         pd.testing.assert_frame_equal(df_out, df_expect)
@@ -427,7 +427,7 @@ class Test_ResultCollector:
                 "c": [np.nan, np.nan, np.nan],
                 "d": [np.nan, np.nan, np.nan],
             },
-            index=index_expect
+            index=index_expect,
         ).astype({"a": float, "b": object, "c": float, "d": float})
 
         pd.testing.assert_frame_equal(df_out, df_expect)
