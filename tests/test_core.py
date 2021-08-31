@@ -6,7 +6,6 @@ import numpy as np
 import pandas as pd
 import pytest
 from azure.core.exceptions import ResourceNotFoundError
-from pandas.core.indexes.numeric import Int64Index
 
 from fourinsight.engineroom.utils import (
     AzureBlobHandler,
