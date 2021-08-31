@@ -98,9 +98,6 @@ Then, the state is available next time you run your script by doing a ``pull()``
     # Update state from remote source
     state.pull()
 
-.. warning::
-    The ``push()`` method will overwrite the content of the remote source.
-
 
 Collect and store results
 -------------------------
