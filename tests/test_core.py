@@ -4,6 +4,7 @@ from unittest.mock import Mock, patch
 
 import pandas as pd
 import numpy as np
+from pandas.core.indexes.numeric import Int64Index
 import pytest
 from azure.core.exceptions import ResourceNotFoundError
 
@@ -451,3 +452,77 @@ class Test_ResultCollector:
     #     df_expect = pd.DataFrame(columns=headers.keys()).astype(headers)
 
     #     pd.testing.assert_frame_equal(df_out, df_expect)
+
+    def test_push_auto(self, tmp_path):
+        handler = LocalFileHandler(tmp_path / "results.csv")
+        headers = {"a": float, "b": str, "c": float, "d": str}
+        results = ResultCollector(headers, handler=handler, indexing_mode="auto")
+        results.new_row()
+        results.collect(a=1.1, b="test")
+        results.new_row()
+        results.collect(a=2.2, b="value")
+        results.push()
+
+        with open(tmp_path / "results.csv", mode="r") as f:
+            csv_out = f.read()
+
+        csv_expect = ",a,b,c,d\n0,1.1,test,,nan\n1,2.2,value,,nan\n"
+        assert csv_out == csv_expect
+
+    def test_push_timestamp(self, tmp_path):
+        handler = LocalFileHandler(tmp_path / "results.csv")
+        headers = {"a": float, "b": str, "c": float, "d": str}
+        results = ResultCollector(headers, handler=handler, indexing_mode="timestamp")
+        results.new_row("2020-01-01 00:00")
+        results.collect(a=1.1, b="test")
+        results.new_row("2020-01-01 01:00")
+        results.collect(a=2.2, b="value")
+        results.push()
+
+        with open(tmp_path / "results.csv", mode="r") as f:
+            csv_out = f.read()
+
+        csv_expect = ",a,b,c,d\n2020-01-01 00:00:00+00:00,1.1,test,,nan\n2020-01-01 01:00:00+00:00,2.2,value,,nan\n"
+        assert csv_out == csv_expect
+
+    def test_dataframe_auto(self):
+        headers = {"a": float, "b": str, "c": float, "d": str}
+        results = ResultCollector(headers, indexing_mode="auto")
+        results.new_row()
+        results.collect(a=1.1, b="test")
+        results.new_row()
+        results.collect(a=2.2, b="value")
+
+        df_out = results.dataframe
+        df_expect = pd.DataFrame(
+            data={
+                "a": [1.1, 2.2],
+                "b": ["test", "value"],
+                "c": [np.nan, np.nan],
+                "d": [np.nan, np.nan]
+            },
+            index=pd.Int64Index([0, 1])
+        ).astype(headers)
+
+        pd.testing.assert_frame_equal(df_out, df_expect)
+
+    def test_dataframe_timestamp(self):
+        headers = {"a": float, "b": str, "c": float, "d": str}
+        results = ResultCollector(headers, indexing_mode="timestamp")
+        results.new_row("2020-01-01 00:00")
+        results.collect(a=1.1, b="test")
+        results.new_row("2020-01-01 01:00")
+        results.collect(a=2.2, b="value")
+
+        df_out = results.dataframe
+        df_expect = pd.DataFrame(
+            data={
+                "a": [1.1, 2.2],
+                "b": ["test", "value"],
+                "c": [np.nan, np.nan],
+                "d": [np.nan, np.nan]
+            },
+            index=pd.DatetimeIndex(["2020-01-01 00:00", "2020-01-01 01:00"], tz="utc")
+        ).astype(headers)
+
+        pd.testing.assert_frame_equal(df_out, df_expect)

@@ -313,6 +313,7 @@ class ResultCollector:
         )
         self._handler.push(local_content)
 
+    @property
     def dataframe(self):
         """Return a copy of internal dataframe"""
         return self._dataframe.copy(deep=True)
