@@ -71,7 +71,12 @@ class Test_LocalFileHandler:
 
     def test_pull_non_existing(self):
         handler = LocalFileHandler("non-existing-file")
-        assert handler.pull() is None
+        assert handler.pull(raise_on_missing=False) is None
+
+    def test_pull_non_existing_raises(self):
+        handler = LocalFileHandler("non-existing-file")
+        with pytest.raises(FileNotFoundError):
+            handler.pull(raise_on_missing=True)
 
     def test_push(self, tmp_path):
         handler = LocalFileHandler(tmp_path / "test.json")
@@ -111,7 +116,7 @@ class Test_AzureBlobHandler:
         )
         handler._blob_client.download_blob.assert_called_once_with(encoding="utf-8")
 
-    def test_pull_no_exist(self, azure_blob_handler_mocked):
+    def test_pull_non_existing(self, azure_blob_handler_mocked):
         handler = azure_blob_handler_mocked
 
         def raise_resource_not_found(*args, **kwargs):
@@ -119,7 +124,18 @@ class Test_AzureBlobHandler:
 
         handler._blob_client.download_blob.side_effect = raise_resource_not_found
 
-        assert handler.pull() is None
+        assert handler.pull(raise_on_missing=False) is None
+
+    def test_pull_non_existing_raises(self, azure_blob_handler_mocked):
+        handler = azure_blob_handler_mocked
+
+        def raise_resource_not_found(*args, **kwargs):
+            raise ResourceNotFoundError
+
+        handler._blob_client.download_blob.side_effect = raise_resource_not_found
+
+        with pytest.raises(ResourceNotFoundError):
+            handler.pull(raise_on_missing=True)
 
     def test_push(self, azure_blob_handler_mocked):
         handler = azure_blob_handler_mocked
@@ -198,15 +214,22 @@ class Test_PersistentJSON:
 
         assert content_out == content_expected
 
-    def test_pull_empty(self, local_file_handler_empty):
-        handler = local_file_handler_empty
+    def test_pull_non_existing(self):
+        handler = LocalFileHandler("./non_existing.json")
         persistent_json = PersistentJSON(handler)
-        persistent_json.pull()
+        persistent_json.pull(raise_on_missing=False)
 
         content_out = persistent_json._PersistentJSON__dict
         content_expected = {}
 
         assert content_out == content_expected
+
+    def test_pull_non_existing_raises(self):
+        handler = LocalFileHandler("./non_existing.json")
+        persistent_json = PersistentJSON(handler)
+
+        with pytest.raises(FileNotFoundError):
+            persistent_json.pull(raise_on_missing=True)
 
     def test_push(self, tmp_path):
         handler = LocalFileHandler(tmp_path / "test.json")
@@ -443,15 +466,21 @@ class Test_ResultCollector:
         with pytest.raises(ValueError):
             results.pull()
 
-    # def test_pull_noexist(self):
-    #     handler = LocalFileHandler("./no-exist.csv")
-    #     headers = {"a": float, "b": str, "c": float, "d": str}
-    #     results = ResultCollector(headers, handler=handler, indexing_mode="auto")
-    #     results.pull()
-    #     df_out = results._dataframe
-    #     df_expect = pd.DataFrame(columns=headers.keys()).astype(headers)
+    def test_pull_non_existing(self):
+        handler = LocalFileHandler("./non_exist.csv")
+        headers = {"a": float, "b": str, "c": float, "d": str}
+        results = ResultCollector(headers, handler=handler)
+        results.pull(raise_on_missing=False)
+        df_expect = pd.DataFrame(columns=headers.keys()).astype(headers)
+        df_out = results._dataframe
+        pd.testing.assert_frame_equal(df_out, df_expect)
 
-    #     pd.testing.assert_frame_equal(df_out, df_expect)
+    def test_pull_non_existing_raises(self):
+        handler = LocalFileHandler("./non_exist.csv")
+        headers = {"a": float, "b": str, "c": float, "d": str}
+        results = ResultCollector(headers, handler=handler)
+        with pytest.raises(FileNotFoundError):
+            results.pull(raise_on_missing=True)
 
     def test_push_auto(self, tmp_path):
         handler = LocalFileHandler(tmp_path / "results.csv")

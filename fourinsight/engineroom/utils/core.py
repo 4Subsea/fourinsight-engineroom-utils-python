@@ -16,7 +16,7 @@ class BaseHandler(ABC):
     """
 
     @abstractmethod
-    def pull(self):
+    def pull(self, raise_on_missing=True):
         raise NotImplementedError()
 
     @abstractmethod
@@ -29,12 +29,12 @@ class NullHandler(BaseHandler):
     NullHandler.
     """
 
-    def pull(self):
+    def pull(self, *args, **kwargs):
         raise ValueError(
             "The 'NullHandler' does not provide any push or pull functionality."
         )
 
-    def push(self, local_content):
+    def push(self, *args, **kwargs):
         raise ValueError(
             "The 'NullHandler' does not provide any push or pull functionality."
         )
@@ -53,14 +53,16 @@ class LocalFileHandler(BaseHandler):
     def __init__(self, path):
         self._path = Path(path)
 
-    def pull(self):
+    def pull(self, raise_on_missing=True):
         """
         Pull content from file. Returns None if file is not found.
         """
         try:
             remote_content = open(self._path, mode="r").read()
-        except FileNotFoundError:
+        except Exception as e:
             remote_content = None
+            if raise_on_missing:
+                raise e
         return remote_content
 
     def push(self, local_content):
@@ -94,14 +96,16 @@ class AzureBlobHandler(BaseHandler):
             conn_str, container_name, blob_name
         )
 
-    def pull(self):
+    def pull(self, raise_on_missing=True):
         """
         Pull content from blob as text. Returns None if resource is not found.
         """
         try:
             remote_content = self._blob_client.download_blob(encoding="utf-8").readall()
-        except ResourceNotFoundError:
+        except Exception as e:
             remote_content = None
+            if raise_on_missing:
+                raise e
         return remote_content
 
     def push(self, local_content):
@@ -159,11 +163,11 @@ class PersistentJSON(MutableMapping):
         else:
             self.__dict[key] = value
 
-    def pull(self):
+    def pull(self, raise_on_missing=True):
         """
         Pull content from source. Remote source overwrites existing values.
         """
-        remote_content = self._handler.pull()
+        remote_content = self._handler.pull(raise_on_missing=raise_on_missing)
         if remote_content is None:
             remote_content = "{}"
         self.__dict.update(json.loads(remote_content))
@@ -274,7 +278,7 @@ class ResultCollector:
             if not isinstance(value, self._headers[header]):
                 raise ValueError(f"Invalid dtype in '{header}'")
 
-    def pull(self):
+    def pull(self, raise_on_missing=True):
         """
         Pull results from source. Remote source overwrites existing values.
         """
@@ -283,10 +287,9 @@ class ResultCollector:
         else:
             parse_dates = True
 
-        dataframe_csv = self._handler.pull()
-
+        dataframe_csv = self._handler.pull(raise_on_missing=raise_on_missing)
         if not dataframe_csv:
-            raise ValueError("Could not read results from source.")
+            return
 
         df = pd.read_csv(StringIO(dataframe_csv), index_col=0, parse_dates=parse_dates)
 
