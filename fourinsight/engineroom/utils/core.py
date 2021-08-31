@@ -6,6 +6,7 @@ from io import StringIO
 from pathlib import Path
 
 import pandas as pd
+import numpy as np
 from azure.core.exceptions import ResourceNotFoundError
 from azure.storage.blob import BlobClient
 
@@ -285,7 +286,7 @@ class ResultCollector:
 
         self._check_types(results)
         current_index = self._dataframe.index[-1]
-        row_update = pd.DataFrame(results, index=[current_index])
+        row_update = pd.DataFrame(data=results, index=[current_index])
         self._dataframe.update(row_update, errors="ignore")
 
     def _check_types(self, results):
@@ -302,16 +303,12 @@ class ResultCollector:
         raise_on_missing : bool
             Raise exception if results can not be pulled from source.
         """
-        if self._indexing_mode == "auto":
-            parse_dates = False
-        else:
-            parse_dates = True
 
         dataframe_csv = self._handler.pull(raise_on_missing=raise_on_missing)
         if not dataframe_csv:
             return
 
-        df = pd.read_csv(StringIO(dataframe_csv), index_col=0, parse_dates=parse_dates)
+        df = pd.read_csv(StringIO(dataframe_csv), index_col=0, parse_dates=True)
 
         if not (set(df.columns) == set(self._headers.keys())):
             raise ValueError("Header is not valid.")
@@ -325,7 +322,7 @@ class ResultCollector:
         ):
             raise ValueError("Index must be 'DatetimeIndex'.")
 
-        self._dataframe = df.astype(self._headers)
+        self._dataframe = df
 
     def push(self):
         """

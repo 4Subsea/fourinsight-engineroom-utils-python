@@ -387,23 +387,19 @@ class Test_ResultCollector:
 
         results.pull()
 
-        index_expect = pd.Int64Index([0, 1, 2])
-        a_expect = np.array([1.1, 3.3, np.nan]).astype(float)
-        b_expect = np.array(["foo", "bar", np.nan]).astype(str)
-        c_expect = np.array([np.nan, np.nan, np.nan]).astype(float)
-        d_expect = np.array([np.nan, np.nan, np.nan]).astype(str)
+        df_out = results._dataframe
 
-        index_out = results._dataframe.index
-        a_out = results._dataframe["a"].values
-        b_out = results._dataframe["b"].values
-        c_out = results._dataframe["c"].values
-        d_out = results._dataframe["d"].values
+        df_expect = pd.DataFrame(
+            data={
+                "a": [1.1, 3.3, np.nan],
+                "b": ["foo", "bar", np.nan],
+                "c": [np.nan, np.nan, np.nan],
+                "d": [np.nan, np.nan, np.nan],
+            },
+            index=pd.Int64Index([0, 1, 2])
+        ).astype({"a": float, "b": object, "c": float, "d": float})
 
-        pd.testing.assert_index_equal(index_out, index_expect)
-        np.testing.assert_array_almost_equal(a_out, a_expect)
-        np.testing.assert_array_equal(b_out, b_expect)
-        np.testing.assert_array_almost_equal(c_out, c_expect)
-        np.testing.assert_array_equal(d_out, d_expect)
+        pd.testing.assert_frame_equal(df_out, df_expect)
 
     def test_pull_timestamp(self):
         path = Path(__file__).parent / "testdata/results_timestamp.csv"
@@ -413,6 +409,8 @@ class Test_ResultCollector:
 
         results.pull()
 
+        df_out = results._dataframe
+
         index_expect = pd.DatetimeIndex(
             [
                 "2020-01-01 00:00:00+00:00",
@@ -421,22 +419,18 @@ class Test_ResultCollector:
             ],
             tz="utc",
         )
-        a_expect = np.array([1.1, 3.3, np.nan]).astype(float)
-        b_expect = np.array(["foo", "bar", np.nan]).astype(str)
-        c_expect = np.array([np.nan, np.nan, np.nan]).astype(float)
-        d_expect = np.array([np.nan, np.nan, np.nan]).astype(str)
 
-        index_out = results._dataframe.index
-        a_out = results._dataframe["a"].values
-        b_out = results._dataframe["b"].values
-        c_out = results._dataframe["c"].values
-        d_out = results._dataframe["d"].values
+        df_expect = pd.DataFrame(
+            data={
+                "a": [1.1, 3.3, np.nan],
+                "b": ["foo", "bar", np.nan],
+                "c": [np.nan, np.nan, np.nan],
+                "d": [np.nan, np.nan, np.nan],
+            },
+            index=index_expect
+        ).astype({"a": float, "b": object, "c": float, "d": float})
 
-        pd.testing.assert_index_equal(index_out, index_expect)
-        np.testing.assert_array_almost_equal(a_out, a_expect)
-        np.testing.assert_array_equal(b_out, b_expect)
-        np.testing.assert_array_almost_equal(c_out, c_expect)
-        np.testing.assert_array_equal(d_out, d_expect)
+        pd.testing.assert_frame_equal(df_out, df_expect)
 
     def test_pull_missing_header_raises(self):
         path = Path(__file__).parent / "testdata/results_auto.csv"
