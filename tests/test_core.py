@@ -358,3 +358,96 @@ class Test_ResultCollector:
         # raise on float
         with pytest.raises(ValueError):
             results.collect(b=1.0)
+
+    def test_pull_auto(self):
+        path = Path(__file__).parent / "testdata/results_auto.csv"
+        handler = LocalFileHandler(path)
+        headers = {"a": float, "b": str, "c": float, "d": str}
+        results = ResultCollector(headers, handler=handler, indexing_mode="auto")
+
+        results.pull()
+
+        index_expect = pd.Int64Index([0, 1, 2])
+        a_expect = np.array([1.1, 3.3, np.nan]).astype(float)
+        b_expect = np.array(["foo", "bar", np.nan]).astype(str)
+        c_expect = np.array([np.nan, np.nan, np.nan]).astype(float)
+        d_expect = np.array([np.nan, np.nan, np.nan]).astype(str)
+
+        index_out = results._dataframe.index
+        a_out = results._dataframe["a"].values
+        b_out = results._dataframe["b"].values
+        c_out = results._dataframe["c"].values
+        d_out = results._dataframe["d"].values
+
+        pd.testing.assert_index_equal(index_out, index_expect)
+        np.testing.assert_array_almost_equal(a_out, a_expect)
+        np.testing.assert_array_equal(b_out, b_expect)
+        np.testing.assert_array_almost_equal(c_out, c_expect)
+        np.testing.assert_array_equal(d_out, d_expect)
+
+    def test_pull_timestamp(self):
+        path = Path(__file__).parent / "testdata/results_timestamp.csv"
+        handler = LocalFileHandler(path)
+        headers = {"a": float, "b": str, "c": float, "d": str}
+        results = ResultCollector(headers, handler=handler, indexing_mode="timestamp")
+
+        results.pull()
+
+        index_expect = pd.DatetimeIndex([
+            "2020-01-01 00:00:00+00:00",
+            "2020-01-01 01:00:00+00:00",
+            "2020-01-01 02:00:00+00:00"
+        ], tz="utc")
+        a_expect = np.array([1.1, 3.3, np.nan]).astype(float)
+        b_expect = np.array(["foo", "bar", np.nan]).astype(str)
+        c_expect = np.array([np.nan, np.nan, np.nan]).astype(float)
+        d_expect = np.array([np.nan, np.nan, np.nan]).astype(str)
+
+        index_out = results._dataframe.index
+        a_out = results._dataframe["a"].values
+        b_out = results._dataframe["b"].values
+        c_out = results._dataframe["c"].values
+        d_out = results._dataframe["d"].values
+
+        pd.testing.assert_index_equal(index_out, index_expect)
+        np.testing.assert_array_almost_equal(a_out, a_expect)
+        np.testing.assert_array_equal(b_out, b_expect)
+        np.testing.assert_array_almost_equal(c_out, c_expect)
+        np.testing.assert_array_equal(d_out, d_expect)
+
+    def test_pull_missing_header_raises(self):
+        path = Path(__file__).parent / "testdata/results_auto.csv"
+        handler = LocalFileHandler(path)
+        headers = {"a": float, "b": str, "c": float, "d": str, "missing-header": float}
+        results = ResultCollector(headers, handler=handler, indexing_mode="auto")
+
+        with pytest.raises(ValueError):
+            results.pull()
+
+    def test_pull_wrong_mode_raises(self):
+        path = Path(__file__).parent / "testdata/results_auto.csv"
+        handler = LocalFileHandler(path)
+        headers = {"a": float, "b": str, "c": float, "d": str}
+        results = ResultCollector(headers, handler=handler, indexing_mode="timestamp")
+
+        with pytest.raises(ValueError):
+            results.pull()
+
+    def test_pull_wrong_mode_raises2(self):
+        path = Path(__file__).parent / "testdata/results_timestamp.csv"
+        handler = LocalFileHandler(path)
+        headers = {"a": float, "b": str, "c": float, "d": str}
+        results = ResultCollector(headers, handler=handler, indexing_mode="auto")
+
+        with pytest.raises(ValueError):
+            results.pull()
+
+    # def test_pull_noexist(self):
+    #     handler = LocalFileHandler("./no-exist.csv")
+    #     headers = {"a": float, "b": str, "c": float, "d": str}
+    #     results = ResultCollector(headers, handler=handler, indexing_mode="auto")
+    #     results.pull()
+    #     df_out = results._dataframe
+    #     df_expect = pd.DataFrame(columns=headers.keys()).astype(headers)
+
+    #     pd.testing.assert_frame_equal(df_out, df_expect)

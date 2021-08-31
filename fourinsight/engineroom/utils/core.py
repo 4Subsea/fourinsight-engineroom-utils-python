@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from collections.abc import MutableMapping
 from io import StringIO
 from pathlib import Path
+import warnings
 
 import pandas as pd
 from azure.core.exceptions import ResourceNotFoundError
@@ -189,7 +190,7 @@ class ResultCollector:
         Header names and data types as key/value pairs. The collector will only accept
         intermediate results defined here.
     handler:
-        Handler extended from `BaseHandler`. Default handler is NullHandler, which
+        Handler extended from `BaseHandler`. Default handler is `NullHandler`, which
         does not provide any push or pull functionality.
     indexing_mode : str
         Indexing mode. Should be 'auto' or 'timestamp'.
@@ -284,8 +285,13 @@ class ResultCollector:
             parse_dates = False
         else:
             parse_dates = True
-        dataframe_csv = StringIO(self._handler.pull())
-        df = pd.read_csv(dataframe_csv, index_col=0, parse_dates=parse_dates)
+
+        dataframe_csv = self._handler.pull()
+
+        if not dataframe_csv:
+            raise ValueError("Could not read results from source.")
+
+        df = pd.read_csv(StringIO(dataframe_csv), index_col=0, parse_dates=parse_dates)
 
         if not (set(df.columns) == set(self._headers.keys())):
             raise ValueError("Header is not valid.")
