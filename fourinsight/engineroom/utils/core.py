@@ -25,6 +25,8 @@ class BaseHandler(ABC):
 class NullHandler(BaseHandler):
     """
     NullHandler.
+
+    Will raise an exception if push() or pull() is called.
     """
 
     def pull(self, *args, **kwargs):
