@@ -14,14 +14,14 @@ method should return ``None``.
 
 .. code-block:: python
 
-    from io import StringIO
+    from io import BytesIO
     from ftplib import FTP, error_perm
     from fourinsight.engineroom.utils.core import BaseHandler
 
 
     class FTPHandler(BaseHandler):
         """
-        Handler for push/pull file content to/from an FTP server.
+        Handler for push/pull text content to/from an FTP server file.
 
         Parameters
         ----------
@@ -42,7 +42,7 @@ method should return ``None``.
             self._filename = filename
             self._ftp = FTP(host=host, user=user, passwd=passwd)
             self._cwd(self._folder)
-                
+
         def _cwd(self, folder):
             """
             Change current working directory, and make it if it does not exist.
@@ -52,7 +52,7 @@ method should return ``None``.
             except error_perm:
                 self._ftp.mkd(folder)
                 self._ftp.cwd(folder)
-        
+
         def pull(self, raise_on_missing=True):
             """
             Pull text content from FTP server. Returns None if file is not found.
@@ -63,18 +63,18 @@ method should return ``None``.
                 Raise exception if content can not be pulled from file.
             """
             try:
-                with StringIO() as content_stream:
-                    ftplib.retrlines("RETR " + self.path, content_stream.write)
-                    content_stream.seek(0)
-                    remote_content = content_stream.read()
+                with BytesIO() as binary_content:
+                    self._ftp.retrbinary("RETR " + self._filename, binary_content.write)
+                    binary_content.seek(0)
+                    remote_content = binary_content.read().decode()
             except Exception as e:
                 remote_content = None
                 if raise_on_missing:
                     raise e
             return remote_content
-        
+
         def push(self, local_content):
             """
             Push text content to FTP server file.
             """
-            self._ftp.storlines("STOR " + self._filename, StringIO(local_content))
+            self._ftp.storbinary("STOR " + self._filename, BytesIO(local_content.encode()))
