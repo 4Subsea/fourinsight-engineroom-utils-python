@@ -2,8 +2,6 @@ name: CD - Publish package to TestPyPi
 
 on:
   workflow_dispatch:
-  release:
-    types: prereleased
     branches: main
 
 jobs:
