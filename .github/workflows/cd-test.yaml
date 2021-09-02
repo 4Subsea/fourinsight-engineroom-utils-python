@@ -2,7 +2,7 @@ name: CD - Publish package to TestPyPi
 
 on:
   workflow_dispatch:
-    branches: main
+    branches: dst-43-cd-github-actions
 
 jobs:
   CD--build-and-publish-test:
