@@ -6,6 +6,8 @@ on:
 
 jobs:
   MY:
+    runs-on: ubuntu-latest
+
     steps:
       - name: Print Hello
         run: |
