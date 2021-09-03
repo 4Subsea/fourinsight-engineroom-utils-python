@@ -1,0 +1,17 @@
+# Hello World workflow. Just for testing.
+
+name: Hello World workflow
+
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  # This workflow contains a single job called "build"
+  print-hello-wf:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Print hello world
+      - name: Print Hello
+        run: echo Hello, world!
