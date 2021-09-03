@@ -2,15 +2,6 @@ name: My workflow test
 
 on:
   workflow_dispatch:
-    inputs:
-      name:
-        description: 'Person to greet'
-        required: true
-        default: 'Mona the Octocat'
-      home:
-        description: 'location'
-        required: false
-        default: 'The Octoverse'
 
 jobs:
   MY:
@@ -18,5 +9,5 @@ jobs:
 
     steps:
       - run: |
-          echo "Hello ${{ github.event.inputs.name }}!"
-          echo "- in ${{ github.event.inputs.home }}!"
+          echo "Hello World!"
+          echo "This is a test.!"
