@@ -24,6 +24,13 @@ jobs:
           python -m pip install pip
           python -m pip install build
 
+      - name: Get version number
+        id: version_number
+        run: |
+          $REF="${{github.ref}}"
+          $TAG=$REF.Replace("refs/tags/", "")
+          echo "::set-output name=TAG::$TAG"
+
       - name: Build package
         run: python -m build --sdist --wheel --outdir dist/
 
