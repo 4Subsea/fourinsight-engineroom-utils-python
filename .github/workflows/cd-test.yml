@@ -1,0 +1,13 @@
+name: CD Test - build and upload to test
+
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  CD-TEST:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Print something
+        run: echo "This is the CD workflow."
