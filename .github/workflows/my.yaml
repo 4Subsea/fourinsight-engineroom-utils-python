@@ -1,8 +1,6 @@
 name: My workflow test
 
 on:
-  workflow_dispatch:
-    branches: dst-43-cd-github-actions
   pull_request:
     branches: main
 
