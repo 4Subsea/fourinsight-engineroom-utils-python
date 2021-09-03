@@ -1,8 +1,8 @@
 name: My workflow test
 
 on:
-  pull_request:
-    branches: main
+  workflow_dispatch:
+    branches: [main, dst-43-cd-github-actions]
 
 jobs:
   MY:
