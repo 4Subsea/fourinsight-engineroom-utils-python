@@ -2,16 +2,21 @@ name: My workflow test
 
 on:
   workflow_dispatch:
-    branches: [main, dst-43-cd-github-actions]
+    inputs:
+      name:
+        description: 'Person to greet'
+        required: true
+        default: 'Mona the Octocat'
+      home:
+        description: 'location'
+        required: false
+        default: 'The Octoverse'
 
 jobs:
   MY:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Print Hello
-        run: |
-          echo "Hello World!"
-      - name: Print some more
-        run:
-          echo "This is a test."
+      - run: |
+          echo "Hello ${{ github.event.inputs.name }}!"
+          echo "- in ${{ github.event.inputs.home }}!"
