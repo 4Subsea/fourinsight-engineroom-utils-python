@@ -8,20 +8,20 @@ jobs:
   set-env:
     runs-on: ubuntu-latest
     outputs:
-      DEPLOY_ENV: ${{ steps.env-check.outputs.TAG }}
+      DEPLOY_ENV: ${{ steps.env-check.outputs.ENV }}
 
     steps:
-      # - name: Set default env
-      #   run: echo "ENV=default" >> $GITHUB_ENV
+      - name: Set default env
+        run: echo "ENV=default" >> $GITHUB_ENV
 
-      # - name: Check if on-demand
-      #   if: ${{ (github.event_name == 'workflow_dispatch') }}
-      #   run: echo "ENV=test" >> $GITHUB_ENV
+      - name: Check if on-demand
+        if: ${{ (github.event_name == 'workflow_dispatch') }}
+        run: echo "ENV=test" >> $GITHUB_ENV
 
       - id: env-check
         env:
-          TAG: "${{github.sha}}"
-        run: echo "::set-output name=TAG::$TAG"
+          ENV: env.ENV
+        run: echo "::set-output name=ENV::$ENV"
 
   kladd:
     needs: set-env
