@@ -30,7 +30,7 @@ jobs:
 
       - name: Read __init__
         run: |
-          input="/path/to/txt/file"
+          input="fourinsight/engineroom/utils/__init__.py"
           while IFS= read -r line
           do
             echo "$line"
