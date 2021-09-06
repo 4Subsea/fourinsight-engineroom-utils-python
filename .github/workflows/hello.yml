@@ -15,3 +15,8 @@ jobs:
         env:
           REF: "${{github.ref}}"
         run: echo "Ref is $REF"
+
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJSON(github) }}
+        run: echo "$GITHUB_CONTEXT"
