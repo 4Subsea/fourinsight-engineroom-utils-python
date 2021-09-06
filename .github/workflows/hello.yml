@@ -19,7 +19,9 @@ jobs:
         run: echo "ENV=test" >> $GITHUB_ENV
 
       - id: env_check
-        run: echo "::set-output name=DEPLOY_ENV::env.ENV"
+        env:
+          OUT: "hei"
+        run: echo "::set-output name=DEPLOY_ENV::$OUT"
 
   kladd:
     needs: set-env
@@ -30,6 +32,10 @@ jobs:
         env:
           ENVIRON: ${{ needs.set-env.outputs.DEPLOY_ENV }}
         run: echo "Environment set to $ENVIRON"
+
+
+
+
 
   job1:
     # If ref is not a tag, set 'test'
