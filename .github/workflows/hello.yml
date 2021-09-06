@@ -50,8 +50,8 @@ jobs:
       - name: Get version number
         run: |
           REF="${{ github.ref }}"
-          VERSION="${REF // 'refs/heads/' / ''}"
-          VERSION="${VERSION // '-actions' / ''}"
+          repl="refs/heads/"
+          VERSION="${REF//repl/''}"
           echo "VERSION_NUMBER=$VERSION" >> $GITHUB_ENV
 
       - name: Print version number
