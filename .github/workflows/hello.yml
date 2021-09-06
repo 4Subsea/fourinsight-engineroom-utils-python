@@ -18,7 +18,7 @@ jobs:
         run: echo "ENV_DEPLOY=TEST" >> $GITHUB_ENV
 
       - name: Check if PROD
-        if !: endswith(github.ref, "-test")
+        if: (! endswith(github.ref, "-test"))
         run: echo "ENV_DEPLOY=PROD" >> $GITHUB_ENV
 
       - name: Print environment
