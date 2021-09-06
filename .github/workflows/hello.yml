@@ -24,7 +24,7 @@ jobs:
 
       - name: Get version number
         run: |
-          REF="refs/tags/v9.8.7-test"
+          REF="refs/tags/v1.2.3-test"
           strip_of_start="refs/tags/v"
           strip_of_ending="-test"
           VERSION="${REF//$strip_of_start/''}"
