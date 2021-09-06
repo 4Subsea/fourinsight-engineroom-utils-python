@@ -10,3 +10,8 @@ jobs:
     steps:
       - name: Print something
         run: echo "This is the CD workflow."
+
+      - name: Check reference
+        env:
+          REF: "${{github.ref}}"
+        run: echo "Ref is $REF"
