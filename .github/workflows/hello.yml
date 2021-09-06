@@ -29,13 +29,22 @@ jobs:
       - name: Print ref
         run: echo "Ref is ${{ github.ref }}"
 
+      # - name: Get version number
+      #   run: |
+      #     REF="${{ github.ref }}"
+      #     prefix="refs/heads/"
+      #     suffix="-actions"
+      #     VERSION="${REF//'refs/heads/'/''}"
+      #     VERSION="${VERSION//'-actions'/''}"
+      #     echo "VERSION_NUMBER=$VERSION" >> $GITHUB_ENV
+
       - name: Get version number
         run: |
           REF="${{ github.ref }}"
-          prefix="refs/heads/"
-          suffix="-actions"
-          VERSION="${REF//'refs/heads/'/''}"
-          VERSION="${VERSION//'-actions'/''}"
+          prefix='refs/heads/'
+          suffix='-actions'
+          VERSION="${REF//prefix/''}"
+          VERSION="${VERSION//suffix/''}"
           echo "VERSION_NUMBER=$VERSION" >> $GITHUB_ENV
 
       - name: Print version number
