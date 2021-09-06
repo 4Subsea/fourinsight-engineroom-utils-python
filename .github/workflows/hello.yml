@@ -21,7 +21,7 @@ jobs:
       - name: Print version
         env:
           version: "$TAG"
-        run: echo "Version is $version"
+        run: echo "Version is $version, tag is $TAG"
 
 
 
