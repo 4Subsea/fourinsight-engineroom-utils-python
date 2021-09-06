@@ -8,7 +8,7 @@ jobs:
   set-env:
     runs-on: ubuntu-latest
     outputs:
-      DEPLOY_ENV: $"{{ steps.env-check.outputs.TAG }}"
+      DEPLOY_ENV: ${{ steps.env-check.outputs.TAG }}
 
     steps:
       # - name: Set default env
