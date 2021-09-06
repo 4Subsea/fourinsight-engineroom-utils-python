@@ -37,7 +37,7 @@ jobs:
           done < "$input"
 
       - name: Check if TEST
-        if: ${{ startswith(github.ref, 'refs/tags/v') && endsWith(github.ref, '-test') }}
+        if: ${{ startswith(github.ref, 'refs/heads')}}
         run: |
           echo "password=${{ secrets.PYPI_TEST_API_KEY }}" >> $GITHUB_ENV
           echo "repository_url=https://test.pypi.org/legacy/" >> $GITHUB_ENV
