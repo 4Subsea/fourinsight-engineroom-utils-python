@@ -6,7 +6,7 @@ on:
 jobs:
   test-check:
     # If ref is not a tag, set 'test'
-    if: ${{ startsWith(github.ref, "refs/heads/") }}
+    if: ${{ startsWith(github.ref, 'refs/heads/') }}
     runs-on: ubuntu-latest
 
     steps:
