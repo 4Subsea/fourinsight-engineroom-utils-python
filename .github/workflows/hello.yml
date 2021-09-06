@@ -33,7 +33,7 @@ jobs:
           filename="./fourinsight/engineroom/utils/__init__.py"
           search_string="0.0.1"
           replace_string="1.2.3"
-          sed -i 's/search_string/replace_string/' "$filename"
+          sed -i -e 's/search_string/replace_string/' "$filename"
 
       # - name: Replace version number
       #   run: |
