@@ -18,8 +18,7 @@ jobs:
         if: ${{ (github.event_name == 'workflow_dispatch') }}
         run: echo "ENV=test" >> $GITHUB_ENV
 
-      - name: Check environment
-        id: env_check
+      - id: env_check
         run: echo "::set-output name=DEPLOY_ENV::env.ENV"
 
   kladd:
