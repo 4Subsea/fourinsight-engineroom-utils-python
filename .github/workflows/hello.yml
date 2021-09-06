@@ -4,12 +4,24 @@ on:
   workflow_dispatch:
 
 jobs:
-  CD-TEST:
+  test-check:
+    # If ref is not a tag, set 'test'
+    if: ${{ startsWith(github.ref, "refs/heads/") }}
+    outputs:
+      TAG: github["sha"]
+
+  deploy:
+    needs: test-check
     runs-on: ubuntu-latest
 
     steps:
       - name: Print something
         run: echo "This is the CD workflow."
+
+      - name: Print tag
+        env:
+          VERSION: needs.test-check.outputs.TAG
+        run: echo "Version set to $VERSION"
 
       - name: Check reference
         env:
