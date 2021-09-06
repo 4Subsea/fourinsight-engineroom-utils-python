@@ -38,23 +38,6 @@ jobs:
           replace_string="__version__ = \"$VERSION_NUMBER\""
           sed -i "s|$search_pattern|$replace_string|g" "$filename"
 
-      # - name: Check if TEST
-      #   if: ${{ startswith(github.ref, 'refs/tags/v') && endsWith(github.ref, '-test') }}
-      #   run: |
-      #     echo "password=${{ secrets.PYPI_TEST_API_KEY }}" >> $GITHUB_ENV
-      #     echo "repository_url=https://test.pypi.org/legacy/" >> $GITHUB_ENV
-
-      # - name: Check if PROD
-      #   if: ${{ startsWith(github.ref, 'refs/tags/v') && !endsWith(github.ref, '-test')}}
-      #   run: |
-      #     echo "password=${{ secrets.PYPI_PROD_API_KEY }}" >> $GITHUB_ENV
-
-      # - name: Check if on-demand
-      #   if: ${{ startsWith(github.ref, 'refs/heads') }}
-      #   run: |
-      #     echo "password=${{ secrets.PYPI_TEST_API_KEY }}" >> $GITHUB_ENV
-      #     echo "repository_url=https://test.pypi.org/legacy/" >> $GITHUB_ENV
-
       - name: Build package
         run: python -m build --sdist --wheel --outdir dist/
 
@@ -81,13 +64,6 @@ jobs:
           password: ${{ secrets.PYPI_TEST_API_KEY }}
           repository_url: https://test.pypi.org/legacy/
 
-      # - name: Publish package
-      #   uses: pypa/gh-action-pypi-publish@release/v1
-      #   with:
-      #     user: __token__
-      #     password: ${{ secrets.PYPI_TEST_API_KEY }}
-      #     repository_url: https://test.pypi.org/legacy/
-
       - name: Print Hello
         run: echo "Hello, World"
 
@@ -98,6 +74,35 @@ jobs:
           do
             echo "$line"
           done < "$input"
+
+
+
+
+
+      # - name: Check if TEST
+      #   if: ${{ startswith(github.ref, 'refs/tags/v') && endsWith(github.ref, '-test') }}
+      #   run: |
+      #     echo "password=${{ secrets.PYPI_TEST_API_KEY }}" >> $GITHUB_ENV
+      #     echo "repository_url=https://test.pypi.org/legacy/" >> $GITHUB_ENV
+
+      # - name: Check if PROD
+      #   if: ${{ startsWith(github.ref, 'refs/tags/v') && !endsWith(github.ref, '-test')}}
+      #   run: |
+      #     echo "password=${{ secrets.PYPI_PROD_API_KEY }}" >> $GITHUB_ENV
+
+      # - name: Check if on-demand
+      #   if: ${{ startsWith(github.ref, 'refs/heads') }}
+      #   run: |
+      #     echo "password=${{ secrets.PYPI_TEST_API_KEY }}" >> $GITHUB_ENV
+      #     echo "repository_url=https://test.pypi.org/legacy/" >> $GITHUB_ENV
+
+
+      # - name: Publish package
+      #   uses: pypa/gh-action-pypi-publish@release/v1
+      #   with:
+      #     user: __token__
+      #     password: ${{ secrets.PYPI_TEST_API_KEY }}
+      #     repository_url: https://test.pypi.org/legacy/
 
 
 
