@@ -11,12 +11,12 @@ jobs:
       DEPLOY_ENV: $"{{ steps.env_check.outputs.DEPLOY_ENV }}"
 
     steps:
-      - name: Set default env
-        run: echo "ENV=default" >> $GITHUB_ENV
+      # - name: Set default env
+      #   run: echo "ENV=default" >> $GITHUB_ENV
 
-      - name: Check if on-demand
-        if: ${{ (github.event_name == 'workflow_dispatch') }}
-        run: echo "ENV=test" >> $GITHUB_ENV
+      # - name: Check if on-demand
+      #   if: ${{ (github.event_name == 'workflow_dispatch') }}
+      #   run: echo "ENV=test" >> $GITHUB_ENV
 
       - id: env_check
         env:
@@ -37,38 +37,38 @@ jobs:
 
 
 
-  job1:
-    # If ref is not a tag, set 'test'
-    if: ${{ startsWith(github.ref, 'refs/heads/') }}
-    runs-on: ubuntu-latest
-    outputs:
-      VERSION: ${{ steps.set-version.outputs.TAG }}
+  # job1:
+  #   # If ref is not a tag, set 'test'
+  #   if: ${{ startsWith(github.ref, 'refs/heads/') }}
+  #   runs-on: ubuntu-latest
+  #   outputs:
+  #     VERSION: ${{ steps.set-version.outputs.TAG }}
 
-    steps:
-      - id: set-version
-        env:
-          TAG: "${{github.sha}}"
-        run: echo "::set-output name=TAG::$TAG"
+  #   steps:
+  #     - id: set-version
+  #       env:
+  #         TAG: "${{github.sha}}"
+  #       run: echo "::set-output name=TAG::$TAG"
 
-  deploy:
-    needs: job1
-    runs-on: ubuntu-latest
+  # deploy:
+  #   needs: job1
+  #   runs-on: ubuntu-latest
 
-    steps:
-      - name: Print something
-        run: echo "This is the CD workflow."
+  #   steps:
+  #     - name: Print something
+  #       run: echo "This is the CD workflow."
 
-      - name: Print tag
-        env:
-          VERSION: ${{ needs.job1.outputs.VERSION }}
-        run: echo "Version set to $VERSION"
+  #     - name: Print tag
+  #       env:
+  #         VERSION: ${{ needs.job1.outputs.VERSION }}
+  #       run: echo "Version set to $VERSION"
 
-      - name: Check reference
-        env:
-          REF: "${{github.ref}}"
-        run: echo "Ref is $REF"
+  #     - name: Check reference
+  #       env:
+  #         REF: "${{github.ref}}"
+  #       run: echo "Ref is $REF"
 
-      - name: Dump GitHub context
-        env:
-          GITHUB_CONTEXT: ${{ toJSON(github) }}
-        run: echo "$GITHUB_CONTEXT"
+  #     - name: Dump GitHub context
+  #       env:
+  #         GITHUB_CONTEXT: ${{ toJSON(github) }}
+  #       run: echo "$GITHUB_CONTEXT"
