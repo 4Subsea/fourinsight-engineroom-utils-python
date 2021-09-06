@@ -38,6 +38,11 @@ jobs:
           VERSION="${VERSION//$strip_of_ending/''}"
           echo "VERSION_NUMBER=$VERSION" >> $GITHUB_ENV
 
+      - name: Print version number
+        run: |
+          echo "Full ref is ${{ github.ref }}"
+          echo "Version number is $VERSION_NUMBER"
+
       # - name: Get version number
       #   run: |
       #     REF="${{ github.ref }}"
@@ -62,9 +67,6 @@ jobs:
       #     repl="refs/heads/"
       #     VERSION="${REF//repl/''}"
       #     echo "VERSION_NUMBER=$VERSION" >> $GITHUB_ENV
-
-      - name: Print version number
-        run: echo "Version number is $VERSION_NUMBER"
 
       # - name: Get tag
       #   env:
