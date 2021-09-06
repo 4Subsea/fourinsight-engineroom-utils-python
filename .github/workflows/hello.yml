@@ -16,9 +16,9 @@ jobs:
         run: echo "TAG=$TAG" >> $GITHUB_ENV
 
       - name: Print version
-        env:
-          version: $TAG
-        run: echo "Version is $version"
+        # env:
+        #   version: $TAG
+        run: echo "Version is $TAG"
 
 
 
