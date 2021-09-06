@@ -1,9 +1,39 @@
 name: Just for testing
 on:
+  release:
+    types: [published]
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 jobs:
+
+  set-env:
+    runs-on: ubuntu-latest
+    outouts:
+      DEPLOY_ENV: $"{{ steps.env_check.ENV }}"
+
+    steps:
+      - name: Set default env
+        run: echo "ENV=default" >> $GITHUB_ENV
+
+      - name: Check if on-demand
+        if: ${{ (github.event_name == 'workflow_dispatch') }}
+        run: echo "ENV=test" >> $GITHUB_ENV
+
+      - name: Check environment
+        id: env_check
+        run: echo "::set-output name=DEPLOY_ENV::env.ENV"
+
+  kladd:
+    needs: set-env
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Print Environment
+        env:
+          ENVIRON: ${{ needs.set-env.outputs.DEPLOY_ENV }}
+        run: echo "Environment set to $ENVIRON"
+
   job1:
     # If ref is not a tag, set 'test'
     if: ${{ startsWith(github.ref, 'refs/heads/') }}
