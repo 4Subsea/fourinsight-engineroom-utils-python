@@ -28,6 +28,9 @@ jobs:
       - name: Print environment
         run: echo "Environment is $ENV_DEPLOY"
 
+      - name: Print ref
+        run: echo "Ref is ${{ github.ref }}"
+
       # - name: Get tag
       #   env:
       #     TAG: "refs/tags/v1.0.0-test"   # "${{github.ref}}"
