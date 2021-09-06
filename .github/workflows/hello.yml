@@ -61,7 +61,7 @@ jobs:
       - name: Publish package
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          user: __token__
+          user: "__token__"
           password: "pypi-$password"
           repository_url: "$repository_url"
           # packages_dir: "dist"
