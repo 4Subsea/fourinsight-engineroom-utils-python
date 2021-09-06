@@ -47,11 +47,20 @@ jobs:
       #     VERSION="${VERSION//suffix/''}"
       #     echo "VERSION_NUMBER=$VERSION" >> $GITHUB_ENV
 
+      # - name: Get version number
+      #   run: |
+      #     REF="${{ github.ref }}"
+      #     repl="refs/heads/"
+      #     VERSION="${REF//repl/''}"
+      #     echo "VERSION_NUMBER=$VERSION" >> $GITHUB_ENV
+
       - name: Get version number
         run: |
           REF="${{ github.ref }}"
-          repl="refs/heads/"
-          VERSION="${REF//repl/''}"
+          prefix="refs/heads/"
+          suffix="-actions"
+          VERSION="${REF//$prefix/''}"
+          VERSION="${VERSION//$suffix/''}"
           echo "VERSION_NUMBER=$VERSION" >> $GITHUB_ENV
 
       - name: Print version number
