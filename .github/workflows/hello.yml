@@ -1,97 +1,93 @@
 name: Just for testing
 on:
+  release:
+    types: [published]
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 jobs:
-
-  set-env:
+  deploy:
     runs-on: ubuntu-latest
-    outputs:
-      DEPLOY_ENV: ${{ steps.get-env.outputs.ENV }}
 
     steps:
-      - name: Set default env
+      - name: Get tag
         env:
-          ENV_DEFAULT: "test"
-        run: echo "ENV=$ENV_DEFAULT" >> $GITHUB_ENV
+          TAG: "refs/tags/v1.0.0-test"   # "${{github.ref}}"
+        run: echo "TAG=$TAG" >> $GITHUB_ENV
 
-      - name: Check if on-demand
-        if: ${{ (github.event_name == 'workflow_dispatch') }}
+      - name: Print version
         env:
-          ENV_UPDATE: "test"
-        run: echo "ENV=$ENV_UPDATE" >> $GITHUB_ENV
+          version: $TAG
+          echo "Version is $version"
 
-      - id: get-env
-        run: echo "::set-output name=ENV::$ENV"
 
-  # set-version:
+
+
+  # set-env:
   #   runs-on: ubuntu-latest
   #   outputs:
-  #     VERSION_NUMBER: ${{ steps.get-version.outputs.VERSION }}
+  #     DEPLOY_ENV: ${{ steps.get-env.outputs.ENV }}
 
   #   steps:
-  #     - name: Set default version number
+  #     - name: Set default env
   #       env:
-  #         VERSION_DEFAULT: "${{ github.sha }}"
-  #       run: echo "VERSION=$VERSION_DEFAULT" >> $GITHUB_ENV
+  #         ENV_DEFAULT: "test"
+  #       run: echo "ENV=$ENV_DEFAULT" >> $GITHUB_ENV
 
-  #     - name: Check if tag
+  #     - name: Check if on-demand
+  #       if: ${{ (github.event_name == 'workflow_dispatch') }}
+  #       env:
+  #         ENV_UPDATE: "test"
+  #       run: echo "ENV=$ENV_UPDATE" >> $GITHUB_ENV
 
-  print-github:
-    runs-on: ubuntu-latest
+  #     - id: get-env
+  #       run: echo "::set-output name=ENV::$ENV"
 
-    steps:
-      - name: Dump GitHub context
-        env:
-          GITHUB_CONTEXT: ${{ toJSON(github) }}
-        run: echo "$GITHUB_CONTEXT"
+  # # set-version:
+  # #   runs-on: ubuntu-latest
+  # #   outputs:
+  # #     VERSION_NUMBER: ${{ steps.get-version.outputs.VERSION }}
 
-  # set-deploy-params:
+  # #   steps:
+  # #     - name: Set default version number
+  # #       env:
+  # #         VERSION_DEFAULT: "${{ github.sha }}"
+  # #       run: echo "VERSION=$VERSION_DEFAULT" >> $GITHUB_ENV
+
+  # #     - name: Check if tag
+
+  # print-github:
   #   runs-on: ubuntu-latest
-  #   outputs:
-  #     PYPI_TOKEN: ${{ steps.get-url.outputs.TOKEN }}
-  #     PYPI_URL: ${{ steps.get-url.outputs.URL }}
 
-  kladd:
-    needs: set-env
-    runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Dump GitHub context
+  #       env:
+  #         GITHUB_CONTEXT: ${{ toJSON(github) }}
+  #       run: echo "$GITHUB_CONTEXT"
 
-    steps:
-      - name: Print Environment
-        env:
-          ENVIRON: ${{ needs.set-env.outputs.DEPLOY_ENV }}
-        run: echo "Environment set to $ENVIRON"
+  # # set-deploy-params:
+  # #   runs-on: ubuntu-latest
+  # #   outputs:
+  # #     PYPI_TOKEN: ${{ steps.get-url.outputs.TOKEN }}
+  # #     PYPI_URL: ${{ steps.get-url.outputs.URL }}
 
-
-  # deploy:
+  # kladd:
   #   needs: set-env
   #   runs-on: ubuntu-latest
 
   #   steps:
-  #     - uses: actions/checkout@v2
+  #     - name: Print Environment
+  #       env:
+  #         ENVIRON: ${{ needs.set-env.outputs.DEPLOY_ENV }}
+  #       run: echo "Environment set to $ENVIRON"
 
-  #     - name: Set up Python 3.8
-  #       uses: actions/setup-python@v2
-  #       with:
-  #         python-version: 3.8
 
-  #     - name: Install dependencies
-  #       run: |
-  #         python -m pip install pip
-  #         python -m pip install build
+  # deploy-kladd:
+  #   runs-on: ubuntu-latest
 
-  #     - name: Get version number
-  #       id: version_number
-  #       run: |
-  #         $REF="${{github.ref}}"
-  #         $TAG=$REF.Replace("refs/tags/", "")
-  #         echo "::set-output name=TAG::$TAG"
-
-  #     - name: Build package
-  #       run: python -m build --sdist --wheel --outdir dist/
-
-  #     - name: Publish package to TestPyPi
+  #   steps:
+  #     - name: Publish package
+  #       if: (github.event_name == 'publish') && startsWith(gitub.ref, 'refs/tags')
   #       uses: pypa/gh-action-pypi-publish@release/v1
   #       with:
   #         user: __token__
@@ -99,42 +95,77 @@ jobs:
   #         repository_url: https://test.pypi.org/legacy/
 
 
+  # # deploy:
+  # #   needs: set-env
+  # #   runs-on: ubuntu-latest
+
+  # #   steps:
+  # #     - uses: actions/checkout@v2
+
+  # #     - name: Set up Python 3.8
+  # #       uses: actions/setup-python@v2
+  # #       with:
+  # #         python-version: 3.8
+
+  # #     - name: Install dependencies
+  # #       run: |
+  # #         python -m pip install pip
+  # #         python -m pip install build
+
+  # #     - name: Get version number
+  # #       id: version_number
+  # #       run: |
+  # #         $REF="${{github.ref}}"
+  # #         $TAG=$REF.Replace("refs/tags/", "")
+  # #         echo "::set-output name=TAG::$TAG"
+
+  # #     - name: Build package
+  # #       run: python -m build --sdist --wheel --outdir dist/
+
+  # #     - name: Publish package to TestPyPi
+  # #       uses: pypa/gh-action-pypi-publish@release/v1
+  # #       with:
+  # #         user: __token__
+  # #         password: ${{ secrets.PYPI_TEST_API_KEY }}
+  # #         repository_url: https://test.pypi.org/legacy/
 
 
 
 
-  # job1:
-  #   # If ref is not a tag, set 'test'
-  #   if: ${{ startsWith(github.ref, 'refs/heads/') }}
-  #   runs-on: ubuntu-latest
-  #   outputs:
-  #     VERSION: ${{ steps.set-version.outputs.TAG }}
 
-  #   steps:
-  #     - id: set-version
-  #       env:
-  #         TAG: "${{github.sha}}"
-  #       run: echo "::set-output name=TAG::$TAG"
 
-  # deploy:
-  #   needs: job1
-  #   runs-on: ubuntu-latest
+  # # job1:
+  # #   # If ref is not a tag, set 'test'
+  # #   if: ${{ startsWith(github.ref, 'refs/heads/') }}
+  # #   runs-on: ubuntu-latest
+  # #   outputs:
+  # #     VERSION: ${{ steps.set-version.outputs.TAG }}
 
-  #   steps:
-  #     - name: Print something
-  #       run: echo "This is the CD workflow."
+  # #   steps:
+  # #     - id: set-version
+  # #       env:
+  # #         TAG: "${{github.sha}}"
+  # #       run: echo "::set-output name=TAG::$TAG"
 
-  #     - name: Print tag
-  #       env:
-  #         VERSION: ${{ needs.job1.outputs.VERSION }}
-  #       run: echo "Version set to $VERSION"
+  # # deploy:
+  # #   needs: job1
+  # #   runs-on: ubuntu-latest
 
-  #     - name: Check reference
-  #       env:
-  #         REF: "${{github.ref}}"
-  #       run: echo "Ref is $REF"
+  # #   steps:
+  # #     - name: Print something
+  # #       run: echo "This is the CD workflow."
 
-  #     - name: Dump GitHub context
-  #       env:
-  #         GITHUB_CONTEXT: ${{ toJSON(github) }}
-  #       run: echo "$GITHUB_CONTEXT"
+  # #     - name: Print tag
+  # #       env:
+  # #         VERSION: ${{ needs.job1.outputs.VERSION }}
+  # #       run: echo "Version set to $VERSION"
+
+  # #     - name: Check reference
+  # #       env:
+  # #         REF: "${{github.ref}}"
+  # #       run: echo "Ref is $REF"
+
+  # #     - name: Dump GitHub context
+  # #       env:
+  # #         GITHUB_CONTEXT: ${{ toJSON(github) }}
+  # #       run: echo "$GITHUB_CONTEXT"
