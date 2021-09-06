@@ -7,8 +7,13 @@ jobs:
   test-check:
     # If ref is not a tag, set 'test'
     if: ${{ startsWith(github.ref, "refs/heads/") }}
-    outputs:
-      TAG: github["sha"]
+    runs-on: ubuntu-latest
+
+    steps:
+      name: version_number
+      run: echo "::set-output name=TAG::$TAG"
+      env:
+        TAG: github['sha']
 
   deploy:
     needs: test-check
@@ -20,7 +25,7 @@ jobs:
 
       - name: Print tag
         env:
-          VERSION: needs.test-check.outputs.TAG
+          VERSION: needs.test-check.version_number.TAG
         run: echo "Version set to $VERSION"
 
       - name: Check reference
