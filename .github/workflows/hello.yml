@@ -4,19 +4,21 @@ on:
   workflow_dispatch:
 
 jobs:
-  test-check:
+  job1:
     # If ref is not a tag, set 'test'
     if: ${{ startsWith(github.ref, 'refs/heads/') }}
     runs-on: ubuntu-latest
+    outputs:
+      VERSION: ${{ steps.set-version.outputs.TAG }}
 
     steps:
-      - name: version_number
+      - id: set-version
         env:
-          TAG: github['sha']
+          TAG: "${{github.sha}}"
         run: echo "::set-output name=TAG::$TAG"
 
   deploy:
-    needs: test-check
+    needs: job1
     runs-on: ubuntu-latest
 
     steps:
@@ -25,7 +27,7 @@ jobs:
 
       - name: Print tag
         env:
-          VERSION: needs.test-check.version_number.TAG
+          VERSION: ${{ needs.job1.outputs.VERSION }}
         run: echo "Version set to $VERSION"
 
       - name: Check reference
