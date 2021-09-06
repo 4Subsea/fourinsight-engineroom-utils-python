@@ -28,6 +28,14 @@ jobs:
           replace_string="__version__ = \"$VERSION_NEMBER\""
           echo sed -i 's/search_string/replace_string/' filename
 
+      - name: Read __init__
+        run: |
+          input="/path/to/txt/file"
+          while IFS= read -r line
+          do
+            echo "$line"
+          done < "$input"
+
 
 
       # - name: Check if test
