@@ -45,6 +45,16 @@ jobs:
           echo "password=${{ secrets.PYPI_TEST_API_KEY }}" >> $GITHUB_ENV
           echo "repository_url=https://test.pypi.org/legacy/" >> $GITHUB_ENV
 
+      - name: Build package
+        run: python -m build --sdist --wheel --outdir dist/
+
+      - name: Publish package
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: $password
+          repository_url: $repository_url
+
       - name: Print Hello
         run: echo "Hello, World"
 
@@ -55,6 +65,18 @@ jobs:
           do
             echo "$line"
           done < "$input"
+
+
+
+
+
+
+
+
+
+
+
+
 
       # - name: Replace version number
       #   run: |
