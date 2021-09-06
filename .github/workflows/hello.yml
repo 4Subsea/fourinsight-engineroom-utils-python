@@ -13,16 +13,31 @@ jobs:
       # - name: Print Hello
       #   run: echo "Hello, World!"
 
-      - name: Get tag
-        env:
-          TAG: "refs/tags/v1.0.0-test"   # "${{github.ref}}"
-        run: echo "TAG=$TAG" >> $GITHUB_ENV
+      - name: Check if TEST
+        if: endsWith(github.ref, "-test")
+        run: echo "ENV_DEPLOY=TEST" >> $GITHUB_ENV
 
-      - name: Print version
-        # env:
-        #   version: $TAG
-        run: |
-          echo "Tag is $TAG"
+      - name: Check if PROD
+        if: ! endswith(github.ref, "-test")
+        run: echo "ENV_DEPLOY=PROD" >> $GITHUB_ENV
+
+      - name: Print environment
+        run: echo "Environment is $ENV_DEPLOY"
+
+      # - name: Get tag
+      #   env:
+      #     TAG: "refs/tags/v1.0.0-test"   # "${{github.ref}}"
+      #   run: echo "TAG=$TAG" >> $GITHUB_ENV
+
+      # - name: Get version number
+      #   id: version_number
+      #   run: echo "::set-output "
+
+      # - name: Print version
+      #   # env:
+      #   #   version: $TAG
+      #   run: |
+      #     echo "Tag is $TAG"
 
 
 
