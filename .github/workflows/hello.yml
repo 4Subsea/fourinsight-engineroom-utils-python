@@ -10,8 +10,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # - name: Print Hello
-      #   run: echo "Hello, World!"
 
       - name: Check if test
         if: ${{ startswith(github.ref, 'refs/tags/v') && endsWith(github.ref, '-test') }}
@@ -25,15 +23,23 @@ jobs:
         if: ${{ startsWith(github.ref, 'refs/heads') }}
         run: echo "ENV_DEPLOY=ON-DEMAND" >> $GITHUB_ENV
 
-      # - name: Check if PROD
-      #   if: (! endswith(github.ref, "-test"))
-      #   run: echo "ENV_DEPLOY=PROD" >> $GITHUB_ENV
-
       - name: Print environment
         run: echo "Environment is $ENV_DEPLOY"
 
       - name: Print ref
         run: echo "Ref is ${{ github.ref }}"
+
+      - name: Get version number
+        run: |
+          REF="${{ github.ref }}"
+          prefix="refs/heads/"
+          suffix="-actions"
+          VERSION=${REF//prefix/''}
+          VERSION=${{VERSION//suffix/''}}
+          echo "VERSION_NUMBER=$VERSION" >> $GITHUB_ENV
+
+      - name: Print version number
+        run: echo "Version number is $VERSION_NUMBER"
 
       # - name: Get tag
       #   env:
