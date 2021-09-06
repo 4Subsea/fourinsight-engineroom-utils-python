@@ -20,7 +20,7 @@ jobs:
 
       - name: Print version
         env:
-          version: "${{ $TAG }}"
+          version: "$TAG"
         run: echo "Version is $version"
 
 
