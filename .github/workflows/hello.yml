@@ -47,7 +47,7 @@ jobs:
           filename="fourinsight/engineroom/utils/__init__.py"
           search_pattern="0.0.1"
           replace_string="1.2.3"
-          sed -i 's|$search_pattern|$replace_string|g' "$filename"
+          sed -i "s|$search_pattern|$replace_string|g" "$filename"
 
       - name: Read __init__
         run: |
