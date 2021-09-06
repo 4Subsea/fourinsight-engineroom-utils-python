@@ -13,12 +13,12 @@ jobs:
       # - name: Print Hello
       #   run: echo "Hello, World!"
 
-      - name: Check if TEST
-        if: endsWith(github.ref, '-test')
+      - name: Check if test
+        if: ${{ startswith(github.ref, 'ref/tags/v') && !endsWith(github.ref, '-test') }}
         run: echo "ENV_DEPLOY=TEST" >> $GITHUB_ENV
 
       - name: Check if PROD
-        if: ! endswith(github.ref, '-test')
+        if: ${{ startsWith(github.ref, 'ref/heads') }}
         run: echo "ENV_DEPLOY=PROD" >> $GITHUB_ENV
 
       # - name: Check if PROD
