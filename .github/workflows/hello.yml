@@ -19,8 +19,8 @@ jobs:
         run: echo "ENV=test" >> $GITHUB_ENV
 
       - id: env-check
-        env:
-          ENV: env.ENV
+        # env:
+        #   ENV: env.ENV
         run: echo "::set-output name=ENV::$ENV"
 
   kladd:
