@@ -22,8 +22,9 @@ jobs:
         # env:
         #   version: $TAG
         run: |
-        $VERSION=$TAG.Replace("refs/tags/", "")
-        echo "Version is $VERSION, tag is $VERSION"
+        # $VERSION=$TAG.Replace("refs/tags/", "")
+        # echo "Version is $VERSION, tag is $VERSION"
+          echo "Tag is $TAG"
 
 
 
