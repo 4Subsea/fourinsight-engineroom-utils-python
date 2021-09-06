@@ -10,17 +10,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # - name: Get tag
-      #   env:
-      #     TAG: "refs/tags/v1.0.0-test"   # "${{github.ref}}"
-      #   run: echo "TAG=$TAG" >> $GITHUB_ENV
+      # - name: Print Hello
+      #   run: echo "Hello, World!"
 
-      # - name: Print version
-      #   # env:
-      #   #   version: $TAG
-      #   run: echo "Version is $TAG"
-      - name: Print Hello
-        run: echo "Hello, World!"
+      - name: Get tag
+        env:
+          TAG: "refs/tags/v1.0.0-test"   # "${{github.ref}}"
+        run: echo "TAG=$TAG" >> $GITHUB_ENV
+
+      - name: Print version
+        # env:
+        #   version: $TAG
+        run: echo "Version is $TAG"
 
 
 
