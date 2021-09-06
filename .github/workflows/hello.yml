@@ -12,11 +12,13 @@ jobs:
 
     steps:
       - name: Set default env
-        run: echo "ENV=default" >> $GITHUB_ENV
+        env:
+          DEFAULT_ENV: "default"
+        run: echo "ENV=$DEFAULT_ENV" >> $GITHUB_ENV
 
-      - name: Check if on-demand
-        if: ${{ (github.event_name == 'workflow_dispatch') }}
-        run: echo "ENV=test" >> $GITHUB_ENV
+      # - name: Check if on-demand
+      #   if: ${{ (github.event_name == 'workflow_dispatch') }}
+      #   run: echo "ENV=test" >> $GITHUB_ENV
 
       - id: env-check
         # env:
