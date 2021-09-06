@@ -14,7 +14,7 @@ jobs:
       #   run: echo "Hello, World!"
 
       - name: Check if TEST
-        if: endsWith(github.ref, "-test")
+        if: endsWith(github.ref, '-test')
         run: echo "ENV_DEPLOY=TEST" >> $GITHUB_ENV
 
       # - name: Check if PROD
