@@ -10,10 +10,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      name: version_number
-      run: echo "::set-output name=TAG::$TAG"
-      env:
-        TAG: github['sha']
+      - name: version_number
+        run: echo "::set-output name=TAG::$TAG"
+        env:
+          TAG: github['sha']
 
   deploy:
     needs: test-check
