@@ -35,7 +35,7 @@ jobs:
           prefix="refs/heads/"
           suffix="-actions"
           VERSION=${$REF//prefix/''}
-          VERSION=${{$VERSION//suffix/''}}
+          VERSION=${$VERSION//suffix/''}
           echo "VERSION_NUMBER=$VERSION" >> $GITHUB_ENV
 
       - name: Print version number
