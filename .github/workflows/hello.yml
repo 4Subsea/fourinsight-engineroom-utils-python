@@ -34,17 +34,17 @@ jobs:
       - name: Replace package version number
         run: |
           filename="./fourinsight/engineroom/utils/__init__.py"
-          search_pattern="__version__ = \"0.0.1\""
+          search_pattern="__version__ =\s+\"0.0.1\""
           replace_string="__version__ = \"$VERSION_NUMBER\""
           sed -i "s|$search_pattern|$replace_string|" "$filename"
 
-      - name: Read __init__
-        run: |
-          input="fourinsight/engineroom/utils/__init__.py"
-          while IFS= read -r line
-          do
-            echo "$line"
-          done < "$input"
+      # - name: Read __init__
+      #   run: |
+      #     input="fourinsight/engineroom/utils/__init__.py"
+      #     while IFS= read -r line
+      #     do
+      #       echo "$line"
+      #     done < "$input"
 
       - name: Build package
         run: python -m build --sdist --wheel --outdir dist/
