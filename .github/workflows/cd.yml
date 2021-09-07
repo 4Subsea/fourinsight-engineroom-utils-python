@@ -1,0 +1,63 @@
+name: CD
+on:
+  release:
+    types: [published]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: Install dependencies
+        run: |
+          python -m pip install pip
+          python -m pip install build
+
+      - name: Get new version number from tag
+        run: |
+          ref="refs/tags/v3.2.1-test"
+          ref_prefix="refs/tags/v"
+          ref_suffix="-test"
+          version="${ref//$ref_prefix/''}"
+          version="${version//$ref_suffix/''}"
+          echo "VERSION_NUMBER=$version" >> $GITHUB_ENV
+
+      - name: Replace package version number
+        run: |
+          filename="./fourinsight/engineroom/utils/__init__.py"
+          search_pattern="__version__ = \"0.0.1\""
+          replace_string="__version__ = \"$VERSION_NUMBER\""
+          sed -i "s|$search_pattern|$replace_string|" "$filename"
+
+      - name: Build package
+        run: python -m build --sdist --wheel --outdir dist/
+
+      - name: Publish package to TestPyPi
+        if: ${{ startswith(github.ref, 'refs/tags/v') && endsWith(github.ref, '-test') }}
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_TEST_API_KEY }}
+          repository_url: https://test.pypi.org/legacy/
+
+      - name: Publish package to PyPi
+        if: ${{ startswith(github.ref, 'refs/tags/v') && !endsWith(github.ref, '-test') }}
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_PROD_API_KEY }}
+
+      - name: (on-demand) Publish package to TestPyPi
+        if: ${{ startsWith(github.ref, 'refs/heads') }}
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_TEST_API_KEY }}
+          repository_url: https://test.pypi.org/legacy/
