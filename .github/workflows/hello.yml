@@ -38,13 +38,13 @@ jobs:
           replace_string="__version__ = \"$VERSION_NUMBER\""
           sed -i "s|$search_pattern|$replace_string|" "$filename"
 
-      # - name: Read __init__
-      #   run: |
-      #     input="fourinsight/engineroom/utils/__init__.py"
-      #     while IFS= read -r line
-      #     do
-      #       echo "$line"
-      #     done < "$input"
+      - name: Read __init__
+        run: |
+          input="fourinsight/engineroom/utils/__init__.py"
+          while IFS= read -r line
+          do
+            echo "$line"
+          done < "$input"
 
       - name: Build package
         run: python -m build --sdist --wheel --outdir dist/
