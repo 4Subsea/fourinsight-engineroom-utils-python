@@ -34,9 +34,9 @@ jobs:
       - name: Replace package version number
         run: |
           filename="./fourinsight/engineroom/utils/__init__.py"
-          search_pattern="__version__/\s+=\s+/\"0.0.1\""
+          search_pattern="__version__\s+=\s+\"0.0.1\""
           replace_string="__version__ = \"$VERSION_NUMBER\""
-          sed -i "s|$search_pattern|$replace_string|" "$filename"
+          sed -i "s|__version__\s+=\s+\"0.0.1\"|$replace_string|" "$filename"
 
       - name: Read __init__
         run: |
