@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from azure.core.exceptions import ResourceNotFoundError
+
 from fourinsight.engineroom.utils import (
     AzureBlobHandler,
     LocalFileHandler,
@@ -119,7 +120,10 @@ class Test_AzureBlobHandler:
         )
 
     def test__repr__(self, azure_blob_handler_mocked):
-        assert str(azure_blob_handler_mocked) == "AzureBlobHandler some_container_name/some_blob_name"
+        assert (
+            str(azure_blob_handler_mocked)
+            == "AzureBlobHandler some_container_name/some_blob_name"
+        )
 
     def test__init__fixture(self, azure_blob_handler_mocked):
         handler = azure_blob_handler_mocked
@@ -290,7 +294,9 @@ class Test_ResultCollector:
         assert results._headers == {"a": "Int64", "b": "float64", "c": "string"}
         assert results._indexing_mode == "auto"
         assert isinstance(results._handler, NullHandler)
-        df_expect = pd.DataFrame(columns=headers.keys()).astype({"a": "Int64", "b": "float64", "c": "string"})
+        df_expect = pd.DataFrame(columns=headers.keys()).astype(
+            {"a": "Int64", "b": "float64", "c": "string"}
+        )
         pd.testing.assert_frame_equal(results._dataframe, df_expect)
 
     @pytest.mark.parametrize("mode", ["auto", "timestamp"])
@@ -324,14 +330,14 @@ class Test_ResultCollector:
         results = ResultCollector(headers, indexing_mode="auto")
 
         results.new_row()
-        df_expect = pd.DataFrame(columns=("a", "b", "c"), index=pd.Int64Index([0])).astype(
-            {"a": "float64", "b": "string", "c": "Int64"}
-        )
+        df_expect = pd.DataFrame(
+            columns=("a", "b", "c"), index=pd.Int64Index([0])
+        ).astype({"a": "float64", "b": "string", "c": "Int64"})
         pd.testing.assert_frame_equal(results._dataframe, df_expect)
 
         results.new_row()
         df_expect = pd.DataFrame(
-            columns=("a", "b" , "c"), index=pd.Int64Index([0, 1])
+            columns=("a", "b", "c"), index=pd.Int64Index([0, 1])
         ).astype({"a": "float64", "b": "string", "c": "Int64"})
         pd.testing.assert_frame_equal(results._dataframe, df_expect)
 
@@ -341,7 +347,8 @@ class Test_ResultCollector:
 
         results.new_row("2020-01-01 00:00")
         df_expect = pd.DataFrame(
-            columns=("a", "b", "c"), index=pd.DatetimeIndex(["2020-01-01 00:00"], tz="utc")
+            columns=("a", "b", "c"),
+            index=pd.DatetimeIndex(["2020-01-01 00:00"], tz="utc"),
         ).astype({"a": "float64", "b": "string", "c": "Int64"})
         pd.testing.assert_frame_equal(results._dataframe, df_expect)
 
@@ -492,7 +499,9 @@ class Test_ResultCollector:
         headers = {"a": float, "b": str, "c": float, "d": str}
         results = ResultCollector(headers, handler=handler)
         results.pull(raise_on_missing=False)
-        df_expect = pd.DataFrame(columns=headers.keys()).astype({"a": "float64", "b": "string", "c": "float64", "d": "string"})
+        df_expect = pd.DataFrame(columns=headers.keys()).astype(
+            {"a": "float64", "b": "string", "c": "float64", "d": "string"}
+        )
         df_out = results._dataframe
         pd.testing.assert_frame_equal(df_out, df_expect)
 
@@ -581,7 +590,7 @@ class Test_ResultCollector:
         headers = {"a": int, "b": str, "c": float, "d": str}
         results = ResultCollector(headers, indexing_mode="auto")
         results.new_row()
-        results.collect(a=1., b="test")
+        results.collect(a=1.0, b="test")
         results.new_row()
         results.collect(c=2, d=23.4)
 

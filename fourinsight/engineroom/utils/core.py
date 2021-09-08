@@ -245,9 +245,8 @@ class ResultCollector:
             raise ValueError("Only 'int', 'float', and 'str' dtypes are supported.")
 
         self._headers = {
-            header: self._DTYPES_MAP[dtype_]
-            for header, dtype_ in headers.items()
-            }
+            header: self._DTYPES_MAP[dtype_] for header, dtype_ in headers.items()
+        }
         self._indexing_mode = indexing_mode.lower()
 
         self._handler = handler or NullHandler()
@@ -277,12 +276,13 @@ class ResultCollector:
             :func:`pandas.to_datetime`.
         """
         if self._indexing_mode == "auto" and index is not None:
-            raise ValueError("'indexing_mode' is set to 'auto'. "
-                             "Only 'index=None' is allowed.")
+            raise ValueError(
+                "'indexing_mode' is set to 'auto'. " "Only 'index=None' is allowed."
+            )
         elif self._indexing_mode == "timestamp" and index is None:
-            raise ValueError("'indexing_mode' is set to 'timestamp'. "
-                             "'index=None' is not allowed."
-                             )
+            raise ValueError(
+                "'indexing_mode' is set to 'timestamp'. " "'index=None' is not allowed."
+            )
         else:
             index = pd.to_datetime(index, utc=True)
 
@@ -290,11 +290,10 @@ class ResultCollector:
                 raise ValueError("Index already exists.")
 
         row_new = pd.DataFrame(
-            {header: None for header in self._headers},
-            index=[index]).astype(self._headers)
+            {header: None for header in self._headers}, index=[index]
+        ).astype(self._headers)
         self._dataframe = self._dataframe.append(
-            row_new, verify_integrity=True, ignore_index=self._ignore_index,
-            sort=False
+            row_new, verify_integrity=True, ignore_index=self._ignore_index, sort=False
         )
 
     def collect(self, **results):
@@ -314,13 +313,13 @@ class ResultCollector:
         current_index = self._dataframe.index[-1]
 
         try:
-            row_update = pd.DataFrame(
-                data=results,
-                index=[current_index],
-                ).astype({
-                    header: dtype_ for header, dtype_ in self._headers.items()
+            row_update = pd.DataFrame(data=results, index=[current_index],).astype(
+                {
+                    header: dtype_
+                    for header, dtype_ in self._headers.items()
                     if header in results
-                    })
+                }
+            )
         except ValueError:
             raise ValueError("Unable to cast 'results' to correct dtype")
         self._dataframe.loc[current_index, list(results.keys())] = row_update.iloc[0]
@@ -340,11 +339,8 @@ class ResultCollector:
             return
 
         df = pd.read_csv(
-            StringIO(dataframe_csv),
-            index_col=0,
-            parse_dates=True,
-            dtype=self._headers
-            )
+            StringIO(dataframe_csv), index_col=0, parse_dates=True, dtype=self._headers
+        )
 
         if not (set(df.columns) == set(self._headers.keys())):
             raise ValueError("Header is not valid.")
