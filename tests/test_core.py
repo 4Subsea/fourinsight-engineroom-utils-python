@@ -177,7 +177,12 @@ class Test_PersistentJSON:
 
     def test__init__raises(self):
         with pytest.raises(TypeError):
-            PersistentJSON(None)
+            PersistentJSON("A")
+
+    def test__init__default(self):
+        persistent_json = PersistentJSON()
+        assert persistent_json._PersistentJSON__dict == {}
+        assert isinstance(persistent_json._handler, NullHandler)
 
     def test__repr__(self, persistent_json):
         assert str(persistent_json) == "{}"

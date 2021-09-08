@@ -129,6 +129,11 @@ class AzureBlobHandler(BaseHandler):
     def push(self, local_content):
         """
         Push content to blob.
+
+        Parameters
+        ----------
+        local_content : str-like
+            ``str`` or ``str``-like stream (e.g. ``io.StringIO``)
         """
         self._blob_client.upload_blob(local_content, overwrite=True)
 
@@ -146,14 +151,15 @@ class PersistentJSON(MutableMapping):
 
     Parameters
     ----------
-    handler : cls
-        Handler extended from `BaseHandler`.
+    handler : object
+        Handler extended from `BaseHandler`. Default handler is `NullHandler`, which
+        does not provide any push or pull functionality.
     """
 
-    def __init__(self, handler):
+    def __init__(self, handler=None):
         self.__dict = {}
         self._jsonencoder = json.JSONEncoder().encode
-        self._handler = handler
+        self._handler = handler or NullHandler()
 
         if not isinstance(self._handler, BaseHandler):
             raise TypeError("Handler does not inherit from BaseHandler")
@@ -216,7 +222,7 @@ class ResultCollector:
     headers : dict
         Header names and data types as key/value pairs. The collector will only accept
         intermediate results defined here.
-    handler:
+    handler: object
         Handler extended from `BaseHandler`. Default handler is `NullHandler`, which
         does not provide any push or pull functionality.
     indexing_mode : str
@@ -229,10 +235,8 @@ class ResultCollector:
     def __init__(self, headers, handler=None, indexing_mode="auto"):
         self._headers = headers
         self._indexing_mode = indexing_mode.lower()
-        if handler:
-            self._handler = handler
-        else:
-            self._handler = NullHandler()
+
+        self._handler = handler or NullHandler()
 
         if not self._VALID_DATA_DTYPES.issuperset(self._headers.values()):
             raise ValueError("Only 'float' and 'str' dtypes are supported.")
