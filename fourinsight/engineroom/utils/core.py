@@ -5,6 +5,7 @@ from io import StringIO
 from pathlib import Path
 
 import pandas as pd
+from azure.core.exceptions import ResourceNotFoundError
 from azure.storage.blob import BlobClient
 
 
@@ -43,11 +44,11 @@ class NullHandler(BaseHandler):
 
 class LocalFileHandler(BaseHandler):
     """
-    Handler for push/pull of text content to/from a local file.
+    Handler for push/pull text content to/from a local file.
 
     Parameters
     ----------
-    path : str
+    path : str or path object
         File path.
     """
 
@@ -68,7 +69,7 @@ class LocalFileHandler(BaseHandler):
         """
         try:
             remote_content = open(self._path, mode="r").read()
-        except Exception as e:
+        except FileNotFoundError as e:
             remote_content = None
             if raise_on_missing:
                 raise e
@@ -119,7 +120,7 @@ class AzureBlobHandler(BaseHandler):
         """
         try:
             remote_content = self._blob_client.download_blob(encoding="utf-8").readall()
-        except Exception as e:
+        except ResourceNotFoundError as e:
             remote_content = None
             if raise_on_missing:
                 raise e
