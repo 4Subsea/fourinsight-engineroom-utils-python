@@ -3,7 +3,7 @@ Getting started
 
 Install
 *******
-``fourinsight.engineroom.utils`` can be installed via pip from `PyPI`_.
+:mod:`fourinsight.engineroom.utils` can be installed via pip from `PyPI`_.
 
 .. code-block:: shell
 

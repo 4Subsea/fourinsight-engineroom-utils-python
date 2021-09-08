@@ -28,7 +28,7 @@ class NullHandler(BaseHandler):
     Goes nowhere, does nothing. This handler is intended for objects that
     required a handler, but the push/pull functionality is not needed.
 
-    Will raise an exception if push() or pull() is called.
+    Will raise an exception if :meth:`.push()` or :meth:`pull()` is called.
     """
 
     _ERROR_MSG = "The 'NullHandler' does not provide push/pull functionality."
@@ -134,7 +134,7 @@ class AzureBlobHandler(BaseHandler):
         Parameters
         ----------
         local_content : str-like
-            ``str`` or ``str``-like stream (e.g. ``io.StringIO``)
+            ``str`` or ``str``-like stream (e.g. :class:`io.StringIO`)
         """
         self._blob_client.upload_blob(local_content, overwrite=True)
 
@@ -153,9 +153,9 @@ class PersistentJSON(MutableMapping):
     Parameters
     ----------
     handler : object
-        Handler extended from :class:`BaseHandler`. Default handler is
-        :class:`NullHandler`, which does not provide any push or pull
-        functionality.
+        Handler extended from :class:`~fourinsight.engineroom.utils.core.BaseHandler`.
+        Default handler is :class:`NullHandler`, which does not provide any
+        push or pull functionality.
     """
 
     def __init__(self, handler=None):
@@ -217,7 +217,7 @@ class ResultCollector:
 
     This class provides a simple interface to collect, store, and index
     intermediate results. The results are stored in a pandas.DataFrame internally.
-    Using a handler, the results can be 'pushed' or 'pulled' from a remote source.
+    Using a handler, the results can be *pushed or *pulled* from a remote source.
 
     Parameters
     ----------
@@ -226,9 +226,9 @@ class ResultCollector:
         ``str`` are allowed as data types. The collector will only accept
         intermediate results defined here.
     handler: object
-        Handler extended from :class:`BaseHandler`. Default handler is
-        :class:`NullHandler`, which does not provide any push or pull
-        functionality.
+        Handler extended from :class:`~fourinsight.engineroom.utils.core.BaseHandler`.
+        Default handler is :class:`NullHandler`, which does not provide any
+        push or pull functionality.
     indexing_mode : str
         Indexing mode. Should be 'auto' or 'timestamp'.
 

@@ -8,9 +8,9 @@ Set up a custom handler based on FTP
 ------------------------------------
 
 This example shows how you can set up a custom handler based on FTP. The handler
-must inherit from ``BaseHandler``, and override the two abstract methods, ``push()``
-and ``pull()``. If the file content you want to download does not exist, the ``pull()``
-method should return ``None``.
+must inherit from :class:`~fourinsight.engineroom.utils.core.BaseHandler`, and override
+the two abstract methods, :meth:`push()` and :meth:`pull()`. If the file content you
+want to download does not exist, the :meth:`pull()` method should return ``None``.
 
 .. code-block:: python
 

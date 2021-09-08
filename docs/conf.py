@@ -48,6 +48,7 @@ napoleon_numpy_docstring = True
 # Intershpinx mapping
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
+    "pandas": ("http://pandas.pydata.org/pandas-docs/stable/", None),
 }
 
 # Add any paths that contain templates here, relative to this directory.
@@ -70,3 +71,6 @@ html_theme = "pydata_sphinx_theme"
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = []
+
+# Remove module names in API documentation
+add_module_names = False
