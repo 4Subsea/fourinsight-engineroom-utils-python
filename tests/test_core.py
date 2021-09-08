@@ -6,7 +6,6 @@ import numpy as np
 import pandas as pd
 import pytest
 from azure.core.exceptions import ResourceNotFoundError
-
 from fourinsight.engineroom.utils import (
     AzureBlobHandler,
     LocalFileHandler,
@@ -58,6 +57,9 @@ class Test_NullHandler:
     def test__init__(self):
         handler = NullHandler()
         assert isinstance(handler, BaseHandler)
+
+    def test__repr__(self, azure_blob_handler_mocked):
+        assert str(NullHandler()) == "NullHandler"
 
     def test_pull(self):
         handler = NullHandler()
@@ -115,6 +117,9 @@ class Test_AzureBlobHandler:
         mock_from_connection_string.assert_called_once_with(
             "some_connection_string", "some_container_name", "some_blob_name"
         )
+
+    def test__repr__(self, azure_blob_handler_mocked):
+        assert str(azure_blob_handler_mocked) == "AzureBlobHandler some_container_name/some_blob_name"
 
     def test__init__fixture(self, azure_blob_handler_mocked):
         handler = azure_blob_handler_mocked
@@ -303,6 +308,11 @@ class Test_ResultCollector:
         headers = {"a": float, "b": str}
         results = ResultCollector(headers, handler=handler)
         assert results._handler == handler
+
+    def tests__repr__(self):
+        headers = {"a": float, "b": str}
+        results = ResultCollector(headers)
+        assert str(results) == str(results.dataframe)
 
     def test_new_row_auto(self):
         headers = {"a": float, "b": str}
