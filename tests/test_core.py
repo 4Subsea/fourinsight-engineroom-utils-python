@@ -10,10 +10,11 @@ from azure.core.exceptions import ResourceNotFoundError
 from fourinsight.engineroom.utils import (
     AzureBlobHandler,
     LocalFileHandler,
+    NullHandler,
     PersistentJSON,
     ResultCollector,
 )
-from fourinsight.engineroom.utils.core import BaseHandler, NullHandler
+from fourinsight.engineroom.utils.core import BaseHandler
 
 REMOTE_FILE_PATH = Path(__file__).parent / "testdata/a_test_file.json"
 
@@ -51,6 +52,22 @@ def azure_blob_handler_mocked(mock_from_connection_string):
     )
 
     return handler
+
+
+class Test_NullHandler:
+    def test__init__(self):
+        handler = NullHandler()
+        assert isinstance(handler, BaseHandler)
+
+    def test_pull(self):
+        handler = NullHandler()
+        with pytest.raises(NotImplementedError):
+            handler.pull()
+
+    def test_push(self):
+        handler = NullHandler()
+        with pytest.raises(NotImplementedError):
+            handler.push()
 
 
 class Test_LocalFileHandler:
