@@ -310,18 +310,20 @@ class ResultCollector:
         """
         if not set(self._headers.keys()).issuperset(results):
             raise KeyError("Keyword must be in headers.")
-        headers_subset = {key: value for key, value in self._headers.items() if key in results}
 
         current_index = self._dataframe.index[-1]
 
         try:
             row_update = pd.DataFrame(
                 data=results,
-                index=[current_index]
-                ).astype(headers_subset)
+                index=[current_index],
+                ).astype({
+                    header: dtype_ for header, dtype_ in self._headers.items()
+                    if header in results
+                    })
         except ValueError:
             raise ValueError("Unable to cast 'results' to correct dtype")
-        self._dataframe.update(row_update, errors="ignore")
+        self._dataframe.loc[current_index, list(results.keys())] = row_update.iloc[0]
 
     def pull(self, raise_on_missing=True):
         """

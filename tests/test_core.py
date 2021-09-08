@@ -284,13 +284,13 @@ class Test_PersistentJSON:
 
 class Test_ResultCollector:
     def test__init__default(self):
-        headers = {"a": float, "b": str}
+        headers = {"a": int, "b": float, "c": str}
         results = ResultCollector(headers)
 
-        assert results._headers == headers
+        assert results._headers == {"a": "Int64", "b": "float64", "c": "string"}
         assert results._indexing_mode == "auto"
         assert isinstance(results._handler, NullHandler)
-        df_expect = pd.DataFrame(columns=headers.keys()).astype(headers)
+        df_expect = pd.DataFrame(columns=headers.keys()).astype({"a": "Int64", "b": "float64", "c": "string"})
         pd.testing.assert_frame_equal(results._dataframe, df_expect)
 
     @pytest.mark.parametrize("mode", ["auto", "timestamp"])
@@ -320,50 +320,50 @@ class Test_ResultCollector:
         assert str(results) == str(results.dataframe)
 
     def test_new_row_auto(self):
-        headers = {"a": float, "b": str}
+        headers = {"a": float, "b": str, "c": int}
         results = ResultCollector(headers, indexing_mode="auto")
 
         results.new_row()
-        df_expect = pd.DataFrame(columns=("a", "b"), index=pd.Int64Index([0])).astype(
-            {"a": float, "b": object}
+        df_expect = pd.DataFrame(columns=("a", "b", "c"), index=pd.Int64Index([0])).astype(
+            {"a": "float64", "b": "string", "c": "Int64"}
         )
         pd.testing.assert_frame_equal(results._dataframe, df_expect)
 
         results.new_row()
         df_expect = pd.DataFrame(
-            columns=("a", "b"), index=pd.Int64Index([0, 1])
-        ).astype({"a": float, "b": object})
+            columns=("a", "b" , "c"), index=pd.Int64Index([0, 1])
+        ).astype({"a": "float64", "b": "string", "c": "Int64"})
         pd.testing.assert_frame_equal(results._dataframe, df_expect)
 
     def test_new_row_timestamp(self):
-        headers = {"a": float, "b": str}
+        headers = {"a": float, "b": str, "c": int}
         results = ResultCollector(headers, indexing_mode="timestamp")
 
         results.new_row("2020-01-01 00:00")
         df_expect = pd.DataFrame(
-            columns=("a", "b"), index=pd.DatetimeIndex(["2020-01-01 00:00"], tz="utc")
-        ).astype({"a": float, "b": object})
+            columns=("a", "b", "c"), index=pd.DatetimeIndex(["2020-01-01 00:00"], tz="utc")
+        ).astype({"a": "float64", "b": "string", "c": "Int64"})
         pd.testing.assert_frame_equal(results._dataframe, df_expect)
 
         results.new_row("2020-01-01 01:00")
         df_expect = pd.DataFrame(
-            columns=("a", "b"),
+            columns=("a", "b", "c"),
             index=pd.DatetimeIndex(["2020-01-01 00:00", "2020-01-01 01:00"], tz="utc"),
-        ).astype({"a": float, "b": object})
+        ).astype({"a": "float64", "b": "string", "c": "Int64"})
         pd.testing.assert_frame_equal(results._dataframe, df_expect)
 
     def test_new_row_auto_raises(self):
         headers = {"a": float, "b": str}
         results = ResultCollector(headers, indexing_mode="auto")
 
-        with pytest.raises(TypeError):
+        with pytest.raises(ValueError):
             results.new_row("2020-01-01 00:00")
 
     def test_new_row_timestamp_raises(self):
         headers = {"a": float, "b": str}
         results = ResultCollector(headers, indexing_mode="timestamp")
 
-        with pytest.raises(TypeError):
+        with pytest.raises(ValueError):
             results.new_row()
 
     def test_new_row_duplicate_raises(self):
@@ -375,40 +375,37 @@ class Test_ResultCollector:
             results.new_row("2020-01-01 00:00")
 
     def test_collect(self):
-        headers = {"a": float, "b": str, "c": float, "d": str}
+        headers = {"a": float, "b": str, "c": float, "d": int}
         results = ResultCollector(headers, indexing_mode="auto")
 
         results.new_row()
         results.collect(a=1.1, b="test")
         results.new_row()
-        results.collect(a=2.2, b="overridden-value")
-        results.collect(a=3.3, b="updated-value")
+        results.collect(a=2.2, c=1.0)
+        results.collect(a=3.3, d=1)
         results.new_row()
 
         df_out = results._dataframe
         df_expect = pd.DataFrame(
             data={
-                "a": [1.1, 3.3, np.nan],
-                "b": ["test", "updated-value", np.nan],
-                "c": [np.nan, np.nan, np.nan],
-                "d": [np.nan, np.nan, np.nan],
+                "a": [1.1, 3.3, None],
+                "b": ["test", None, None],
+                "c": [None, 1.0, None],
+                "d": [None, 1, None],
             },
             index=pd.Int64Index([0, 1, 2]),
-        ).astype({"a": float, "b": object, "c": float, "d": object})
+        ).astype({"a": "float64", "b": "string", "c": "float64", "d": "Int64"})
 
         pd.testing.assert_frame_equal(df_out, df_expect)
 
     def test_collect_raises(self):
         headers = {"a": float, "b": str}
         results = ResultCollector(headers, indexing_mode="auto")
+        results.new_row()
 
         # raise on string
         with pytest.raises(ValueError):
             results.collect(a="hei")
-
-        # raise on float
-        with pytest.raises(ValueError):
-            results.collect(b=1.0)
 
     def test_pull_auto(self):
         path = Path(__file__).parent / "testdata/results_auto.csv"
@@ -422,20 +419,20 @@ class Test_ResultCollector:
 
         df_expect = pd.DataFrame(
             data={
-                "a": [1.1, 3.3, np.nan],
-                "b": ["foo", "bar", np.nan],
-                "c": [np.nan, np.nan, np.nan],
-                "d": [np.nan, np.nan, np.nan],
+                "a": [1.1, 3.3, None],
+                "b": ["foo", "bar", None],
+                "c": [None, None, None],
+                "d": [None, None, None],
             },
             index=pd.Int64Index([0, 1, 2]),
-        ).astype({"a": float, "b": object, "c": float, "d": float})
+        ).astype({"a": "float64", "b": "string", "c": "float64", "d": "string"})
 
         pd.testing.assert_frame_equal(df_out, df_expect)
 
     def test_pull_timestamp(self):
         path = Path(__file__).parent / "testdata/results_timestamp.csv"
         handler = LocalFileHandler(path)
-        headers = {"a": float, "b": str, "c": float, "d": str}
+        headers = {"a": float, "b": str, "c": float, "d": int}
         results = ResultCollector(headers, handler=handler, indexing_mode="timestamp")
 
         results.pull()
@@ -453,13 +450,13 @@ class Test_ResultCollector:
 
         df_expect = pd.DataFrame(
             data={
-                "a": [1.1, 3.3, np.nan],
-                "b": ["foo", "bar", np.nan],
-                "c": [np.nan, np.nan, np.nan],
-                "d": [np.nan, np.nan, np.nan],
+                "a": [1.1, 3.3, None],
+                "b": ["foo", "bar", None],
+                "c": [None, None, None],
+                "d": [None, None, None],
             },
             index=index_expect,
-        ).astype({"a": float, "b": object, "c": float, "d": float})
+        ).astype({"a": "float64", "b": "string", "c": "float64", "d": "Int64"})
 
         pd.testing.assert_frame_equal(df_out, df_expect)
 
@@ -495,7 +492,7 @@ class Test_ResultCollector:
         headers = {"a": float, "b": str, "c": float, "d": str}
         results = ResultCollector(headers, handler=handler)
         results.pull(raise_on_missing=False)
-        df_expect = pd.DataFrame(columns=headers.keys()).astype(headers)
+        df_expect = pd.DataFrame(columns=headers.keys()).astype({"a": "float64", "b": "string", "c": "float64", "d": "string"})
         df_out = results._dataframe
         pd.testing.assert_frame_equal(df_out, df_expect)
 
@@ -539,23 +536,23 @@ class Test_ResultCollector:
         assert csv_out == csv_expect
 
     def test_dataframe_auto(self):
-        headers = {"a": float, "b": str, "c": float, "d": str}
+        headers = {"a": int, "b": str, "c": float, "d": str}
         results = ResultCollector(headers, indexing_mode="auto")
         results.new_row()
-        results.collect(a=1.1, b="test")
+        results.collect(a=1, b="test")
         results.new_row()
-        results.collect(a=2.2, b="value")
+        results.collect(a=2, b="value")
 
         df_out = results.dataframe
         df_expect = pd.DataFrame(
             data={
-                "a": [1.1, 2.2],
+                "a": [1, 2],
                 "b": ["test", "value"],
                 "c": [np.nan, np.nan],
                 "d": [np.nan, np.nan],
             },
             index=pd.Int64Index([0, 1]),
-        ).astype({"a": float, "b": object, "c": float, "d": object})
+        ).astype({"a": "Int64", "b": "string", "c": "float64", "d": "string"})
 
         pd.testing.assert_frame_equal(df_out, df_expect)
 
@@ -576,6 +573,27 @@ class Test_ResultCollector:
                 "d": [np.nan, np.nan],
             },
             index=pd.DatetimeIndex(["2020-01-01 00:00", "2020-01-01 01:00"], tz="utc"),
-        ).astype({"a": float, "b": object, "c": float, "d": object})
+        ).astype({"a": "float64", "b": "string", "c": "float64", "d": "string"})
+
+        pd.testing.assert_frame_equal(df_out, df_expect)
+
+    def test_cast_dtypes(self):
+        headers = {"a": int, "b": str, "c": float, "d": str}
+        results = ResultCollector(headers, indexing_mode="auto")
+        results.new_row()
+        results.collect(a=1., b="test")
+        results.new_row()
+        results.collect(c=2, d=23.4)
+
+        df_out = results.dataframe
+        df_expect = pd.DataFrame(
+            data={
+                "a": [1, None],
+                "b": ["test", None],
+                "c": [None, 2.0],
+                "d": [None, "23.4"],
+            },
+            index=pd.Int64Index([0, 1]),
+        ).astype({"a": "Int64", "b": "string", "c": "float64", "d": "string"})
 
         pd.testing.assert_frame_equal(df_out, df_expect)
