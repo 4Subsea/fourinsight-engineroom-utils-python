@@ -28,6 +28,8 @@ class NullHandler(BaseHandler):
 
     Will raise an exception if push() or pull() is called.
     """
+    def __repr__(self):
+        return "NullHandler"
 
     def pull(self, *args, **kwargs):
         raise ValueError(
@@ -52,6 +54,9 @@ class LocalFileHandler(BaseHandler):
 
     def __init__(self, path):
         self._path = Path(path)
+
+    def __repr__(self):
+        return f"LocalFileHandler {self._path.resolve()}"
 
     def pull(self, raise_on_missing=True):
         """
@@ -100,6 +105,9 @@ class AzureBlobHandler(BaseHandler):
         self._blob_client = BlobClient.from_connection_string(
             conn_str, container_name, blob_name
         )
+
+    def __repr__(self):
+        return f"AzureBlobHandler {self._container_name}/{self._blob_name}"
 
     def pull(self, raise_on_missing=True):
         """
@@ -151,7 +159,7 @@ class PersistentJSON(MutableMapping):
             raise TypeError("Handler does not inherit from BaseHandler")
 
     def __repr__(self):
-        return "PersistentJSON " + repr(self.__dict)
+        return repr(self.__dict)
 
     def __delitem__(self, key):
         del self.__dict[key]
@@ -234,6 +242,9 @@ class ResultCollector:
 
         self._dataframe = pd.DataFrame(columns=headers.keys()).astype(self._headers)
         self._index_counter = 0
+
+    def __repr__(self):
+        return repr(self._dataframe)
 
     def new_row(self, index=None):
         """
