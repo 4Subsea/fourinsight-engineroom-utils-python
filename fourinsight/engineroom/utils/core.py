@@ -1,5 +1,4 @@
 import json
-import warnings
 from abc import ABC, abstractmethod
 from collections.abc import MutableMapping
 from io import StringIO
@@ -26,7 +25,8 @@ class BaseHandler(ABC):
 
 class NullHandler(BaseHandler):
     """
-    NullHandler - goes nowhere, does nothing.
+    Goes nowhere, does nothing. This handler is intended for objects that
+    required a handler, but the push/pull functionality is not needed.
 
     Will raise an exception if push() or pull() is called.
     """
@@ -147,14 +147,15 @@ class PersistentJSON(MutableMapping):
     This class is usefull when loading configurations or keeping persistent
     state.
 
-    The class behaves exactly like a `dict` but only accepts values that are
+    The class behaves exactly like a ``dict`` but only accepts values that are
     JSON encodable.
 
     Parameters
     ----------
     handler : object
-        Handler extended from `BaseHandler`. Default handler is `NullHandler`, which
-        does not provide any push or pull functionality.
+        Handler extended from :class:`BaseHandler`. Default handler is
+        :class:`NullHandler`, which does not provide any push or pull
+        functionality.
     """
 
     def __init__(self, handler=None):
@@ -225,8 +226,9 @@ class ResultCollector:
         ``str`` are allowed as data types. The collector will only accept
         intermediate results defined here.
     handler: object
-        Handler extended from `BaseHandler`. Default handler is `NullHandler`, which
-        does not provide any push or pull functionality.
+        Handler extended from :class:`BaseHandler`. Default handler is
+        :class:`NullHandler`, which does not provide any push or pull
+        functionality.
     indexing_mode : str
         Indexing mode. Should be 'auto' or 'timestamp'.
 
@@ -268,15 +270,19 @@ class ResultCollector:
 
         Parameters
         ----------
-        index :
-            The new index value. If indexing_mode is set to 'auto', index should be None.
-            If indexing_mode is set to 'timestamp', index should be a unique datetime
-            that is passed on to pandas.to_datetime.
+        index : None or datetime-like
+            The new index value. If indexing_mode is set to 'auto', index
+            should be ``None``. If indexing_mode is set to 'timestamp', index
+            should be a unique datetime that is passed on to
+            :func:`pandas.to_datetime`.
         """
         if self._indexing_mode == "auto" and index is not None:
-            raise ValueError("'indexing_mode' is set to 'auto'. Only 'index=None' is allowed.")
+            raise ValueError("'indexing_mode' is set to 'auto'. "
+                             "Only 'index=None' is allowed.")
         elif self._indexing_mode == "timestamp" and index is None:
-            raise ValueError("'indexing_mode' is set to 'timestamp'. 'index=None' is not allowed.")
+            raise ValueError("'indexing_mode' is set to 'timestamp'. "
+                             "'index=None' is not allowed."
+                             )
         else:
             index = pd.to_datetime(index, utc=True)
 
@@ -299,8 +305,8 @@ class ResultCollector:
         ----------
         results : keyword arguments
             The results are passed as keyword arguments, where the keyword must
-            be one of the `headers`. Provided values must be of correct type (provided
-            during initialization).
+            be one of the 'headers'. Provided values must be of correct data
+            type (defined during instantiation).
         """
         if not set(self._headers.keys()).issuperset(results):
             raise KeyError("Keyword must be in headers.")
@@ -363,5 +369,5 @@ class ResultCollector:
 
     @property
     def dataframe(self):
-        """Return a copy of internal dataframe"""
+        """Return a (deep) copy of the internal dataframe"""
         return self._dataframe.copy(deep=True)
