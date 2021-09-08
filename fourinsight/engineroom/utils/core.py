@@ -24,27 +24,26 @@ class BaseHandler(ABC):
 
 class NullHandler(BaseHandler):
     """
-    NullHandler.
+    NullHandler - goes nowhere, does nothing.
 
     Will raise an exception if push() or pull() is called.
     """
+
+    _ERROR_MSG = "The 'NullHandler' does not provide push/pull functionality."
+
     def __repr__(self):
         return "NullHandler"
 
     def pull(self, *args, **kwargs):
-        raise ValueError(
-            "The 'NullHandler' does not provide any push or pull functionality."
-        )
+        raise NotImplementedError(self._ERROR_MSG)
 
     def push(self, *args, **kwargs):
-        raise ValueError(
-            "The 'NullHandler' does not provide any push or pull functionality."
-        )
+        raise NotImplementedError(self._ERROR_MSG)
 
 
 class LocalFileHandler(BaseHandler):
     """
-    Handler for push/pull text content to/from local file.
+    Handler for push/pull of text content to/from a local file.
 
     Parameters
     ----------
