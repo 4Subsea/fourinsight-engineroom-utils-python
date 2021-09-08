@@ -158,9 +158,9 @@ class Test_PersistentJSON:
             PersistentJSON(None)
 
     def test__repr__(self, persistent_json):
-        assert str(persistent_json) == "PersistentJSON {}"
+        assert str(persistent_json) == "{}"
         persistent_json.update({"a": 1.0, "b": "test"})
-        assert str(persistent_json) == "PersistentJSON {'a': 1.0, 'b': 'test'}"
+        assert str(persistent_json) == "{'a': 1.0, 'b': 'test'}"
 
     def test__delitem__(self, persistent_json):
         persistent_json.update({"a": 1.0, "b": "test"})
