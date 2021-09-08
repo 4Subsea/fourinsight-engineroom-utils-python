@@ -1,4 +1,5 @@
 import json
+import warnings
 from abc import ABC, abstractmethod
 from collections.abc import MutableMapping
 from io import StringIO
@@ -220,32 +221,43 @@ class ResultCollector:
     Parameters
     ----------
     headers : dict
-        Header names and data types as key/value pairs. The collector will only accept
+        Header names and data types as key/value pairs; ``int``, ``float``, and
+        ``str`` are allowed as data types. The collector will only accept
         intermediate results defined here.
     handler: object
         Handler extended from `BaseHandler`. Default handler is `NullHandler`, which
         does not provide any push or pull functionality.
     indexing_mode : str
         Indexing mode. Should be 'auto' or 'timestamp'.
+
+    Notes
+    -----
+    The data types are casted to Pandas equivalent data types, so that missing
+    values are handled correctly.
     """
 
-    _INDEX_DTYPE_MAP = {"auto": int, "timestamp": pd.Timestamp}
-    _VALID_DATA_DTYPES = {float, str}
+    _DTYPES_MAP = {int: "Int64", float: "float64", str: "string"}
 
     def __init__(self, headers, handler=None, indexing_mode="auto"):
-        self._headers = headers
+        if not set(self._DTYPES_MAP).issuperset(headers.values()):
+            raise ValueError("Only 'int', 'float', and 'str' dtypes are supported.")
+
+        self._headers = {
+            header: self._DTYPES_MAP[dtype_]
+            for header, dtype_ in headers.items()
+            }
         self._indexing_mode = indexing_mode.lower()
 
         self._handler = handler or NullHandler()
 
-        if not self._VALID_DATA_DTYPES.issuperset(self._headers.values()):
-            raise ValueError("Only 'float' and 'str' dtypes are supported.")
-
-        if self._indexing_mode not in ("auto", "timestamp"):
+        if self._indexing_mode == "auto":
+            self._ignore_index = True
+        elif self._indexing_mode == "timestamp":
+            self._ignore_index = False
+        else:
             raise ValueError("Indexing mode must be 'auto' or 'timestamp'.")
 
         self._dataframe = pd.DataFrame(columns=headers.keys()).astype(self._headers)
-        self._index_counter = 0
 
     def __repr__(self):
         return repr(self._dataframe)
@@ -261,28 +273,23 @@ class ResultCollector:
             If indexing_mode is set to 'timestamp', index should be a unique datetime
             that is passed on to pandas.to_datetime.
         """
-        if index:
-            index = pd.to_datetime(index, utc=True)
+        if self._indexing_mode == "auto" and index is not None:
+            raise ValueError("'indexing_mode' is set to 'auto'. Only 'index=None' is allowed.")
+        elif self._indexing_mode == "timestamp" and index is None:
+            raise ValueError("'indexing_mode' is set to 'timestamp'. 'index=None' is not allowed.")
         else:
-            index = self._index_counter
-        self._verify_index(index)
+            index = pd.to_datetime(index, utc=True)
 
-        row_new = pd.DataFrame(index=[index])
+            if index in (self._dataframe.index):
+                raise ValueError("Index already exists.")
+
+        row_new = pd.DataFrame(
+            {header: None for header in self._headers},
+            index=[index]).astype(self._headers)
         self._dataframe = self._dataframe.append(
-            row_new, verify_integrity=True, sort=False
+            row_new, verify_integrity=True, ignore_index=self._ignore_index,
+            sort=False
         )
-        self._index_counter += 1
-
-    def _verify_index(self, index):
-        expected_dtype = self._INDEX_DTYPE_MAP[self._indexing_mode]
-        if not isinstance(index, expected_dtype):
-            raise TypeError(
-                f"Index dtype '{type(index)}' is not valid when using indexing "
-                + f"mode '{self._indexing_mode}'."
-            )
-
-        if index in (self._dataframe.index):
-            raise ValueError("Index already exists.")
 
     def collect(self, **results):
         """
@@ -297,16 +304,18 @@ class ResultCollector:
         """
         if not set(self._headers.keys()).issuperset(results):
             raise KeyError("Keyword must be in headers.")
+        headers_subset = {key: value for key, value in self._headers.items() if key in results}
 
-        self._check_types(results)
         current_index = self._dataframe.index[-1]
-        row_update = pd.DataFrame(data=results, index=[current_index])
-        self._dataframe.update(row_update, errors="ignore")
 
-    def _check_types(self, results):
-        for header, value in results.items():
-            if not isinstance(value, self._headers[header]):
-                raise ValueError(f"Invalid dtype in '{header}'")
+        try:
+            row_update = pd.DataFrame(
+                data=results,
+                index=[current_index]
+                ).astype(headers_subset)
+        except ValueError:
+            raise ValueError("Unable to cast 'results' to correct dtype")
+        self._dataframe.update(row_update, errors="ignore")
 
     def pull(self, raise_on_missing=True):
         """
@@ -322,7 +331,12 @@ class ResultCollector:
         if not dataframe_csv:
             return
 
-        df = pd.read_csv(StringIO(dataframe_csv), index_col=0, parse_dates=True)
+        df = pd.read_csv(
+            StringIO(dataframe_csv),
+            index_col=0,
+            parse_dates=True,
+            dtype=self._headers
+            )
 
         if not (set(df.columns) == set(self._headers.keys())):
             raise ValueError("Header is not valid.")
