@@ -64,6 +64,11 @@ jobs:
           user: __token__
           password: ${{ secrets.PYPI_PROD_API_KEY }}
 
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ FOURINSIGHTQA_DOC_BLOB_CONNSTR }}
+
       # - name: (on-demand) Publish package to TestPyPi
       #   if: ${{ startsWith(github.ref, 'refs/heads') }}
       #   uses: pypa/gh-action-pypi-publish@release/v1
@@ -71,11 +76,6 @@ jobs:
       #     user: __token__
       #     password: ${{ secrets.PYPI_TEST_API_KEY }}
       #     repository_url: https://test.pypi.org/legacy/
-
-    - name: Azure Login
-      uses: azure/login@v1
-      with:
-        creds: ${{ FOURINSIGHTQA_DOC_BLOB_CONNSTR }}
 
       # - name: Print Hello
       #   run: echo "Hello, World"
