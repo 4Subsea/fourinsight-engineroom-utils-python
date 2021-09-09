@@ -72,7 +72,7 @@ jobs:
         env:
           AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.FOURINSIGHTQA_DOC_BLOB_CONNSTR }}
         with:
-          inlineScript: az storage blob delete-batch -s "\$web" --pattern "engineroom-utils/python/docs/latest"
+          inlineScript: az storage blob delete-batch -s "\$web" --pattern "engineroom-utils/python/docs/latest/*"
 
       # - name: Upload documentation to blob storage
       #   uses: azure/CLI@v1
