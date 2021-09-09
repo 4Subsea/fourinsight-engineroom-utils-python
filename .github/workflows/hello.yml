@@ -19,7 +19,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install pip
+          python -m pip install --upgrade pip
           python -m pip install build sphinx pydata_sphinx_theme
 
       - name: Get new version number from tag
@@ -66,6 +66,13 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.PYPI_PROD_API_KEY }}
+
+    - name: Azure CLI script file
+      uses: azure/CLI@v1
+      with:
+        inlineScript: |
+          chmod +x $GITHUB_WORKSPACE/.deploy/upload_doc_to_azure.sh
+          $GITHUB_WORKSPACE/.deploy/upload_doc_to_azure.sh
 
       # - name: Azure Login
       #   uses: azure/login@v1
