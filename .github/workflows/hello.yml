@@ -20,7 +20,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install pip
-          python -m pip install build, sphinx, pydata_sphinx_theme
+          python -m pip install build sphinx pydata_sphinx_theme
 
       - name: Get new version number from tag
         run: |
