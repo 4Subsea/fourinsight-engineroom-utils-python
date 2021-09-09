@@ -37,7 +37,7 @@ jobs:
           sed -i "s|$search_pattern|$replacement_text|" "$filename"
 
       - name: Build package
-        run: python -m build --sdist --wheel --outdir dist/
+        run: python -m build --sdist --wheel --outdir ./dist
 
       - name: Build documentation
         run: sphinx-build -b html ./docs ./build/html
