@@ -39,7 +39,7 @@ jobs:
           sed -i "s|$search_pattern|$replacement_text|" "$filename"
 
       - name: Build package
-        run: python -m build --sdist --wheel --outdir ./build
+        run: python -m build --sdist --wheel --outdir ./dist
 
       - name: Build documentation
         run: sphinx-build -b html ./docs ./build/html
@@ -50,7 +50,6 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.PYPI_TEST_API_KEY }}
-          packages_dir: ./build
           repository_url: https://test.pypi.org/legacy/
 
       - name: Publish package to PyPi
@@ -59,7 +58,6 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.PYPI_PROD_API_KEY }}
-          packages_dir: ./build
 
       - name: Delete 'latest' folder
         uses: azure/CLI@v1
@@ -83,7 +81,6 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.PYPI_TEST_API_KEY }}
-          packages_dir: ./build
           repository_url: https://test.pypi.org/legacy/
 
       # - name: Azure CLI script file
