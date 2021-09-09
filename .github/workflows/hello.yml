@@ -24,7 +24,7 @@ jobs:
 
       - name: Get new version number from tag
         run: |
-          ref="refs/tags/v1.2.3-test"
+          ref="refs/tags/v1.2.4-test"
           ref_prefix="refs/tags/v"
           ref_suffix="-test"
           version="${ref//$ref_prefix/''}"
@@ -74,14 +74,14 @@ jobs:
         with:
           inlineScript: az storage blob delete-batch -s "\$web" --pattern "engineroom-utils/python/docs/latest/*"
 
-      # - name: Upload documentation to blob storage
-      #   uses: azure/CLI@v1
-      #   env:
-      #     AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.FOURINSIGHTQA_DOC_BLOB_CONNSTR }}
-      #   with:
-      #     inlineScript: |
-      #       az storage blob upload-batch -d "\$web" -s ./build/html --destination-path "engineroom-utils/python/docs/latest"
-      #       az storage blob upload-batch -d "\$web" -s ./build/html --destination-path "engineroom-utils/python/docs/v$VERSION_NUMBER"
+      - name: Upload documentation to blob storage
+        uses: azure/CLI@v1
+        env:
+          AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.FOURINSIGHTQA_DOC_BLOB_CONNSTR }}
+        with:
+          inlineScript: |
+            az storage blob upload-batch -d "\$web" -s ./build/html --destination-path "engineroom-utils/python/docs/latest"
+            az storage blob upload-batch -d "\$web" -s ./build/html --destination-path "engineroom-utils/python/docs/v$VERSION_NUMBER"
 
 
       # - name: Azure CLI script file
