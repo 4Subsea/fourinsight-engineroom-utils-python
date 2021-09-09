@@ -67,7 +67,7 @@ jobs:
       - name: Azure Login
         uses: azure/login@v1
         with:
-          creds: ${{ FOURINSIGHTQA_DOC_BLOB_CONNSTR }}
+          creds: ${{ secrets.FOURINSIGHTQA_DOC_BLOB_CONNSTR }}
 
       # - name: (on-demand) Publish package to TestPyPi
       #   if: ${{ startsWith(github.ref, 'refs/heads') }}
