@@ -50,7 +50,7 @@ jobs:
         run: python -m build --sdist --wheel --outdir dist/
 
       - name: Build documentation
-        run: python -m sphinx-build -b html ./docs ./build/html
+        run: sphinx-build -b html ./docs ./build/html
 
       - name: Publish package to TestPyPi
         if: ${{ startswith(github.ref, 'refs/tags/v') && endsWith(github.ref, '-test') }}
