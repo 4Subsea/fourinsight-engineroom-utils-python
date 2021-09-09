@@ -24,7 +24,7 @@ jobs:
 
       - name: Get new version number from tag
         run: |
-          ref="refs/tags/v1.2.4-test"
+          ref="refs/tags/2.2.2-test"
           ref_prefix="refs/tags/v"
           ref_suffix="-test"
           version="${ref//$ref_prefix/''}"
@@ -38,16 +38,8 @@ jobs:
           replacement_text="__version__ = \"$VERSION_NUMBER\""
           sed -i "s|$search_pattern|$replacement_text|" "$filename"
 
-      # - name: Read __init__
-      #   run: |
-      #     input="fourinsight/engineroom/utils/__init__.py"
-      #     while IFS= read -r line
-      #     do
-      #       echo "$line"
-      #     done < "$input"
-
       - name: Build package
-        run: python -m build --sdist --wheel --outdir dist/
+        run: python -m build --sdist --wheel --outdir ./build
 
       - name: Build documentation
         run: sphinx-build -b html ./docs ./build/html
@@ -58,6 +50,7 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.PYPI_TEST_API_KEY }}
+          folder: ./build
           repository_url: https://test.pypi.org/legacy/
 
       - name: Publish package to PyPi
@@ -66,6 +59,7 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.PYPI_PROD_API_KEY }}
+          folder: ./build
 
       - name: Delete 'latest' folder
         uses: azure/CLI@v1
@@ -83,6 +77,13 @@ jobs:
             az storage blob upload-batch -d "\$web" -s ./build/html --destination-path "engineroom-utils/python/docs/latest"
             az storage blob upload-batch -d "\$web" -s ./build/html --destination-path "engineroom-utils/python/docs/v$VERSION_NUMBER"
 
+      - name: (on-demand) Publish package to TestPyPi
+        if: ${{ startsWith(github.ref, 'refs/heads') }}
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_TEST_API_KEY }}
+          repository_url: https://test.pypi.org/legacy/
 
       # - name: Azure CLI script file
       #   uses: azure/CLI@v1
@@ -96,13 +97,13 @@ jobs:
       #   with:
       #     creds: ${{ secrets.FOURINSIGHTQA_DOC_BLOB_CONNSTR }}
 
-      # - name: (on-demand) Publish package to TestPyPi
-      #   if: ${{ startsWith(github.ref, 'refs/heads') }}
-      #   uses: pypa/gh-action-pypi-publish@release/v1
-      #   with:
-      #     user: __token__
-      #     password: ${{ secrets.PYPI_TEST_API_KEY }}
-      #     repository_url: https://test.pypi.org/legacy/
+      # - name: Read __init__
+      #   run: |
+      #     input="fourinsight/engineroom/utils/__init__.py"
+      #     while IFS= read -r line
+      #     do
+      #       echo "$line"
+      #     done < "$input"
 
       # - name: Print Hello
       #   run: echo "Hello, World"
