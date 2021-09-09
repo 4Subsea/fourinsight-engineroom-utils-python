@@ -72,7 +72,7 @@ jobs:
         if: ${{ startswith(github.ref, 'refs/tags/v') && !endsWith(github.ref, '-test') }}
         uses: azure/CLI@v1
         env:
-          AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.FOURINSIGHTQA_DOC_BLOB_CONNSTR }}
+          AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.FOURINSIGHTPROD_DOC_BLOB_CONNSTR }}
         with:
           inlineScript: |
             az storage blob delete-batch -s "\$web" --pattern "engineroom-utils/python/docs/latest/*"
