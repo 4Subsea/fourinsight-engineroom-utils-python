@@ -24,7 +24,7 @@ jobs:
 
       - name: Get new version number from tag
         run: |
-          ref="refs/tags/2.2.2-test"
+          ref="refs/tags/v2.2.2-test"
           ref_prefix="refs/tags/v"
           ref_suffix="-test"
           version="${ref//$ref_prefix/''}"
