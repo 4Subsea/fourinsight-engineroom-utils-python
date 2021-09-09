@@ -71,8 +71,7 @@ jobs:
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            chmod +x $GITHUB_WORKSPACE/.deploy/upload_doc_to_azure.sh
-            $GITHUB_WORKSPACE/.deploy/upload_doc_to_azure.sh
+            .deploy/upload_doc_to_azure.sh
 
       # - name: Azure Login
       #   uses: azure/login@v1
