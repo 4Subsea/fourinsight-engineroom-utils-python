@@ -64,13 +64,13 @@ jobs:
           user: __token__
           password: ${{ secrets.PYPI_PROD_API_KEY }}
 
-      - name: (on-demand) Publish package to TestPyPi
-        if: ${{ startsWith(github.ref, 'refs/heads') }}
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          user: __token__
-          password: ${{ secrets.PYPI_TEST_API_KEY }}
-          repository_url: https://test.pypi.org/legacy/
+      # - name: (on-demand) Publish package to TestPyPi
+      #   if: ${{ startsWith(github.ref, 'refs/heads') }}
+      #   uses: pypa/gh-action-pypi-publish@release/v1
+      #   with:
+      #     user: __token__
+      #     password: ${{ secrets.PYPI_TEST_API_KEY }}
+      #     repository_url: https://test.pypi.org/legacy/
 
     - name: Azure Login
       uses: azure/login@v1
