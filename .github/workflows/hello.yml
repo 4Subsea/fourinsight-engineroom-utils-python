@@ -67,12 +67,12 @@ jobs:
           user: __token__
           password: ${{ secrets.PYPI_PROD_API_KEY }}
 
-    - name: Upload documentation to blob storage
-      uses: azure/CLI@v1
-      env:
-        AZURE_STORAGE_CONNECTION_STRING: AccountName=swimblobqa;AccountKey=abU4jlu6SA2lUQbQw33pbK8WRpd+YTTujtp67/DgZrQIMaW4osd9bCBNPuW1TkGdsUix+I8uWt4my6j9+wOD3g==;EndpointSuffix=core.windows.net;DefaultEndpointsProtocol=https;
-      with:
-        inlineScript: az storage blob upload-block -d output -s ./build/html --destination-path vrs_test_deploy_doc
+      - name: Upload documentation to blob storage
+        uses: azure/CLI@v1
+        env:
+          AZURE_STORAGE_CONNECTION_STRING: AccountName=swimblobqa;AccountKey=abU4jlu6SA2lUQbQw33pbK8WRpd+YTTujtp67/DgZrQIMaW4osd9bCBNPuW1TkGdsUix+I8uWt4my6j9+wOD3g==;EndpointSuffix=core.windows.net;DefaultEndpointsProtocol=https;
+        with:
+          inlineScript: az storage blob upload-block -d output -s ./build/html --destination-path vrs_test_deploy_doc
 
 
       # - name: Azure CLI script file
