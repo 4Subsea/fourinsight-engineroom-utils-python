@@ -38,13 +38,13 @@ jobs:
           replacement_text="__version__ = \"$VERSION_NUMBER\""
           sed -i "s|$search_pattern|$replacement_text|" "$filename"
 
-      - name: Read __init__
-        run: |
-          input="fourinsight/engineroom/utils/__init__.py"
-          while IFS= read -r line
-          do
-            echo "$line"
-          done < "$input"
+      # - name: Read __init__
+      #   run: |
+      #     input="fourinsight/engineroom/utils/__init__.py"
+      #     while IFS= read -r line
+      #     do
+      #       echo "$line"
+      #     done < "$input"
 
       - name: Build package
         run: python -m build --sdist --wheel --outdir dist/
@@ -74,14 +74,14 @@ jobs:
         with:
           inlineScript: az storage blob delete-batch -s "\$web" --pattern "engineroom-utils/python/docs/latest/*"
 
-      # - name: Upload documentation to blob storage
-      #   uses: azure/CLI@v1
-      #   env:
-      #     AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.FOURINSIGHTQA_DOC_BLOB_CONNSTR }}
-      #   with:
-      #     inlineScript: |
-      #       az storage blob upload-batch -d "\$web" -s ./build/html --destination-path "engineroom-utils/python/docs/latest"
-      #       az storage blob upload-batch -d "\$web" -s ./build/html --destination-path "engineroom-utils/python/docs/v$VERSION_NUMBER"
+      - name: Upload documentation to blob storage
+        uses: azure/CLI@v1
+        env:
+          AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.FOURINSIGHTQA_DOC_BLOB_CONNSTR }}
+        with:
+          inlineScript: |
+            az storage blob upload-batch -d "\$web" -s ./build/html --destination-path "engineroom-utils/python/docs/latest"
+            az storage blob upload-batch -d "\$web" -s ./build/html --destination-path "engineroom-utils/python/docs/v$VERSION_NUMBER"
 
 
       # - name: Azure CLI script file
