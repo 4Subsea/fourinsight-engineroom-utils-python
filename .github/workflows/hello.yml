@@ -67,23 +67,21 @@ jobs:
           user: __token__
           password: ${{ secrets.PYPI_PROD_API_KEY }}
 
-      - name: Delete old documentation
+      - name: Delete 'latest' folder
         uses: azure/CLI@v1
         env:
-          AZURE_STORAGE_CONNECTION_STRING: AccountName=swimblobqa;AccountKey=abU4jlu6SA2lUQbQw33pbK8WRpd+YTTujtp67/DgZrQIMaW4osd9bCBNPuW1TkGdsUix+I8uWt4my6j9+wOD3g==;EndpointSuffix=core.windows.net;DefaultEndpointsProtocol=https;
-          container: output
-          folder: vrs_test_deploy_doc
+          AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.FOURINSIGHTQA_DOC_BLOB_CONNSTR }}
         with:
-          inlineScript: az storage blob delete-batch -s $container --pattern "$folder/*"
+          inlineScript: az storage blob delete-batch -s "\$web" --pattern "engineroom-utils/python/docs/latest/*"
 
       - name: Upload documentation to blob storage
         uses: azure/CLI@v1
         env:
-          AZURE_STORAGE_CONNECTION_STRING: AccountName=swimblobqa;AccountKey=abU4jlu6SA2lUQbQw33pbK8WRpd+YTTujtp67/DgZrQIMaW4osd9bCBNPuW1TkGdsUix+I8uWt4my6j9+wOD3g==;EndpointSuffix=core.windows.net;DefaultEndpointsProtocol=https;
-          container: output
-          folder: vrs_test_deploy_doc
+          AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.FOURINSIGHTQA_DOC_BLOB_CONNSTR }}
         with:
-          inlineScript: az storage blob upload-batch -d $container -s ./build/html --destination-path $folder
+          inlineScript: |
+            az storage blob upload-batch -d "\$web" -s ./build/html --destination-path "engineroom-utils/python/docs/latest"
+            az storage blob upload-batch -d "\$web" -s ./build/html --destination-path "engineroom-utils/python/docs/v$VERSION_NUMBER"
 
 
       # - name: Azure CLI script file
