@@ -27,8 +27,8 @@ jobs:
           ref="refs/tags/v2.2.2-test"
           prefix="refs/tags/v"
           suffix="-test"
-          version=${ref#"$prefix"}
-          version=${version%"$suffix"}
+          version=${ref#$prefix}
+          version=${version%$suffix}
           echo "VERSION_NUMBER=$version" >> $GITHUB_ENV
 
       - name: Replace package version number
