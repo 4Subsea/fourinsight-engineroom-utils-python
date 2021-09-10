@@ -36,7 +36,7 @@ jobs:
           filename="./fourinsight/engineroom/utils/__init__.py"
           search_pattern="__version__[\s]*=[\s]*\"0.0.1\""
           replacement_text="__version__ = \"$VERSION_NUMBER\""
-          sed -i "s|$search_pattern|$replacement_text|" "$filename"
+          sed -i "s/$search_pattern/$replacement_text" "$filename"
 
       - name: Read __init__
         run: |
