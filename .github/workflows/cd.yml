@@ -23,10 +23,10 @@ jobs:
       - name: Get new version number from tag
         run: |
           ref="${{github.ref}}"
-          ref_prefix="refs/tags/v"
-          ref_suffix="-test"
-          version="${ref//$ref_prefix/''}"
-          version="${version//$ref_suffix/''}"
+          strip_head="refs/tags/v"
+          strip_tail="-test"
+          version="${ref//$strip_head/''}"
+          version="${version//$strip_tail/''}"
           echo "VERSION_NUMBER=$version" >> $GITHUB_ENV
 
       - name: Replace package version number
