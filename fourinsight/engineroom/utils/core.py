@@ -3,13 +3,14 @@ from abc import ABC, abstractmethod
 from collections.abc import MutableMapping
 from io import StringIO
 from pathlib import Path
+from io import TextIOWrapper, BytesIO
 
 import pandas as pd
 from azure.core.exceptions import ResourceNotFoundError
 from azure.storage.blob import BlobClient
 
 
-class BaseHandler(ABC):
+class BaseHandler(TextIOWrapper):
     """
     Abstract class for push/pull file content from a remote/persistent source.
     """
@@ -19,8 +20,17 @@ class BaseHandler(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def push(self, local_content):
+    def push(self):
         raise NotImplementedError()
+
+    def getvalue(self):
+        self.flush()
+        return self.buffer.getvalue().decode(self.encoding)
+
+    def setvalue(self, s):
+        self.seek(0)
+        self.truncate()
+        self.write(s)
 
 
 class NullHandler(BaseHandler):
@@ -99,13 +109,14 @@ class AzureBlobHandler(BaseHandler):
         The name of the blob with which to interact.
     """
 
-    def __init__(self, conn_str, container_name, blob_name):
+    def __init__(self, conn_str, container_name, blob_name, encoding="utf-8", newline="\n"):
         self._conn_str = conn_str
         self._container_name = container_name
         self._blob_name = blob_name
         self._blob_client = BlobClient.from_connection_string(
-            conn_str, container_name, blob_name
+            self._conn_str, self._container_name, self._blob_name
         )
+        super().__init__(BytesIO(), encoding=encoding, newline=newline)
 
     def __repr__(self):
         return f"AzureBlobHandler {self._container_name}/{self._blob_name}"
@@ -119,15 +130,16 @@ class AzureBlobHandler(BaseHandler):
         raise_on_missing : bool
             Raise exception if content can not be pulled from blob.
         """
+        self.seek(0)
         try:
-            remote_content = self._blob_client.download_blob(encoding="utf-8").readall()
+            characters_written = self._blob_client.download_blob().readinto(self.buffer)
         except ResourceNotFoundError as e:
-            remote_content = None
             if raise_on_missing:
                 raise e
-        return remote_content
+        else:
+            self.truncate(characters_written)
 
-    def push(self, local_content):
+    def push(self):
         """
         Push content to blob.
 
@@ -136,7 +148,7 @@ class AzureBlobHandler(BaseHandler):
         local_content : str-like
             ``str`` or ``str``-like stream (e.g. :class:`io.StringIO`)
         """
-        self._blob_client.upload_blob(local_content, overwrite=True)
+        self._blob_client.upload_blob(self.getvalue(), overwrite=True)
 
 
 class PersistentJSON(MutableMapping):
@@ -198,8 +210,9 @@ class PersistentJSON(MutableMapping):
         raise_on_missing : bool
             Raise exception if content can not be pulled from source.
         """
-        remote_content = self._handler.pull(raise_on_missing=raise_on_missing)
-        if remote_content is None:
+        self._handler.pull(raise_on_missing=raise_on_missing)
+        remote_content = self._handler.getvalue()
+        if not remote_content:
             remote_content = "{}"
         self.__dict.update(json.loads(remote_content))
 
@@ -208,7 +221,8 @@ class PersistentJSON(MutableMapping):
         Push content to source.
         """
         local_content = json.dumps(self.__dict, indent=4)
-        self._handler.push(local_content)
+        self._handler.setvalue(local_content)
+        self._handler.push()
 
 
 class ResultCollector:
