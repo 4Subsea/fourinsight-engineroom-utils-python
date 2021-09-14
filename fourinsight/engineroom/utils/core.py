@@ -27,10 +27,11 @@ class BaseHandler(TextIOWrapper):
         self.flush()
         return self.buffer.getvalue().decode(self.encoding)
 
-    def setvalue(self, s):
-        self.seek(0)
-        self.truncate()
-        self.write(s)
+    # def setvalue(self, s):
+    #     self.flush()
+    #     self.seek(0)
+    #     self.truncate()
+    #     self.write(s)
 
 
 class NullHandler(BaseHandler):
@@ -220,8 +221,9 @@ class PersistentJSON(MutableMapping):
         """
         Push content to source.
         """
-        local_content = json.dumps(self.__dict, indent=4)
-        self._handler.setvalue(local_content)
+        self._handler.seek(0)
+        self._handler.truncate()
+        json.dump(self.__dict, self._handler, indent=4)
         self._handler.push()
 
 
@@ -348,22 +350,23 @@ class ResultCollector:
             Raise exception if results can not be pulled from source.
         """
 
-        dataframe_csv = self._handler.pull(raise_on_missing=raise_on_missing)
-        if not dataframe_csv:
+        self._handler.pull(raise_on_missing=raise_on_missing)
+        if not self._handler.getvalue():
             return
 
+        self._handler.seek(0)
         df = pd.read_csv(
-            StringIO(dataframe_csv), index_col=0, parse_dates=True, dtype=self._headers
+            self._handler, index_col=0, parse_dates=True, dtype=self._headers
         )
 
         if not (set(df.columns) == set(self._headers.keys())):
             raise ValueError("Header is not valid.")
 
-        if (self._indexing_mode == "auto") and not (
+        if not df.index.empty and (self._indexing_mode == "auto") and not (
             isinstance(df.index, pd.Int64Index)
         ):
             raise ValueError("Index must be 'Int64Index'.")
-        elif (self._indexing_mode == "timestamp") and not (
+        elif not df.index.empty and (self._indexing_mode == "timestamp") and not (
             isinstance(df.index, pd.DatetimeIndex)
         ):
             raise ValueError("Index must be 'DatetimeIndex'.")
@@ -374,10 +377,12 @@ class ResultCollector:
         """
         Push results to source.
         """
-        local_content = self._dataframe.to_csv(
-            sep=",", index=True, line_terminator="\n"
+        self._handler.seek(0)
+        self._handler.truncate()
+        self._dataframe.to_csv(
+            self._handler, sep=",", index=True, line_terminator="\n"
         )
-        self._handler.push(local_content)
+        self._handler.push()
 
     @property
     def dataframe(self):
