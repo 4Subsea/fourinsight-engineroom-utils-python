@@ -15,23 +15,47 @@ class BaseHandler(TextIOWrapper):
     Abstract class for push/pull file content from a remote/persistent source.
     """
 
-    @abstractmethod
     def pull(self, raise_on_missing=True):
+        """
+        Pull text content from source. Returns None if file is not found.
+
+        Parameters
+        ----------
+        raise_on_missing : bool
+            Raise exception if content can not be pulled from source.
+        """
+        self.seek(0)
+        try:
+            characters_written = self._pull()
+        except self._SOURCE_NOT_FOUND_ERROR as e:
+            characters_written = 0
+            if raise_on_missing:
+                raise e
+        finally:
+            self.truncate(characters_written)
+
+    def push(self):
+        """
+        Push text content to source.
+        """
+        self._push()
+
+    @abstractmethod
+    def _pull(self):
         raise NotImplementedError()
 
     @abstractmethod
-    def push(self):
+    def _push(self):
+        raise NotImplementedError()
+
+    @property
+    @abstractmethod
+    def _SOURCE_NOT_FOUNT_ERROR(self):
         raise NotImplementedError()
 
     def getvalue(self):
         self.flush()
         return self.buffer.getvalue().decode(self.encoding)
-
-    # def setvalue(self, s):
-    #     self.flush()
-    #     self.seek(0)
-    #     self.truncate()
-    #     self.write(s)
 
 
 class NullHandler(BaseHandler):
@@ -47,11 +71,14 @@ class NullHandler(BaseHandler):
     def __repr__(self):
         return "NullHandler"
 
-    def pull(self, *args, **kwargs):
+    def _pull(self):
         raise NotImplementedError(self._ERROR_MSG)
 
-    def push(self, *args, **kwargs):
+    def _push(self):
         raise NotImplementedError(self._ERROR_MSG)
+
+    def _SOURCE_NOT_FOUNT_ERROR(self):
+        return NotImplementedError
 
 
 class LocalFileHandler(BaseHandler):
@@ -64,36 +91,24 @@ class LocalFileHandler(BaseHandler):
         File path.
     """
 
-    def __init__(self, path):
+    def __init__(self, path, encoding="utf-8", newline="\n"):
         self._path = Path(path)
+        super().__init__(BytesIO(), encoding=encoding, newline=newline)
 
     def __repr__(self):
         return f"LocalFileHandler {self._path.resolve()}"
 
-    def pull(self, raise_on_missing=True):
-        """
-        Pull text content from file. Returns None if file is not found.
+    def _pull(self):
+        return self.write(open(self._path, mode="r").read())
 
-        Parameters
-        ----------
-        raise_on_missing : bool
-            Raise exception if content can not be pulled from file.
-        """
-        try:
-            remote_content = open(self._path, mode="r").read()
-        except FileNotFoundError as e:
-            remote_content = None
-            if raise_on_missing:
-                raise e
-        return remote_content
-
-    def push(self, local_content):
-        """
-        Push content to file.
-        """
+    def _push(self):
         self._path.parent.mkdir(parents=True, exist_ok=True)
         with open(self._path, mode="w") as f:
-            f.write(local_content)
+            f.write(self.getvalue())
+
+    @property
+    def _SOURCE_NOT_FOUND_ERROR(self):
+        return FileNotFoundError
 
 
 class AzureBlobHandler(BaseHandler):
@@ -122,34 +137,44 @@ class AzureBlobHandler(BaseHandler):
     def __repr__(self):
         return f"AzureBlobHandler {self._container_name}/{self._blob_name}"
 
-    def pull(self, raise_on_missing=True):
-        """
-        Pull text content from blob. Returns None if resource is not found.
+    def _pull(self):
+        return self._blob_client.download_blob().readinto(self.buffer)
 
-        Parameters
-        ----------
-        raise_on_missing : bool
-            Raise exception if content can not be pulled from blob.
-        """
-        self.seek(0)
-        try:
-            characters_written = self._blob_client.download_blob().readinto(self.buffer)
-        except ResourceNotFoundError as e:
-            if raise_on_missing:
-                raise e
-        else:
-            self.truncate(characters_written)
-
-    def push(self):
-        """
-        Push content to blob.
-
-        Parameters
-        ----------
-        local_content : str-like
-            ``str`` or ``str``-like stream (e.g. :class:`io.StringIO`)
-        """
+    def _push(self):
         self._blob_client.upload_blob(self.getvalue(), overwrite=True)
+
+    @property
+    def _SOURCE_NOT_FOUNT_ERROR(self):
+        return ResourceNotFoundError
+
+    # def pull(self, raise_on_missing=True):
+    #     """
+    #     Pull text content from blob. Returns None if resource is not found.
+
+    #     Parameters
+    #     ----------
+    #     raise_on_missing : bool
+    #         Raise exception if content can not be pulled from blob.
+    #     """
+    #     self.seek(0)
+    #     try:
+    #         characters_written = self._blob_client.download_blob().readinto(self.buffer)
+    #     except ResourceNotFoundError as e:
+    #         if raise_on_missing:
+    #             raise e
+    #     else:
+    #         self.truncate(characters_written)
+
+    # def push(self):
+    #     """
+    #     Push content to blob.
+
+    #     Parameters
+    #     ----------
+    #     local_content : str-like
+    #         ``str`` or ``str``-like stream (e.g. :class:`io.StringIO`)
+    #     """
+    #     self._blob_client.upload_blob(self.getvalue(), overwrite=True)
 
 
 class PersistentJSON(MutableMapping):
