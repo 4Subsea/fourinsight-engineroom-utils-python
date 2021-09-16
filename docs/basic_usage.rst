@@ -86,14 +86,14 @@ As well as deleted, printed, etc...
 
     # etc...
 
-To store the state for later, you simply just update the source with a :meth:`push()`.
+To store the state for later, you simply just update the source with a ``push()``.
 
 .. code-block:: python
 
     # Update remote source
     state.push()
 
-Then, the state is available next time you run your script by doing a :meth:`pull()`.
+Then, the state is available next time you run your script by doing a ``pull()``.
 
 .. code-block:: python
 
