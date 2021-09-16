@@ -1,7 +1,6 @@
 import json
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from collections.abc import MutableMapping
-from io import StringIO
 from pathlib import Path
 from io import TextIOWrapper, BytesIO
 
@@ -12,8 +11,10 @@ from azure.storage.blob import BlobClient
 
 class BaseHandler(TextIOWrapper):
     """
-    Abstract class for push/pull file content from a remote/persistent source.
+    Abstract class for push/pull text content from a remote/persistent source.
     """
+
+    _SOURCE_NOT_FOUND_ERROR = Exception
 
     def pull(self, raise_on_missing=True):
         """
@@ -24,6 +25,7 @@ class BaseHandler(TextIOWrapper):
         raise_on_missing : bool
             Raise exception if content can not be pulled from source.
         """
+        current_pos = self.tell()
         self.seek(0)
         try:
             characters_written = self._pull()
@@ -32,7 +34,10 @@ class BaseHandler(TextIOWrapper):
             if raise_on_missing:
                 raise e
         finally:
-            self.truncate(characters_written)
+            if raise_on_missing:
+                self.seek(current_pos)
+            else:
+                self.truncate(characters_written)
 
     def push(self):
         """
@@ -46,11 +51,6 @@ class BaseHandler(TextIOWrapper):
 
     @abstractmethod
     def _push(self):
-        raise NotImplementedError()
-
-    @property
-    @abstractmethod
-    def _SOURCE_NOT_FOUNT_ERROR(self):
         raise NotImplementedError()
 
     def getvalue(self):
@@ -67,6 +67,7 @@ class NullHandler(BaseHandler):
     """
 
     _ERROR_MSG = "The 'NullHandler' does not provide push/pull functionality."
+    _SOURCE_NOT_FOUND_ERROR = NotImplementedError
 
     def __repr__(self):
         return "NullHandler"
@@ -76,9 +77,6 @@ class NullHandler(BaseHandler):
 
     def _push(self):
         raise NotImplementedError(self._ERROR_MSG)
-
-    def _SOURCE_NOT_FOUNT_ERROR(self):
-        return NotImplementedError
 
 
 class LocalFileHandler(BaseHandler):
@@ -90,6 +88,7 @@ class LocalFileHandler(BaseHandler):
     path : str or path object
         File path.
     """
+    _SOURCE_NOT_FOUND_ERROR = FileNotFoundError
 
     def __init__(self, path, encoding="utf-8", newline="\n"):
         self._path = Path(path)
@@ -106,10 +105,6 @@ class LocalFileHandler(BaseHandler):
         with open(self._path, mode="w") as f:
             f.write(self.getvalue())
 
-    @property
-    def _SOURCE_NOT_FOUND_ERROR(self):
-        return FileNotFoundError
-
 
 class AzureBlobHandler(BaseHandler):
     """
@@ -124,6 +119,7 @@ class AzureBlobHandler(BaseHandler):
     blob_name : str
         The name of the blob with which to interact.
     """
+    _SOURCE_NOT_FOUND_ERROR = ResourceNotFoundError
 
     def __init__(self, conn_str, container_name, blob_name, encoding="utf-8", newline="\n"):
         self._conn_str = conn_str
@@ -142,39 +138,6 @@ class AzureBlobHandler(BaseHandler):
 
     def _push(self):
         self._blob_client.upload_blob(self.getvalue(), overwrite=True)
-
-    @property
-    def _SOURCE_NOT_FOUNT_ERROR(self):
-        return ResourceNotFoundError
-
-    # def pull(self, raise_on_missing=True):
-    #     """
-    #     Pull text content from blob. Returns None if resource is not found.
-
-    #     Parameters
-    #     ----------
-    #     raise_on_missing : bool
-    #         Raise exception if content can not be pulled from blob.
-    #     """
-    #     self.seek(0)
-    #     try:
-    #         characters_written = self._blob_client.download_blob().readinto(self.buffer)
-    #     except ResourceNotFoundError as e:
-    #         if raise_on_missing:
-    #             raise e
-    #     else:
-    #         self.truncate(characters_written)
-
-    # def push(self):
-    #     """
-    #     Push content to blob.
-
-    #     Parameters
-    #     ----------
-    #     local_content : str-like
-    #         ``str`` or ``str``-like stream (e.g. :class:`io.StringIO`)
-    #     """
-    #     self._blob_client.upload_blob(self.getvalue(), overwrite=True)
 
 
 class PersistentJSON(MutableMapping):
