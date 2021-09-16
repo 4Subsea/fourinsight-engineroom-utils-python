@@ -14,11 +14,9 @@ Handlers
 Some of the core functionality provided by :mod:`fourinsight.engineroom.utils` relies
 on handlers that facilitate downloading and uploading of text content from a source.
 The source can be a local file, an Azure Storage Blob, or other any other suitable
-storage place. Downloading and uploading of the text content is provided by a push/pull
-strategy; content is retrieved from the source by a ``pull()`` request, and uploaded
-to the source by a ``push()``. Two handlers, the :class:`LocalFileHandler` and the
-:class:`AzureBlobHandler` are available out-of-the-box. Custom handlers are easily set
-up by inheriting from :class:`~fourinsight.engineroom.utils.core.BaseHandler`.
+storage place. Two handlers, the :class:`LocalFileHandler` and the :class:`AzureBlobHandler`
+are available out-of-the-box. Custom handlers are easily set up by inheriting from
+:class:`~fourinsight.engineroom.utils.core.BaseHandler`.
 
 .. note::
     In the Cookbook section there is an :ref:`example<example_custom_handler_ftp>`
@@ -41,6 +39,25 @@ The :class:`AzureBlobHandler` is used to store text content in *Azure Blob Stora
 
 
     handler = AzureBlobHandler(<connection-string>, <container-name>, <blob-name>)
+
+The handlers behave like *streams*, and include all the normal stream operations:
+
+.. code-block:: python
+
+    # Change stream position
+    handler.seek(0)
+
+    # Read stream content
+    handler.read()
+
+    # Write text content to stream
+    handler.write("Hello, World!")
+
+    # etc...
+
+In addition, downloading and uploading of the text content is provided by a push/pull
+strategy; content is retrieved from the source by a ``pull()`` request, and uploaded
+to the source by a ``push()``.
 
 
 State
