@@ -12,9 +12,17 @@ from azure.storage.blob import BlobClient
 class BaseHandler(TextIOWrapper):
     """
     Abstract class for push/pull text content from a remote/persistent source.
+
+    Parameters
+    ----------
+    **kwargs
+        Passed on to the `TextIOWrapper` constructor.
     """
 
     _SOURCE_NOT_FOUND_ERROR = Exception
+
+    def __init__(self, **kwargs):
+        super().__init__(BytesIO(), **kwargs)
 
     def pull(self, raise_on_missing=True):
         """
@@ -87,12 +95,18 @@ class LocalFileHandler(BaseHandler):
     ----------
     path : str or path object
         File path.
+    encoding : str
+        The name of the encoding that the stream will be decoded or encoded with.
+        Defaults to 'utf-8'.
+    newline : str
+        Controls how line endings are handled. It can be None, '', '\n', '\r', and
+        '\r\n'.
     """
     _SOURCE_NOT_FOUND_ERROR = FileNotFoundError
 
     def __init__(self, path, encoding="utf-8", newline="\n"):
         self._path = Path(path)
-        super().__init__(BytesIO(), encoding=encoding, newline=newline)
+        super().__init__(encoding=encoding, newline=newline)
 
     def __repr__(self):
         return f"LocalFileHandler {self._path.resolve()}"
@@ -128,7 +142,7 @@ class AzureBlobHandler(BaseHandler):
         self._blob_client = BlobClient.from_connection_string(
             self._conn_str, self._container_name, self._blob_name
         )
-        super().__init__(BytesIO(), encoding=encoding, newline=newline)
+        super().__init__(encoding=encoding, newline=newline)
 
     def __repr__(self):
         return f"AzureBlobHandler {self._container_name}/{self._blob_name}"
