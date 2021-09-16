@@ -13,10 +13,12 @@ class BaseHandler(TextIOWrapper):
     """
     Abstract class for push/pull text content from a remote/persistent source.
 
+    The class inherits from ``io.TextIOWrapper``, and will behave like a stream.
+
     Parameters
     ----------
     **kwargs
-        Passed on to the `TextIOWrapper` constructor.
+        Passed on to the ``TextIOWrapper`` constructor.
     """
 
     _SOURCE_NOT_FOUND_ERROR = Exception
@@ -26,7 +28,8 @@ class BaseHandler(TextIOWrapper):
 
     def pull(self, raise_on_missing=True):
         """
-        Pull text content from source. Returns None if file is not found.
+        Pull text content from source, and overwrite the original content of the
+        stream.
 
         Parameters
         ----------
@@ -55,13 +58,33 @@ class BaseHandler(TextIOWrapper):
 
     @abstractmethod
     def _pull(self):
+        """
+        Pull text content from source, and write the string to stream.
+
+        Returns
+        -------
+        int
+            Number of characters written to stream (which is always equal to the
+            length of the string).
+        """
         raise NotImplementedError()
 
     @abstractmethod
     def _push(self):
+        """
+        Push the stream content to source.
+        """
         raise NotImplementedError()
 
     def getvalue(self):
+        """
+        Get all stream content (without changing the stream position).
+
+        Returns
+        -------
+        str
+            Retrieve the entire content of the object.
+        """
         self.flush()
         return self.buffer.getvalue().decode(self.encoding)
 
@@ -71,7 +94,7 @@ class NullHandler(BaseHandler):
     Goes nowhere, does nothing. This handler is intended for objects that
     required a handler, but the push/pull functionality is not needed.
 
-    Will raise an exception if ``.push()`` or ``pull()`` is called.
+    Will raise an exception if ``push()`` or ``pull()`` is called.
     """
 
     _ERROR_MSG = "The 'NullHandler' does not provide push/pull functionality."
@@ -91,6 +114,8 @@ class LocalFileHandler(BaseHandler):
     """
     Handler for push/pull text content to/from a local file.
 
+    Inherits from ``io.TextIOWrapper``, and behaves like a stream.
+
     Parameters
     ----------
     path : str or path object
@@ -99,7 +124,8 @@ class LocalFileHandler(BaseHandler):
         The name of the encoding that the stream will be decoded or encoded with.
         Defaults to 'utf-8'.
     newline : str
-        Controls how line endings are handled.
+        Controls how line endings are handled. Will be passed on to TextIOWrapper's
+        constructor.
     """
 
     _SOURCE_NOT_FOUND_ERROR = FileNotFoundError
@@ -132,6 +158,12 @@ class AzureBlobHandler(BaseHandler):
         The container name for the blob.
     blob_name : str
         The name of the blob with which to interact.
+    encoding : str
+        The name of the encoding that the stream will be decoded or encoded with.
+        Defaults to 'utf-8'.
+    newline : str
+        Controls how line endings are handled. Will be passed on to TextIOWrapper's
+        constructor.
     """
 
     _SOURCE_NOT_FOUND_ERROR = ResourceNotFoundError
