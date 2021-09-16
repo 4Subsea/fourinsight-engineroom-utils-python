@@ -1,4 +1,5 @@
 import json
+from io import BytesIO, TextIOWrapper
 from pathlib import Path
 from unittest.mock import Mock, patch
 
@@ -34,6 +35,26 @@ def persistent_json(local_file_handler_empty):
     return PersistentJSON(local_file_handler_empty)
 
 
+# @pytest.fixture
+# @patch("fourinsight.engineroom.utils.core.BlobClient.from_connection_string")
+# def azure_blob_handler_mocked(mock_from_connection_string):
+#     connection_string = "some_connection_string"
+#     container_name = "some_container_name"
+#     blob_name = "some_blob_name"
+#     handler = AzureBlobHandler(connection_string, container_name, blob_name)
+
+#     remote_content = open(REMOTE_FILE_PATH, mode="r").read()
+#     handler._blob_client.download_blob.return_value.readall.return_value = (
+#         remote_content
+#     )
+
+#     mock_from_connection_string.assert_called_once_with(
+#         "some_connection_string", "some_container_name", "some_blob_name"
+#     )
+
+#     return handler
+
+
 @pytest.fixture
 @patch("fourinsight.engineroom.utils.core.BlobClient.from_connection_string")
 def azure_blob_handler_mocked(mock_from_connection_string):
@@ -43,8 +64,8 @@ def azure_blob_handler_mocked(mock_from_connection_string):
     handler = AzureBlobHandler(connection_string, container_name, blob_name)
 
     remote_content = open(REMOTE_FILE_PATH, mode="r").read()
-    handler._blob_client.download_blob.return_value.readall.return_value = (
-        remote_content
+    handler._blob_client.download_blob.return_value.readinto.side_effect = (
+        lambda buffer: handler.write(remote_content)
     )
 
     mock_from_connection_string.assert_called_once_with(
@@ -54,10 +75,68 @@ def azure_blob_handler_mocked(mock_from_connection_string):
     return handler
 
 
+class Test_BaseHandler:
+    def test__init__(self):
+        handler = BaseHandler()
+        assert isinstance(handler, TextIOWrapper)
+        assert isinstance(handler.buffer, BytesIO)
+
+    def test_getvalue(self):
+        handler = BaseHandler()
+        handler.write("This is some test content.")
+        out = handler.getvalue()
+        expect = "This is some test content."
+        assert out == expect
+
+    def test__pull(self):
+        handler = BaseHandler()
+        with pytest.raises(NotImplementedError):
+            handler._pull()
+
+    def test__push(self):
+        handler = BaseHandler()
+        with pytest.raises(NotImplementedError):
+            handler._push()
+
+    def test_pull_resource_not_found(self):
+        handler = BaseHandler()
+        handler.write("This is some test content.")
+        handler.pull(raise_on_missing=False)
+        out = handler.getvalue()
+        expect = ""
+        assert out == expect
+
+    def test_pull_source_not_found_raises(self):
+        handler = BaseHandler()
+        handler.write("This is some test content.")
+        with pytest.raises(NotImplementedError):
+            handler.pull(raise_on_missing=True)
+        out = handler.getvalue()
+        expect = "This is some test content."
+        assert out == expect
+
+    def test_pull(self):
+        handler = BaseHandler()
+        handler.write("This is some test content.")
+        with patch.object(handler, "_pull") as mocked__pull:
+            mocked__pull.side_effect = lambda: handler.write("Source content.")
+            handler.pull()
+            out = handler.getvalue()
+            expect = "Source content."
+            assert out == expect
+
+    def test_push(self):
+        handler = BaseHandler()
+        with patch.object(handler, "_push") as mocked__push:
+            handler.push()
+            mocked__push.assert_called_once()
+
+
 class Test_NullHandler:
     def test__init__(self):
         handler = NullHandler()
         assert isinstance(handler, BaseHandler)
+        assert handler._SOURCE_NOT_FOUND_ERROR is NotImplementedError
 
     def test__repr__(self, azure_blob_handler_mocked):
         assert str(NullHandler()) == "NullHandler"
@@ -78,43 +157,45 @@ class Test_LocalFileHandler:
         handler = LocalFileHandler("./some/path")
         assert handler._path == Path("./some/path")
         assert isinstance(handler, BaseHandler)
+        assert handler._SOURCE_NOT_FOUND_ERROR is FileNotFoundError
 
     def test_pull(self, local_file_handler_w_content):
         handler = local_file_handler_w_content
-        text_out = handler.pull()
-        text_expect = (
+        assert handler.getvalue() == ""
+        handler.pull()
+        assert handler.getvalue() == (
             '{\n    "this": 1,\n    "is": "hei",\n    "a": null,\n    "test": 1.2\n}'
         )
-        assert text_out == text_expect
 
     def test_pull_non_existing(self):
-        handler = LocalFileHandler("non-existing-file")
-        assert handler.pull(raise_on_missing=False) is None
+        handler = LocalFileHandler("non-exisiting-file")
+        handler.write("Some initial content.")
+        handler.pull(raise_on_missing=False)
+        assert handler.getvalue() == ""
 
     def test_pull_non_existing_raises(self):
-        handler = LocalFileHandler("non-existing-file")
+        handler = LocalFileHandler("non-exisiting-file")
         with pytest.raises(FileNotFoundError):
             handler.pull(raise_on_missing=True)
 
-    def test_push(self, tmp_path):
+    def test__push(self, tmp_path):
         handler = LocalFileHandler(tmp_path / "test.json")
-
-        content = "Some random content\n"
-        handler.push(content)
-
-        assert open(tmp_path / "test.json", mode="r").read() == content
+        handler.write("Some random content")
+        handler._push()
+        assert open(tmp_path / "test.json", mode="r").read() == "Some random content"
 
 
 class Test_AzureBlobHandler:
     @patch("fourinsight.engineroom.utils.core.BlobClient.from_connection_string")
     def test__init__(self, mock_from_connection_string):
-        blob_handler = AzureBlobHandler(
+        handler = AzureBlobHandler(
             "some_connection_string", "some_container_name", "some_blob_name"
         )
 
-        assert blob_handler._conn_str == "some_connection_string"
-        assert blob_handler._container_name == "some_container_name"
-        assert blob_handler._blob_name == "some_blob_name"
+        assert handler._conn_str == "some_connection_string"
+        assert handler._container_name == "some_container_name"
+        assert handler._blob_name == "some_blob_name"
+        assert handler._SOURCE_NOT_FOUND_ERROR is ResourceNotFoundError
         mock_from_connection_string.assert_called_once_with(
             "some_connection_string", "some_container_name", "some_blob_name"
         )
@@ -130,15 +211,40 @@ class Test_AzureBlobHandler:
         assert handler._conn_str == "some_connection_string"
         assert handler._container_name == "some_container_name"
         assert handler._blob_name == "some_blob_name"
+        assert handler._SOURCE_NOT_FOUND_ERROR is ResourceNotFoundError
         assert isinstance(handler._blob_client, Mock)
+
+    # def test__pull(self, azure_blob_handler_mocked):
+    #     handler = azure_blob_handler_mocked
+    #     assert handler.getvalue() == ""
+    #     handler._pull()
+    #     assert (
+    #         handler.getvalue()
+    #         == '{\n    "this": 1,\n    "is": "hei",\n    "a": null,\n    "test": 1.2\n}'
+    #     )
+    #     handler._blob_client.download_blob.return_value.readinto.assert_called_once_with(
+    #         handler.buffer
+    #     )
+
+    # def test__push(self, azure_blob_handler_mocked):
+    #     handler = azure_blob_handler_mocked
+    #     content = "Some test content."
+    #     handler.write(content)
+    #     handler._push()
+    #     handler._blob_client.upload_blob.assert_called_once_with(
+    #         content, overwrite=True
+    #     )
 
     def test_pull(self, azure_blob_handler_mocked):
         handler = azure_blob_handler_mocked
+        handler.pull()
         assert (
-            handler.pull()
+            handler.getvalue()
             == '{\n    "this": 1,\n    "is": "hei",\n    "a": null,\n    "test": 1.2\n}'
         )
-        handler._blob_client.download_blob.assert_called_once_with(encoding="utf-8")
+        handler._blob_client.download_blob.return_value.readinto.assert_called_once_with(
+            handler.buffer
+        )
 
     def test_pull_non_existing(self, azure_blob_handler_mocked):
         handler = azure_blob_handler_mocked
@@ -147,8 +253,8 @@ class Test_AzureBlobHandler:
             raise ResourceNotFoundError
 
         handler._blob_client.download_blob.side_effect = raise_resource_not_found
-
-        assert handler.pull(raise_on_missing=False) is None
+        handler.pull(raise_on_missing=False)
+        assert handler.getvalue() == ""
 
     def test_pull_non_existing_raises(self, azure_blob_handler_mocked):
         handler = azure_blob_handler_mocked
@@ -164,8 +270,9 @@ class Test_AzureBlobHandler:
     def test_push(self, azure_blob_handler_mocked):
         handler = azure_blob_handler_mocked
 
-        content = "some random content"
-        handler.push(content)
+        content = "Some random content."
+        handler.write(content)
+        handler.push()
 
         handler._blob_client.upload_blob.assert_called_once_with(
             content, overwrite=True

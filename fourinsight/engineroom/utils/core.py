@@ -1,8 +1,8 @@
 import json
 from abc import abstractmethod
 from collections.abc import MutableMapping
+from io import BytesIO, TextIOWrapper
 from pathlib import Path
-from io import TextIOWrapper, BytesIO
 
 import pandas as pd
 from azure.core.exceptions import ResourceNotFoundError
@@ -38,14 +38,14 @@ class BaseHandler(TextIOWrapper):
         try:
             characters_written = self._pull()
         except self._SOURCE_NOT_FOUND_ERROR as e:
-            characters_written = 0
-            if raise_on_missing:
-                raise e
-        finally:
             if raise_on_missing:
                 self.seek(current_pos)
+                raise e
             else:
-                self.truncate(characters_written)
+                self.truncate(0)
+                return
+        else:
+            self.truncate(characters_written)
 
     def push(self):
         """
@@ -71,7 +71,7 @@ class NullHandler(BaseHandler):
     Goes nowhere, does nothing. This handler is intended for objects that
     required a handler, but the push/pull functionality is not needed.
 
-    Will raise an exception if :meth:`.push()` or :meth:`pull()` is called.
+    Will raise an exception if ``.push()`` or ``pull()`` is called.
     """
 
     _ERROR_MSG = "The 'NullHandler' does not provide push/pull functionality."
@@ -99,9 +99,9 @@ class LocalFileHandler(BaseHandler):
         The name of the encoding that the stream will be decoded or encoded with.
         Defaults to 'utf-8'.
     newline : str
-        Controls how line endings are handled. It can be None, '', '\n', '\r', and
-        '\r\n'.
+        Controls how line endings are handled.
     """
+
     _SOURCE_NOT_FOUND_ERROR = FileNotFoundError
 
     def __init__(self, path, encoding="utf-8", newline="\n"):
@@ -133,9 +133,12 @@ class AzureBlobHandler(BaseHandler):
     blob_name : str
         The name of the blob with which to interact.
     """
+
     _SOURCE_NOT_FOUND_ERROR = ResourceNotFoundError
 
-    def __init__(self, conn_str, container_name, blob_name, encoding="utf-8", newline="\n"):
+    def __init__(
+        self, conn_str, container_name, blob_name, encoding="utf-8", newline="\n"
+    ):
         self._conn_str = conn_str
         self._container_name = container_name
         self._blob_name = blob_name
@@ -364,12 +367,16 @@ class ResultCollector:
         if not (set(df.columns) == set(self._headers.keys())):
             raise ValueError("Header is not valid.")
 
-        if not df.index.empty and (self._indexing_mode == "auto") and not (
-            isinstance(df.index, pd.Int64Index)
+        if (
+            not df.index.empty
+            and (self._indexing_mode == "auto")
+            and not (isinstance(df.index, pd.Int64Index))
         ):
             raise ValueError("Index must be 'Int64Index'.")
-        elif not df.index.empty and (self._indexing_mode == "timestamp") and not (
-            isinstance(df.index, pd.DatetimeIndex)
+        elif (
+            not df.index.empty
+            and (self._indexing_mode == "timestamp")
+            and not (isinstance(df.index, pd.DatetimeIndex))
         ):
             raise ValueError("Index must be 'DatetimeIndex'.")
 
@@ -381,9 +388,7 @@ class ResultCollector:
         """
         self._handler.seek(0)
         self._handler.truncate()
-        self._dataframe.to_csv(
-            self._handler, sep=",", index=True, line_terminator="\n"
-        )
+        self._dataframe.to_csv(self._handler, sep=",", index=True, line_terminator="\n")
         self._handler.push()
 
     @property
