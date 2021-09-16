@@ -35,26 +35,6 @@ def persistent_json(local_file_handler_empty):
     return PersistentJSON(local_file_handler_empty)
 
 
-# @pytest.fixture
-# @patch("fourinsight.engineroom.utils.core.BlobClient.from_connection_string")
-# def azure_blob_handler_mocked(mock_from_connection_string):
-#     connection_string = "some_connection_string"
-#     container_name = "some_container_name"
-#     blob_name = "some_blob_name"
-#     handler = AzureBlobHandler(connection_string, container_name, blob_name)
-
-#     remote_content = open(REMOTE_FILE_PATH, mode="r").read()
-#     handler._blob_client.download_blob.return_value.readall.return_value = (
-#         remote_content
-#     )
-
-#     mock_from_connection_string.assert_called_once_with(
-#         "some_connection_string", "some_container_name", "some_blob_name"
-#     )
-
-#     return handler
-
-
 @pytest.fixture
 @patch("fourinsight.engineroom.utils.core.BlobClient.from_connection_string")
 def azure_blob_handler_mocked(mock_from_connection_string):
@@ -213,27 +193,6 @@ class Test_AzureBlobHandler:
         assert handler._blob_name == "some_blob_name"
         assert handler._SOURCE_NOT_FOUND_ERROR is ResourceNotFoundError
         assert isinstance(handler._blob_client, Mock)
-
-    # def test__pull(self, azure_blob_handler_mocked):
-    #     handler = azure_blob_handler_mocked
-    #     assert handler.getvalue() == ""
-    #     handler._pull()
-    #     assert (
-    #         handler.getvalue()
-    #         == '{\n    "this": 1,\n    "is": "hei",\n    "a": null,\n    "test": 1.2\n}'
-    #     )
-    #     handler._blob_client.download_blob.return_value.readinto.assert_called_once_with(
-    #         handler.buffer
-    #     )
-
-    # def test__push(self, azure_blob_handler_mocked):
-    #     handler = azure_blob_handler_mocked
-    #     content = "Some test content."
-    #     handler.write(content)
-    #     handler._push()
-    #     handler._blob_client.upload_blob.assert_called_once_with(
-    #         content, overwrite=True
-    #     )
 
     def test_pull(self, azure_blob_handler_mocked):
         handler = azure_blob_handler_mocked
