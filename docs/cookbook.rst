@@ -67,8 +67,8 @@ is expected to be raised if the source file can not be read.
                 length of the string).
             """
             with BytesIO() as binary_content:
-                    self._ftp.retrbinary("RETR " + self._filename, binary_content.write)
-                    characters_written = self.write(binary_content.getvalue().decode(self.encoding))
+                self._ftp.retrbinary("RETR " + self._filename, binary_content.write)
+                characters_written = self.write(binary_content.getvalue().decode(self.encoding))
                     
             return characters_written
             
