@@ -13,8 +13,8 @@ Handlers
 
 Some of the core functionality provided by :mod:`fourinsight.engineroom.utils` relies
 on handlers that facilitate downloading and uploading of text content from a source.
-The source can be a local file, an Azure Storage Blob, or other any other suitable
-storage place. Two handlers, the :class:`LocalFileHandler` and the :class:`AzureBlobHandler`
+The source can be a local file, an Azure Storage Blob, or any other suitable storage
+place. Two handlers, the :class:`LocalFileHandler` and the :class:`AzureBlobHandler`
 are available out-of-the-box. Custom handlers are easily set up by inheriting from
 :class:`~fourinsight.engineroom.utils.core.BaseHandler`.
 

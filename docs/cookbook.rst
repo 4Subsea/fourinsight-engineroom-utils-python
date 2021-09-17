@@ -15,6 +15,7 @@ is expected to be raised if the source file can not be read.
 
 .. code-block:: python
 
+    from io import BytesIO
     from ftplib import FTP, error_perm
     from fourinsight.engineroom.utils.core import BaseHandler
 
