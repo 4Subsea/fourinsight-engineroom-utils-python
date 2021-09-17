@@ -9,12 +9,12 @@ Set up a custom handler based on FTP
 
 This example shows how you can set up a custom handler based on FTP. The handler
 must inherit from :class:`~fourinsight.engineroom.utils.core.BaseHandler`, and override
-the two abstract methods, ``push()`` and ``pull()``. If the file content you
-want to download does not exist, the ``pull()`` method should return ``None``.
+the two abstract methods, ``_push()`` and ``_pull()``. It is recommended to also
+set the class variable, ``_SOURCE_NOT_FOUND_ERROR``, to the type of exception that
+is expected to be raised if the source file can not be read.
 
 .. code-block:: python
 
-    from io import BytesIO
     from ftplib import FTP, error_perm
     from fourinsight.engineroom.utils.core import BaseHandler
 
@@ -36,12 +36,14 @@ want to download does not exist, the ``pull()`` method should return ``None``.
         filename : str
             Filename.
         """
+        _SOURCE_NOT_FOUND_ERROR = error_perm
 
         def __init__(self, host, user, passwd, folder, filename):
             self._folder = folder
             self._filename = filename
             self._ftp = FTP(host=host, user=user, passwd=passwd)
             self._cwd(self._folder)
+            super().__init__()
 
         def _cwd(self, folder):
             """
@@ -52,29 +54,26 @@ want to download does not exist, the ``pull()`` method should return ``None``.
             except error_perm:
                 self._ftp.mkd(folder)
                 self._ftp.cwd(folder)
-
-        def pull(self, raise_on_missing=True):
+                
+        def _pull(self):
             """
-            Pull text content from FTP server. Returns None if file is not found.
+            Pull text content from FTP server, and write the string to stream.
 
-            Parameters
-            ----------
-            raise_on_missing : bool
-                Raise exception if content can not be pulled from file.
+            Returns
+            -------
+            int
+                Number of characters written to stream (which is always equal to the
+                length of the string).
             """
-            try:
-                with BytesIO() as binary_content:
+            with BytesIO() as binary_content:
                     self._ftp.retrbinary("RETR " + self._filename, binary_content.write)
-                    binary_content.seek(0)
-                    remote_content = binary_content.read().decode()
-            except Exception as e:
-                remote_content = None
-                if raise_on_missing:
-                    raise e
-            return remote_content
-
-        def push(self, local_content):
+                    characters_written = self.write(binary_content.getvalue().decode(self.encoding))
+                    
+            return characters_written
+            
+        def _push(self):
             """
-            Push text content to FTP server file.
+            Push the stream content to source.
             """
-            self._ftp.storbinary("STOR " + self._filename, BytesIO(local_content.encode()))
+            self.seek(0)
+            self._ftp.storbinary("STOR " + self._filename, self.buffer)
