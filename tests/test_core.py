@@ -121,10 +121,16 @@ class Test_NullHandler:
     def test__repr__(self, azure_blob_handler_mocked):
         assert str(NullHandler()) == "NullHandler"
 
-    def test_pull(self):
+    def test_pull_raises(self):
         handler = NullHandler()
         with pytest.raises(NotImplementedError):
-            handler.pull()
+            handler.pull(raise_on_missing=True)
+
+    def test_pull(self):
+        handler = NullHandler()
+        handler.write("Some random content.")
+        handler.pull(raise_on_missing=False)
+        assert handler.getvalue() == ""
 
     def test_push(self):
         handler = NullHandler()
@@ -158,10 +164,10 @@ class Test_LocalFileHandler:
         with pytest.raises(FileNotFoundError):
             handler.pull(raise_on_missing=True)
 
-    def test__push(self, tmp_path):
+    def test_push(self, tmp_path):
         handler = LocalFileHandler(tmp_path / "test.json")
         handler.write("Some random content")
-        handler._push()
+        handler.push()
         assert open(tmp_path / "test.json", mode="r").read() == "Some random content"
 
 
