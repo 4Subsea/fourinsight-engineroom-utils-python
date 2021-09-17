@@ -40,18 +40,21 @@ The :class:`AzureBlobHandler` is used to store text content in *Azure Blob Stora
 
     handler = AzureBlobHandler(<connection-string>, <container-name>, <blob-name>)
 
-The handlers behave like *streams*, and include all the normal stream operations:
+The handlers behave like *streams*, and provide all the normal stream capabilities.
 
 .. code-block:: python
 
-    # Change stream position
-    handler.seek(0)
+    # Write text content to stream
+    handler.write("Hello, World!")
 
     # Read stream content
     handler.read()
 
-    # Write text content to stream
-    handler.write("Hello, World!")
+    # Write 'pandas.DataFrame' to stream
+    df.to_csv(handler)
+
+    # Load 'pandas.DataFrame' from stream
+    df = pd.read_csv(handler, index_col=0)
 
     # etc...
 
