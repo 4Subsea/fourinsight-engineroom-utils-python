@@ -18,7 +18,7 @@ class BaseHandler(TextIOWrapper):
     Parameters
     ----------
     **kwargs
-        Passed on to the ``TextIOWrapper`` constructor.
+        Passed on to the TextIOWrapper's constructor.
     """
 
     _SOURCE_NOT_FOUND_ERROR = Exception
