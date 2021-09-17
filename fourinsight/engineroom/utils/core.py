@@ -46,7 +46,6 @@ class BaseHandler(TextIOWrapper):
                 raise e
             else:
                 self.truncate(0)
-                return
         else:
             self.truncate(characters_written)
 
