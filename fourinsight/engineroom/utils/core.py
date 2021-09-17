@@ -150,6 +150,8 @@ class AzureBlobHandler(BaseHandler):
     """
     Handler for push/pull text content to/from Azure Blob Storage.
 
+    Inherits from ``io.TextIOWrapper``, and behaves like a stream.
+
     Parameters
     ----------
     conn_str : str
