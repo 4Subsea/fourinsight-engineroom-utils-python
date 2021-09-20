@@ -91,7 +91,7 @@ class BaseHandler(TextIOWrapper):
 class NullHandler(BaseHandler):
     """
     Goes nowhere, does nothing. This handler is intended for objects that
-    required a handler, but the push/pull functionality is not needed.
+    requires a handler, but the push/pull functionality is not needed.
 
     Will raise an exception if ``push()`` or ``pull()`` is called.
     """
