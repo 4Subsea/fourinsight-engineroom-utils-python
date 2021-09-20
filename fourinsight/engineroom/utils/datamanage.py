@@ -1,11 +1,10 @@
 from abc import ABC, abstractmethod
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 
 class BaseDataSource(ABC):
-
     @abstractmethod
     def get_label(self, label, start, end):
         raise NotImplementedError()

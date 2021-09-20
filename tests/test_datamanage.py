@@ -59,6 +59,6 @@ class Test_BaseDataSource:
         )
         df_expect = pd.DataFrame(
             data={"a": [1.0, 2.0, 3.0, 4.0, np.nan], "b": [1.0, 2.0, 3.0, np.nan, 4.0]},
-            index=index_expect
+            index=index_expect,
         )
         pd.testing.assert_frame_equal(df_out, df_expect)
