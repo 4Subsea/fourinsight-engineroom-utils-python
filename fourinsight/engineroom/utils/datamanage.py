@@ -16,7 +16,7 @@ class BaseDataSource(ABC):
         if not synchronization:
             return pd.DataFrame(data)
         else:
-            return self._synchronize(list(data.values()), tolerance)
+            return self._synchronize(data, tolerance)
 
     @abstractmethod
     def get_label(self, label, start, end):
@@ -48,10 +48,14 @@ class BaseDataSource(ABC):
         idx_keep = np.r_[True, (np.diff(df_synced.index) > tolerance)]
         return df_synced[idx_keep]
 
-    def _synchronize(self, data_list, tolerance):
-        df_synced = data_list.pop(0)
-        for s_i in data_list:
-            df_synced = self._sync_series(df_synced, s_i, tolerance)
+    def _synchronize(self, data, tolerance):
+        for i, (key, series_i) in enumerate(data.items()):
+            if isinstance(series_i, pd.Series):
+                series_i.name = key
+            if i == 0:
+                df_synced = pd.DataFrame(series_i)
+            else:
+                df_synced = self._sync_series(df_synced, series_i, tolerance)
         return df_synced
 
 
@@ -61,9 +65,7 @@ class DrioDataSource(BaseDataSource):
         self._labels = labels
 
     def get_label(self, label, start, end):
-        series = self._drio_client.get(self._labels[label], start=start, end=end)
-        series.name = label
-        return series
+        return self._drio_client.get(self._labels[label], start=start, end=end)
 
     def labels(self):
         return tuple(self._labels.keys())
