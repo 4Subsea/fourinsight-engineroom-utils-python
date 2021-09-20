@@ -6,6 +6,6 @@ from .core import (
     ResultCollector,
 )
 
-from .datamanage import DrioDataSource, BaseDataSource
+from .datamanage import DrioDataSource
 
 __version__ = "0.0.1"
