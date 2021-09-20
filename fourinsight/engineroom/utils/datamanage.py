@@ -16,6 +16,8 @@ class BaseDataSource(ABC):
         if not synchronization:
             return pd.DataFrame(data)
         else:
+            if not tolerance:
+                raise ValueError("No tolerance given.")
             return self._synchronize(data, tolerance)
 
     @abstractmethod
