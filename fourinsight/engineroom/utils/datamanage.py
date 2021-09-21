@@ -46,8 +46,8 @@ class BaseDataSource(ABC):
             Stop time (inclusive) of the data, given as anything pandas.to_datetime
             is able to parse.
         index_sync : bool, optional
-            Controls if index is synced. If ``True``, a valid ``tolerance`` must
-            be given.
+            Controls if index is synced. If ``True``, a valid ``tolerance`` value
+            must be given.
         tolerance : int, float or pandas.Timedelta
             Tolerance limit for syncing (see Notes). If ``index_sync`` is ``True``,
             data points that are closer that the tolerance are merged so that they
@@ -61,7 +61,7 @@ class BaseDataSource(ABC):
 
         Notes
         -----
-        The tolerance must be of a type that is comparable to the data index. I.e.
+        The tolerance must be of a type that is comparable to the data index. E.g.
         if the data has a ``DatetimeIndex``, the tolerance should be of type
         ``pandas.Timestamp``. And if the data has a ``Int64Index``, the tolerance
         should be an integer.
