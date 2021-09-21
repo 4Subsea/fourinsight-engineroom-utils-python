@@ -5,23 +5,19 @@ import pandas as pd
 
 
 class BaseDataSource(ABC):
-    @abstractmethod
-    def get_label(self, label, start, end):
-        raise NotImplementedError()
 
     @abstractmethod
     def labels(self):
+        """Data source labels."""
         raise NotImplementedError()
 
+    @abstractmethod
     def _get(self, start, end):
-        data = {}
-        for label in self.labels():
-            data[label] = self.get_label(label, start, end)
-        return data
+        raise NotImplementedError()
 
-    def get(self, start, end, synchronization=True, tolerance=None):
+    def get(self, start, end, index_sync=True, tolerance=None):
         data = self._get(start, end)
-        if not synchronization:
+        if not index_sync:
             return pd.DataFrame(data)
         else:
             if not tolerance:
@@ -66,23 +62,12 @@ class DrioDataSource(BaseDataSource):
         self._drio_client = drio_client
         self._labels = labels
 
-    def get_label(self, label, start, end):
-        """
-        Get label data.
-
-        Parameters
-        ----------
-        label : str
-            Label to get data for.
-        start : datetime-like
-            Start time (inclusive) of the series given as anything pandas.to_datetime
-            is able to parse.
-        end : datetime-like
-            Stop time (inclusive) of the series given as anything pandas.to_datetime
-            is able to parse.
-        """
-        return self._drio_client.get(self._labels[label], start=start, end=end)
+    def _get(self, start, end):
+        data = {}
+        for label in self.labels():
+            data[label] = self._drio_client.get(self._labels[label], start=start, end=end)
+        return data
 
     def labels(self):
-        """Data source labels"""
+        """Data source labels."""
         return tuple(self._labels.keys())
