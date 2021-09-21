@@ -12,6 +12,23 @@ class BaseDataSource(ABC):
 
     @abstractmethod
     def _get(self, start, end):
+        """
+        Get data.
+
+        Parameters
+        ----------
+        start : str or datetime-like
+            Start time (inclusive) of the data, given as anything pandas.to_datetime
+            is able to parse.
+        end : str or datetime-like
+            Stop time (inclusive) of the data, given as anything pandas.to_datetime
+            is able to parse.
+
+        Returns
+        -------
+        dict
+            Label and data as key/value pairs. The data must be of type ``pandas.Series``.
+        """
         raise NotImplementedError()
 
     def get(self, start, end, index_sync=True, tolerance=None):
