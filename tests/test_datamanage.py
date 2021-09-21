@@ -1,19 +1,33 @@
 import numpy as np
 import pandas as pd
 
+import pytest
+from unittest.mock import patch
+
 from fourinsight.engineroom.utils import DrioDataSource
 from fourinsight.engineroom.utils.datamanage import BaseDataSource
 
 
 class BaseDataSourceForTesting(BaseDataSource):
     def labels(self):
-        raise NotImplementedError()
+        super().labels()
 
     def _get(self, start, end):
-        raise NotImplementedError
+        super()._get(start, end)
 
 
 class Test_BaseDataSource:
+
+    def test_labels(self):
+        source = BaseDataSourceForTesting()
+        with pytest.raises(NotImplementedError):
+            source.labels()
+
+    def test_get(self):
+        source = BaseDataSourceForTesting()
+        with pytest.raises(NotImplementedError):
+            source._get("2020-01-01", "2021-01-01")
+
     def test_sync_series_int_index(self):
         index_a = range(0, 1000, 10)
         values_a = [1.0] * len(index_a)
@@ -224,3 +238,80 @@ class Test_BaseDataSource:
         df_expect = pd.DataFrame(data={"a": values_a_expect}, index=index_expect)
 
         pd.testing.assert_frame_equal(df_out, df_expect)
+
+    @patch.object(BaseDataSourceForTesting, "_get")
+    def test_get_nosync(self, mock_get):
+        source = BaseDataSourceForTesting()
+
+        index_a = [1, 2, 3, 4]
+        values_a = [1.0] * len(index_a)
+        series_a = pd.Series(data=values_a, index=index_a)
+
+        index_b = [1, 10, 100, 1000]
+        values_b = [2.0] * len(index_b)
+        series_b = pd.Series(data=values_b, index=index_b)
+
+        index_c = [1, 2, 7]
+        values_c = [3.0] * len(index_c)
+        series_c = pd.Series(data=values_c, index=index_c)
+
+        data = {"a": series_a, "b": series_b, "c": series_c}
+
+        mock_get.return_value = data
+
+        df_out = source.get("2020-01-01 00:00", "2020-01-02 00:00", index_sync=False)
+
+        df_expect = pd.DataFrame(
+            data={
+                "a": [1.0, 1.0, 1.0, 1.0, np.nan, np.nan, np.nan, np.nan],
+                "b": [2.0, np.nan, np.nan, np.nan, np.nan, 2.0, 2.0, 2.0],
+                "c": [3.0, 3.0, np.nan, np.nan, 3.0, np.nan, np.nan, np.nan]
+            },
+            index=[1, 2, 3, 4, 7, 10, 100, 1000]
+        )
+
+        pd.testing.assert_frame_equal(df_out, df_expect)
+
+    @patch.object(BaseDataSourceForTesting, "_get")
+    def test_get_sync(self, mock_get):
+        source = BaseDataSourceForTesting()
+
+        index_a = pd.date_range("2020-01-01 00:00", "2020-02-01 00:00", freq="2s")
+        values_a = [1.0] * len(index_a)
+        series_a = pd.Series(data=values_a, index=index_a)
+
+        index_b = index_a - pd.to_timedelta(
+            np.random.randint(0, 499, len(index_a)), "ms"
+        )
+        values_b = [2.0] * len(index_b)
+        series_b = pd.Series(data=values_b, index=index_b)
+
+        index_c = index_a + pd.to_timedelta(
+            np.random.randint(0, 499, len(index_a)), "ms"
+        )
+        values_c = [3.0] * len(index_c)
+        series_c = pd.Series(data=values_c, index=index_c)
+
+        data = {"a": series_a, "b": series_b, "c": series_c}
+
+        mock_get.return_value = data
+
+        df_out = source.get("2020-01-01 00:00", "2020-01-02 00:00", index_sync=True, tolerance=pd.to_timedelta("1s"))
+
+        index_expect = index_b
+        values_a_expect = values_a
+        values_b_expect = values_b
+        values_c_expect = values_c
+        df_expect = pd.DataFrame(
+            data={"a": values_a_expect, "b": values_b_expect, "c": values_c_expect},
+            index=index_expect,
+        )
+
+        pd.testing.assert_frame_equal(df_out, df_expect)
+
+    @patch.object(BaseDataSourceForTesting, "_get")
+    def test_get_raises(self, mock_get):
+        source = BaseDataSourceForTesting()
+
+        with pytest.raises(ValueError):
+            source.get("2020-01-01 00:00", "2020-01-02 00:00", index_sync=True, tolerance=None)
