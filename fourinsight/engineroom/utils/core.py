@@ -17,14 +17,16 @@ class BaseHandler(TextIOWrapper):
 
     Parameters
     ----------
+    *args
+        Passed on to the TextIOWrapper's constructor.
     **kwargs
         Passed on to the TextIOWrapper's constructor.
     """
 
     _SOURCE_NOT_FOUND_ERROR = Exception
 
-    def __init__(self, **kwargs):
-        super().__init__(BytesIO(), **kwargs)
+    def __init__(self, *args, **kwargs):
+        super().__init__(BytesIO(), *args, **kwargs)
 
     def pull(self, raise_on_missing=True):
         """
