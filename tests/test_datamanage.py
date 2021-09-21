@@ -1,8 +1,8 @@
+from unittest.mock import patch
+
 import numpy as np
 import pandas as pd
-
 import pytest
-from unittest.mock import patch
 
 from fourinsight.engineroom.utils import DrioDataSource
 from fourinsight.engineroom.utils.datamanage import BaseDataSource
@@ -17,7 +17,6 @@ class BaseDataSourceForTesting(BaseDataSource):
 
 
 class Test_BaseDataSource:
-
     def test_labels(self):
         source = BaseDataSourceForTesting()
         with pytest.raises(NotImplementedError):
@@ -265,9 +264,9 @@ class Test_BaseDataSource:
             data={
                 "a": [1.0, 1.0, 1.0, 1.0, np.nan, np.nan, np.nan, np.nan],
                 "b": [2.0, np.nan, np.nan, np.nan, np.nan, 2.0, 2.0, 2.0],
-                "c": [3.0, 3.0, np.nan, np.nan, 3.0, np.nan, np.nan, np.nan]
+                "c": [3.0, 3.0, np.nan, np.nan, 3.0, np.nan, np.nan, np.nan],
             },
-            index=[1, 2, 3, 4, 7, 10, 100, 1000]
+            index=[1, 2, 3, 4, 7, 10, 100, 1000],
         )
 
         pd.testing.assert_frame_equal(df_out, df_expect)
@@ -296,7 +295,12 @@ class Test_BaseDataSource:
 
         mock_get.return_value = data
 
-        df_out = source.get("2020-01-01 00:00", "2020-01-02 00:00", index_sync=True, tolerance=pd.to_timedelta("1s"))
+        df_out = source.get(
+            "2020-01-01 00:00",
+            "2020-01-02 00:00",
+            index_sync=True,
+            tolerance=pd.to_timedelta("1s"),
+        )
 
         index_expect = index_b
         values_a_expect = values_a
@@ -314,4 +318,6 @@ class Test_BaseDataSource:
         source = BaseDataSourceForTesting()
 
         with pytest.raises(ValueError):
-            source.get("2020-01-01 00:00", "2020-01-02 00:00", index_sync=True, tolerance=None)
+            source.get(
+                "2020-01-01 00:00", "2020-01-02 00:00", index_sync=True, tolerance=None
+            )
