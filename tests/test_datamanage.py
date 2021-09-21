@@ -5,8 +5,15 @@ from fourinsight.engineroom.utils import DrioDataSource
 from fourinsight.engineroom.utils.datamanage import BaseDataSource
 
 
-class Test_BaseDataSource:
+class BaseDataSourceForTesting(BaseDataSource):
+    def labels(self):
+        raise NotImplementedError()
 
+    def _get(self, start, end):
+        raise NotImplementedError
+
+
+class Test_BaseDataSource:
     def test_sync_series_int_index(self):
         index_a = range(0, 1000, 10)
         values_a = [1.0] * len(index_a)
@@ -23,9 +30,7 @@ class Test_BaseDataSource:
             data={"a": values_a_expect, "b": values_b_expect}, index=index_expect
         )
 
-        df_out = BaseDataSource._sync_series(
-            series_a, series_b, 5
-        )
+        df_out = BaseDataSource._sync_series(series_a, series_b, 5)
 
         pd.testing.assert_frame_equal(df_out, df_expect)
 
@@ -136,3 +141,86 @@ class Test_BaseDataSource:
         )
 
         pd.testing.assert_frame_equal(df_out, df_expect, check_freq=False)
+
+    def test__synchronize(self):
+        source = BaseDataSourceForTesting()
+
+        index_a = pd.date_range("2020-01-01 00:00", "2020-02-01 00:00", freq="2s")
+        values_a = [1.0] * len(index_a)
+        series_a = pd.Series(data=values_a, index=index_a)
+
+        index_b = index_a - pd.to_timedelta(
+            np.random.randint(0, 499, len(index_a)), "ms"
+        )
+        values_b = [2.0] * len(index_b)
+        series_b = pd.Series(data=values_b, index=index_b)
+
+        index_c = index_a + pd.to_timedelta(
+            np.random.randint(0, 499, len(index_a)), "ms"
+        )
+        values_c = [3.0] * len(index_c)
+        series_c = pd.Series(data=values_c, index=index_c)
+
+        data = {"a": series_a, "b": series_b, "c": series_c}
+
+        df_out = source._synchronize(data, pd.to_timedelta("1s"))
+
+        index_expect = index_b
+        values_a_expect = values_a
+        values_b_expect = values_b
+        values_c_expect = values_c
+        df_expect = pd.DataFrame(
+            data={"a": values_a_expect, "b": values_b_expect, "c": values_c_expect},
+            index=index_expect,
+        )
+
+        pd.testing.assert_frame_equal(df_out, df_expect)
+
+    def test__synchronize_empty_series(self):
+        source = BaseDataSourceForTesting()
+
+        index_a = pd.date_range("2020-01-01 00:00", "2020-02-01 00:00", freq="2s")
+        values_a = [1.0] * len(index_a)
+        series_a = pd.Series(data=values_a, index=index_a)
+
+        index_b = index_a - pd.to_timedelta(
+            np.random.randint(0, 499, len(index_a)), "ms"
+        )
+        values_b = [2.0] * len(index_b)
+        series_b = pd.Series(data=values_b, index=index_b)
+
+        index_c = pd.DatetimeIndex([])
+        values_c = []
+        series_c = pd.Series(data=values_c, index=index_c, dtype="float64")
+
+        data = {"a": series_a, "b": series_b, "c": series_c}
+
+        df_out = source._synchronize(data, pd.to_timedelta("1s"))
+
+        index_expect = index_b
+        values_a_expect = values_a
+        values_b_expect = values_b
+        values_c_expect = [np.nan] * len(index_expect)
+        df_expect = pd.DataFrame(
+            data={"a": values_a_expect, "b": values_b_expect, "c": values_c_expect},
+            index=index_expect,
+        )
+
+        pd.testing.assert_frame_equal(df_out, df_expect)
+
+    def test__synchronize_single_series(self):
+        source = BaseDataSourceForTesting()
+
+        index_a = pd.date_range("2020-01-01 00:00", "2020-02-01 00:00", freq="2s")
+        values_a = [1.0] * len(index_a)
+        series_a = pd.Series(data=values_a, index=index_a)
+
+        data = {"a": series_a}
+
+        df_out = source._synchronize(data, pd.to_timedelta("1s"))
+
+        index_expect = index_a
+        values_a_expect = values_a
+        df_expect = pd.DataFrame(data={"a": values_a_expect}, index=index_expect)
+
+        pd.testing.assert_frame_equal(df_out, df_expect)
