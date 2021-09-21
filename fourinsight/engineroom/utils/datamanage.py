@@ -5,7 +5,6 @@ import pandas as pd
 
 
 class BaseDataSource(ABC):
-
     @abstractmethod
     def labels(self):
         """Data source labels."""
