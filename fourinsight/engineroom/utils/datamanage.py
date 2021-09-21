@@ -5,6 +5,7 @@ import pandas as pd
 
 
 class BaseDataSource(ABC):
+
     @abstractmethod
     def labels(self):
         """Data source labels."""
@@ -13,7 +14,7 @@ class BaseDataSource(ABC):
     @abstractmethod
     def _get(self, start, end):
         """
-        Get data.
+        Get source data.
 
         Parameters
         ----------
@@ -27,11 +28,46 @@ class BaseDataSource(ABC):
         Returns
         -------
         dict
-            Label and data as key/value pairs. The data must be of type ``pandas.Series``.
+            Label and data as key/value pairs. The data is returned as type
+            ``pandas.Series``.
         """
         raise NotImplementedError()
 
     def get(self, start, end, index_sync=True, tolerance=None):
+        """
+        Get source data.
+
+        Parameters
+        ----------
+        start : str or datetime-like
+            Start time (inclusive) of the data, given as anything pandas.to_datetime
+            is able to parse.
+        end : str or datetime-like
+            Stop time (inclusive) of the data, given as anything pandas.to_datetime
+            is able to parse.
+        index_sync : bool, optional
+            Controls if index is synced. If ``True``, a valid ``tolerance`` must
+            be given.
+        tolerance : int, float or pandas.Timedelta
+            Tolerance limit for syncing (see Notes). If ``index_sync`` is ``True``,
+            data points that are closer that the tolerance are merged so that they
+            share a common index. The common index will be the first index of the
+            neighboring data points.
+
+        Returns
+        -------
+        pandas.DataFrame
+            Source data.
+
+        Notes
+        -----
+        The tolerance must be of a type that is comparable to the data index. I.e.
+        if the data has a ``DatetimeIndex``, the tolerance should be of type
+        ``pandas.Timestamp``. And if the data has a ``Int64Index``, the tolerance
+        should be an integer.
+
+        """
+
         data = self._get(start, end)
         if not index_sync:
             return pd.DataFrame(data)
@@ -42,6 +78,18 @@ class BaseDataSource(ABC):
 
     @staticmethod
     def _sync_series(series_a, series_b, tolerance):
+        """
+        Merge series so that they share a common index.
+
+        Parameters
+        ----------
+        series_a : pandas.Series
+            Data series.
+        series_b : pandas.Series
+            Data series.
+        tolerance : int, float or pandas.Timedelta
+            Tolerance limit for syncing.
+        """
         merge_a = pd.merge_asof(
             series_a,
             series_b,
@@ -63,6 +111,16 @@ class BaseDataSource(ABC):
         return df_synced[idx_keep]
 
     def _synchronize(self, data, tolerance):
+        """
+        Synchronize data series.
+
+        Parameters
+        ----------
+        data : dict
+            Label and data as key/value pairs. The data should be of type ``pandas.Series``.
+        tolerance : int, float or pandas.Timedelta
+            Tolerance limit for syncing.
+        """
         for i, (key, series_i) in enumerate(data.items()):
             if isinstance(series_i, pd.Series):
                 series_i.name = key
