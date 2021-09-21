@@ -1,7 +1,7 @@
 import json
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from collections.abc import MutableMapping
-from io import StringIO
+from io import BytesIO, TextIOWrapper
 from pathlib import Path
 
 import pandas as pd
@@ -9,37 +9,105 @@ from azure.core.exceptions import ResourceNotFoundError
 from azure.storage.blob import BlobClient
 
 
-class BaseHandler(ABC):
+class BaseHandler(TextIOWrapper):
     """
-    Abstract class for push/pull file content from a remote/persistent source.
+    Abstract class for push/pull text content from a remote/persistent source.
+
+    The class inherits from ``io.TextIOWrapper``, and will behave like a stream.
+
+    Parameters
+    ----------
+    *args
+        Passed on to the TextIOWrapper's constructor.
+    **kwargs
+        Passed on to the TextIOWrapper's constructor.
     """
 
-    @abstractmethod
+    _SOURCE_NOT_FOUND_ERROR = Exception
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(BytesIO(), *args, **kwargs)
+
     def pull(self, raise_on_missing=True):
+        """
+        Pull text content from source, and overwrite the original content of the
+        stream.
+
+        Parameters
+        ----------
+        raise_on_missing : bool
+            Raise exception if content can not be pulled from source.
+        """
+        current_pos = self.tell()
+        self.seek(0)
+        try:
+            characters_written = self._pull()
+        except self._SOURCE_NOT_FOUND_ERROR as e:
+            if raise_on_missing:
+                self.seek(current_pos)
+                raise e
+            else:
+                self.truncate(0)
+        else:
+            self.truncate(characters_written)
+
+    def push(self):
+        """
+        Push text content to source.
+        """
+        self._push()
+
+    @abstractmethod
+    def _pull(self):
+        """
+        Pull text content from source, and write the string to stream.
+
+        Returns
+        -------
+        int
+            Number of characters written to stream (which is always equal to the
+            length of the string).
+        """
         raise NotImplementedError()
 
     @abstractmethod
-    def push(self, local_content):
+    def _push(self):
+        """
+        Push the stream content to source.
+        """
         raise NotImplementedError()
+
+    def getvalue(self):
+        """
+        Get all stream content (without changing the stream position).
+
+        Returns
+        -------
+        str
+            Retrieve the entire content of the object.
+        """
+        self.flush()
+        return self.buffer.getvalue().decode(self.encoding)
 
 
 class NullHandler(BaseHandler):
     """
     Goes nowhere, does nothing. This handler is intended for objects that
-    required a handler, but the push/pull functionality is not needed.
+    requires a handler, but the push/pull functionality is not needed.
 
-    Will raise an exception if :meth:`.push()` or :meth:`pull()` is called.
+    Will raise an exception if ``push()`` or ``pull()`` is called.
     """
 
     _ERROR_MSG = "The 'NullHandler' does not provide push/pull functionality."
+    _SOURCE_NOT_FOUND_ERROR = NotImplementedError
 
     def __repr__(self):
         return "NullHandler"
 
-    def pull(self, *args, **kwargs):
+    def _pull(self):
         raise NotImplementedError(self._ERROR_MSG)
 
-    def push(self, *args, **kwargs):
+    def _push(self):
         raise NotImplementedError(self._ERROR_MSG)
 
 
@@ -47,47 +115,43 @@ class LocalFileHandler(BaseHandler):
     """
     Handler for push/pull text content to/from a local file.
 
+    Inherits from ``io.TextIOWrapper``, and behaves like a stream.
+
     Parameters
     ----------
     path : str or path object
         File path.
+    encoding : str
+        The name of the encoding that the stream will be decoded or encoded with.
+        Defaults to 'utf-8'.
+    newline : str
+        Controls how line endings are handled. Will be passed on to TextIOWrapper's
+        constructor.
     """
 
-    def __init__(self, path):
+    _SOURCE_NOT_FOUND_ERROR = FileNotFoundError
+
+    def __init__(self, path, encoding="utf-8", newline="\n"):
         self._path = Path(path)
+        super().__init__(encoding=encoding, newline=newline)
 
     def __repr__(self):
         return f"LocalFileHandler {self._path.resolve()}"
 
-    def pull(self, raise_on_missing=True):
-        """
-        Pull text content from file. Returns None if file is not found.
+    def _pull(self):
+        return self.write(open(self._path, mode="r").read())
 
-        Parameters
-        ----------
-        raise_on_missing : bool
-            Raise exception if content can not be pulled from file.
-        """
-        try:
-            remote_content = open(self._path, mode="r").read()
-        except FileNotFoundError as e:
-            remote_content = None
-            if raise_on_missing:
-                raise e
-        return remote_content
-
-    def push(self, local_content):
-        """
-        Push content to file.
-        """
+    def _push(self):
         self._path.parent.mkdir(parents=True, exist_ok=True)
         with open(self._path, mode="w") as f:
-            f.write(local_content)
+            f.write(self.getvalue())
 
 
 class AzureBlobHandler(BaseHandler):
     """
     Handler for push/pull text content to/from Azure Blob Storage.
+
+    Inherits from ``io.TextIOWrapper``, and behaves like a stream.
 
     Parameters
     ----------
@@ -97,46 +161,35 @@ class AzureBlobHandler(BaseHandler):
         The container name for the blob.
     blob_name : str
         The name of the blob with which to interact.
+    encoding : str
+        The name of the encoding that the stream will be decoded or encoded with.
+        Defaults to 'utf-8'.
+    newline : str
+        Controls how line endings are handled. Will be passed on to TextIOWrapper's
+        constructor.
     """
 
-    def __init__(self, conn_str, container_name, blob_name):
+    _SOURCE_NOT_FOUND_ERROR = ResourceNotFoundError
+
+    def __init__(
+        self, conn_str, container_name, blob_name, encoding="utf-8", newline="\n"
+    ):
         self._conn_str = conn_str
         self._container_name = container_name
         self._blob_name = blob_name
         self._blob_client = BlobClient.from_connection_string(
-            conn_str, container_name, blob_name
+            self._conn_str, self._container_name, self._blob_name
         )
+        super().__init__(encoding=encoding, newline=newline)
 
     def __repr__(self):
         return f"AzureBlobHandler {self._container_name}/{self._blob_name}"
 
-    def pull(self, raise_on_missing=True):
-        """
-        Pull text content from blob. Returns None if resource is not found.
+    def _pull(self):
+        return self._blob_client.download_blob().readinto(self.buffer)
 
-        Parameters
-        ----------
-        raise_on_missing : bool
-            Raise exception if content can not be pulled from blob.
-        """
-        try:
-            remote_content = self._blob_client.download_blob(encoding="utf-8").readall()
-        except ResourceNotFoundError as e:
-            remote_content = None
-            if raise_on_missing:
-                raise e
-        return remote_content
-
-    def push(self, local_content):
-        """
-        Push content to blob.
-
-        Parameters
-        ----------
-        local_content : str-like
-            ``str`` or ``str``-like stream (e.g. :class:`io.StringIO`)
-        """
-        self._blob_client.upload_blob(local_content, overwrite=True)
+    def _push(self):
+        self._blob_client.upload_blob(self.getvalue(), overwrite=True)
 
 
 class PersistentJSON(MutableMapping):
@@ -198,8 +251,9 @@ class PersistentJSON(MutableMapping):
         raise_on_missing : bool
             Raise exception if content can not be pulled from source.
         """
-        remote_content = self._handler.pull(raise_on_missing=raise_on_missing)
-        if remote_content is None:
+        self._handler.pull(raise_on_missing=raise_on_missing)
+        remote_content = self._handler.getvalue()
+        if not remote_content:
             remote_content = "{}"
         self.__dict.update(json.loads(remote_content))
 
@@ -207,8 +261,10 @@ class PersistentJSON(MutableMapping):
         """
         Push content to source.
         """
-        local_content = json.dumps(self.__dict, indent=4)
-        self._handler.push(local_content)
+        self._handler.seek(0)
+        self._handler.truncate()
+        json.dump(self.__dict, self._handler, indent=4)
+        self._handler.push()
 
 
 class ResultCollector:
@@ -334,23 +390,28 @@ class ResultCollector:
             Raise exception if results can not be pulled from source.
         """
 
-        dataframe_csv = self._handler.pull(raise_on_missing=raise_on_missing)
-        if not dataframe_csv:
+        self._handler.pull(raise_on_missing=raise_on_missing)
+        if not self._handler.getvalue():
             return
 
+        self._handler.seek(0)
         df = pd.read_csv(
-            StringIO(dataframe_csv), index_col=0, parse_dates=True, dtype=self._headers
+            self._handler, index_col=0, parse_dates=True, dtype=self._headers
         )
 
         if not (set(df.columns) == set(self._headers.keys())):
             raise ValueError("Header is not valid.")
 
-        if (self._indexing_mode == "auto") and not (
-            isinstance(df.index, pd.Int64Index)
+        if (
+            not df.index.empty
+            and (self._indexing_mode == "auto")
+            and not (isinstance(df.index, pd.Int64Index))
         ):
             raise ValueError("Index must be 'Int64Index'.")
-        elif (self._indexing_mode == "timestamp") and not (
-            isinstance(df.index, pd.DatetimeIndex)
+        elif (
+            not df.index.empty
+            and (self._indexing_mode == "timestamp")
+            and not (isinstance(df.index, pd.DatetimeIndex))
         ):
             raise ValueError("Index must be 'DatetimeIndex'.")
 
@@ -360,10 +421,10 @@ class ResultCollector:
         """
         Push results to source.
         """
-        local_content = self._dataframe.to_csv(
-            sep=",", index=True, line_terminator="\n"
-        )
-        self._handler.push(local_content)
+        self._handler.seek(0)
+        self._handler.truncate()
+        self._dataframe.to_csv(self._handler, sep=",", index=True, line_terminator="\n")
+        self._handler.push()
 
     @property
     def dataframe(self):
