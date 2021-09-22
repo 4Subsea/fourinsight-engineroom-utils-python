@@ -156,13 +156,13 @@ class BaseDataSource(ABC):
 
 
 class DrioDataSource(BaseDataSource):
-    def __init__(self, drio_client, **labels):
+    def __init__(self, drio_client, labels):
         self._drio_client = drio_client
         self._labels = labels
 
     def _get(self, start, end):
         data = {}
-        for label in self.labels():
+        for label in self.labels:
             data[label] = self._drio_client.get(
                 self._labels[label], start=start, end=end
             )

@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import patch, Mock, call
 
 import numpy as np
 import pandas as pd
@@ -405,3 +405,58 @@ class Test_BaseDataSource:
         )
 
         pd.testing.assert_frame_equal(df_out, df_expect)
+
+
+class Test_DrioDataSource:
+    def test__init__(self):
+        drio_client = Mock()
+        labels = {
+            "a": "timeseriesid-a",
+            "b": "timeseriesid-b",
+            "c": "timeseriesid-c",
+        }
+        source = DrioDataSource(drio_client, labels)
+
+        assert isinstance(source, BaseDataSource)
+        assert source._drio_client == drio_client
+        assert source._labels == labels
+
+    def test__labels(self):
+        labels = {
+            "a": "timeseriesid-a",
+            "b": "timeseriesid-b",
+            "c": "timeseriesid-c",
+        }
+        source = DrioDataSource(Mock(), labels)
+        assert set(source.labels) == set(["a", "b", "c"])
+
+    def test__get(self):
+        drio_client = Mock()
+        drio_client.get.return_value = pd.Series(data=[1.1, 1.2, 1.3], index=[1., 2., 3.])
+
+        labels = {
+            "a": "timeseriesid-a",
+            "b": "timeseriesid-b",
+            "c": "timeseriesid-c",
+        }
+        source = DrioDataSource(drio_client, labels)
+
+        data_out = source._get("<start-time>", "<end-time>")
+
+        data_expect = {
+            "a": pd.Series(data=[1.1, 1.2, 1.3], index=[1., 2., 3.]),
+            "b": pd.Series(data=[1.1, 1.2, 1.3], index=[1., 2., 3.]),
+            "c": pd.Series(data=[1.1, 1.2, 1.3], index=[1., 2., 3.]),
+        }
+
+        assert data_out.keys() == data_expect.keys()
+        for key, series_expect in data_expect.items():
+            pd.testing.assert_series_equal(series_expect, data_out[key])
+
+        drio_client.get.assert_has_calls(
+            [
+                call("timeseriesid-a", start="<start-time>", end="<end-time>"),
+                call("timeseriesid-b", start="<start-time>", end="<end-time>"),
+                call("timeseriesid-c", start="<start-time>", end="<end-time>"),
+            ]
+        )
