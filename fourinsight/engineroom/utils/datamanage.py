@@ -1,11 +1,11 @@
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod, abstractproperty
 
 import numpy as np
 import pandas as pd
 
 
 class BaseDataSource(ABC):
-    @abstractmethod
+    @abstractproperty
     def labels(self):
         """Data source labels."""
         raise NotImplementedError()
@@ -168,6 +168,7 @@ class DrioDataSource(BaseDataSource):
             )
         return data
 
+    @property
     def labels(self):
         """Data source labels."""
         return tuple(self._labels.keys())
