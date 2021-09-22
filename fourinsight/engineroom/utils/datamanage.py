@@ -13,7 +13,7 @@ class BaseDataSource(ABC):
     @abstractmethod
     def _get(self, start, end):
         """
-        Get source data.
+        Get data fro source.
 
         Parameters
         ----------
@@ -73,61 +73,86 @@ class BaseDataSource(ABC):
         else:
             if not tolerance:
                 raise ValueError("No tolerance given.")
-            return self._synchronize(data, tolerance)
+            return self._sync_data(data, tolerance)
 
     @staticmethod
-    def _sync_series(series_a, series_b, tolerance):
-        """
-        Merge series so that they share a common index.
+    def _sync_data(data, tolerance):
 
-        Parameters
-        ----------
-        series_a : pandas.Series
-            Data series.
-        series_b : pandas.Series
-            Data series.
-        tolerance : int, float or pandas.Timedelta
-            Tolerance limit for syncing.
-        """
-        merge_a = pd.merge_asof(
-            series_a,
-            series_b,
-            left_index=True,
-            right_index=True,
-            tolerance=tolerance,
-            direction="nearest",
+        index_common = np.sort(
+            np.unique(np.concatenate([series.index for series in data.values()]))
         )
-        merge_b = pd.merge_asof(
-            series_b,
-            series_a,
-            left_index=True,
-            right_index=True,
-            tolerance=tolerance,
-            direction="nearest",
-        )
-        df_synced = pd.concat([merge_a, merge_b]).sort_index()
-        idx_keep = np.r_[True, (np.diff(df_synced.index) > tolerance)]
-        return df_synced[idx_keep]
+        index_keep = np.r_[True, (np.diff(index_common) > tolerance)]
+        index_common = index_common[index_keep]
+        df_synced = pd.DataFrame(index=index_common)
 
-    def _synchronize(self, data, tolerance):
-        """
-        Synchronize data series.
+        for key, series in data.items():
+            if isinstance(series, pd.Series):
+                series.name = key
 
-        Parameters
-        ----------
-        data : dict
-            Label and data as key/value pairs. The data should be of type ``pandas.Series``.
-        tolerance : int, float or pandas.Timedelta
-            Tolerance limit for syncing.
-        """
-        for i, (key, series_i) in enumerate(data.items()):
-            if isinstance(series_i, pd.Series):
-                series_i.name = key
-            if i == 0:
-                df_synced = pd.DataFrame(series_i)
-            else:
-                df_synced = self._sync_series(df_synced, series_i, tolerance)
+            df_synced = pd.merge_asof(
+                df_synced,
+                series,
+                left_index=True,
+                right_index=True,
+                tolerance=tolerance,
+                direction="nearest",
+            )
+
         return df_synced
+
+    # @staticmethod
+    # def _sync_series(series_a, series_b, tolerance):
+    #     """
+    #     Merge series so that they share a common index.
+
+    #     Parameters
+    #     ----------
+    #     series_a : pandas.Series
+    #         Data series.
+    #     series_b : pandas.Series
+    #         Data series.
+    #     tolerance : int, float or pandas.Timedelta
+    #         Tolerance limit for syncing.
+    #     """
+    #     merge_a = pd.merge_asof(
+    #         series_a,
+    #         series_b,
+    #         left_index=True,
+    #         right_index=True,
+    #         tolerance=tolerance,
+    #         direction="nearest",
+    #     )
+    #     merge_b = pd.merge_asof(
+    #         series_b,
+    #         series_a,
+    #         left_index=True,
+    #         right_index=True,
+    #         tolerance=tolerance,
+    #         direction="nearest",
+    #     )
+    #     df_synced = pd.concat([merge_a, merge_b]).sort_index()
+    #     idx_keep = np.r_[True, (np.diff(df_synced.index) > tolerance)]
+    #     return df_synced[idx_keep]
+
+    # def _synchronize(self, data, tolerance):
+    #     """
+    #     Synchronize data series.
+
+    #     Parameters
+    #     ----------
+    #     data : dict
+    #         Label and data as key/value pairs. The data should be of type ``pandas.Series``.
+    #     tolerance : int, float or pandas.Timedelta
+    #         Tolerance limit for syncing.
+    #     """
+    #     for i, (key, series_i) in enumerate(data.items()):
+    #         if isinstance(series_i, pd.Series):
+    #             series_i.name = key
+    #         if i == 0:
+    #             df_synced = pd.DataFrame(series_i)
+    #         else:
+    #             df_synced = self._sync_series(df_synced, series_i, tolerance)
+    #     return df_synced
 
 
 class DrioDataSource(BaseDataSource):
