@@ -156,15 +156,35 @@ class BaseDataSource(ABC):
 
 
 class DrioDataSource(BaseDataSource):
-    def __init__(self, drio_client, labels):
+    """
+    DataReservoir.io data source.
+
+    Parameters
+    ----------
+    drio_client : obj
+        DataReservoir.io client.
+    lables : dict
+        Labels and timeseries IDs as key/value pairs.
+    get_opt : dict, optional
+        Keyword arguments that will be passed on to the ``drio_clien.get`` method.
+        See datareservoirio documentation for details.
+    """
+
+    def __init__(
+        self,
+        drio_client,
+        labels,
+        get_opt={"convert_date": True, "raise_empty": False},
+    ):
         self._drio_client = drio_client
         self._labels = labels
+        self._get_opt = get_opt
 
     def _get(self, start, end):
         data = {}
         for label in self.labels:
             data[label] = self._drio_client.get(
-                self._labels[label], start=start, end=end
+                self._labels[label], start=start, end=end, **self._get_opt
             )
         return data
 
