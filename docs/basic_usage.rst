@@ -186,3 +186,53 @@ be pushed and pulled from a source.
 
     # update the source with the latest results
     results.push()
+
+
+Data Source
+-----------
+
+Timeseries data (or other types of sequential data) is often most valueable when it is
+considered in groups. An example could be measurements from a motion sensor; to be
+able to calcuate the tilt angle of the sensor, you would need access to acceleration
+and gyro measurements for all three axis of the sensor. Another example could be
+parameterized wave spectrum data, where the spectrum is only fully described when
+you have all parameters available. With ``fourinsight.engineroom.utils``, such groups
+of sequential data can be retrieved from their source using 'data source' objects.
+The ``DrioDataSource`` class provides an interface to handle groups of timeseries
+data from the DataReservoir.io. Other data sources can set ut by inheriting from
+``BaseDataSource``.
+
+.. code-block:: python
+
+    from fourinsight.engineroom.utils import DrioDataSource
+
+
+    labels = {
+        "Ax": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "Ay": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "Az": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "Gx": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "Gy": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "Gz": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    }
+
+    source = DrioDataSource(drio_client, labels)
+
+The ``get()`` method is used to download data from the source.
+
+.. code-block:: python
+
+    # download data as a 'pandas.DataFrame'
+    df = source.get("2020-01-01 00:00", "2020-01-02 00:00")
+
+The data index can be synced by setting the ``index_sync`` flag to ``True``, and
+providing a suitable ``tolerance``.
+
+.. code-block:: python
+
+    df = source.get(
+        "2020-01-01 00:00",
+        "2020-01-02 00:00",
+        index_sync=True,
+        tolerance=pd.to_timedelta("1ms")
+    )
