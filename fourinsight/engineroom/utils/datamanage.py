@@ -128,7 +128,7 @@ class DrioDataSource(BaseDataSource):
         DataReservoir.io client.
     lables : dict
         Labels and timeseries IDs as key/value pairs.
-    get_opt : dict, optional
+    get_kwargs : dict, optional
         Keyword arguments that will be passed on to the ``drio_clien.get`` method.
         See datareservoirio documentation for details.
     """
@@ -137,11 +137,11 @@ class DrioDataSource(BaseDataSource):
         self,
         drio_client,
         labels,
-        get_opt={"convert_date": True, "raise_empty": False},
+        get_kwargs={"convert_date": True, "raise_empty": False},
     ):
         self._drio_client = drio_client
         self._labels = labels
-        self._get_opt = get_opt
+        self._get_opt = get_kwargs
 
     def _get(self, start, end):
         """
@@ -149,7 +149,6 @@ class DrioDataSource(BaseDataSource):
 
         Parameters
         ----------
-        start :
         start :
             Start time of the data. Will be passed on to the ``drio_client.get`` method.
         end :
