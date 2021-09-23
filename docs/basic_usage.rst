@@ -196,11 +196,15 @@ considered in groups. An example could be measurements from a motion sensor; to 
 able to calcuate the tilt angle of the sensor, you would need access to acceleration
 and gyro measurements for all three axis of the sensor. Another example could be
 parameterized wave spectrum data, where the spectrum is only fully described when
-you have all parameters available. With ``fourinsight.engineroom.utils``, such groups
+you have all parameters available. With :mod:`fourinsight.engineroom.utils`, such groups
 of sequential data can be retrieved from their source using 'data source' objects.
-The ``DrioDataSource`` class provides an interface to handle groups of timeseries
-data from the DataReservoir.io. Other data sources can set ut by inheriting from
-``BaseDataSource``.
+The :class:`DrioDataSource` class provides an interface to download groups of timeseries
+data from the DataReservoir.io. Other data sources can be set ut by inheriting from
+:class:`BaseDataSource`, and overriding the abstract method, ``_get()``, and the abstract
+property, ``labels``.
+
+A :class:`DrioDataSource` object is initialized with a :class:`datareservoirio.Client`
+object and a dictionary containing labels and timeseries IDs as key/value pairs.
 
 .. code-block:: python
 
@@ -225,8 +229,11 @@ The ``get()`` method is used to download data from the source.
     # download data as a 'pandas.DataFrame'
     df = source.get("2020-01-01 00:00", "2020-01-02 00:00")
 
-The data index can be synced by setting the ``index_sync`` flag to ``True``, and
-providing a suitable ``tolerance``.
+The data index can be synced during download by setting the ``index_sync`` flag
+to ``True`` and providing a suitable ``tolerance`` limit. Neighboring datapoints are
+then merged together at a 'common' index. The common index is set to the smallest
+index of the neighboring datapoints. The tolerance describe the expected spacing
+between neighboring datapoints to merge.
 
 .. code-block:: python
 
@@ -236,3 +243,14 @@ providing a suitable ``tolerance``.
         index_sync=True,
         tolerance=pd.to_timedelta("1ms")
     )
+
+.. warning::
+    Be careful when setting the tolerance limit for synchronization. A too small
+    or too large tolerance could lead to loss of data. The tolerance should at least
+    be smaller than half of the sampling frequency of the data. The tolerance should
+    also be greater than the expected jitter between datapoints to merge. 
+
+    The synchronization algorithm will make a common index by concatenating all
+    the different label indexes, do a sorting, and then remove all index steps that are
+    smaller than the tolerance. Datapoints are then merged into the common index
+    if they are closer than the tolerance limit.
