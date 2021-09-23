@@ -89,6 +89,11 @@ class BaseDataSource(ABC):
             comparable to the data index. E.g. if the data has a ``DatetimeIndex``,
             the tolerance should be of type ``pandas.Timestamp``. And if the data
             has a ``Int64Index``, the tolerance should be an integer.
+
+        Returns
+        -------
+        pandas.DataFrame
+            Synchronized data.
         """
         index_common = np.sort(
             np.unique(np.concatenate([series.index for series in data.values()]))
@@ -139,6 +144,23 @@ class DrioDataSource(BaseDataSource):
         self._get_opt = get_opt
 
     def _get(self, start, end):
+        """
+        Get data from the DataReservoir.io.
+
+        Parameters
+        ----------
+        start :
+        start :
+            Start time of the data. Will be passed on to the ``drio_client.get`` method.
+        end :
+            End time of the data. Will be passed on to the ``drio_client.get`` method.
+
+        Returns
+        -------
+        dict
+            Label and data as key/value pairs. The data is returned as ``pandas.Series``
+            objects.
+        """
         data = {}
         for label in self.labels:
             data[label] = self._drio_client.get(
