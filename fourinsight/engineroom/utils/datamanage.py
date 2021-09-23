@@ -5,6 +5,11 @@ import pandas as pd
 
 
 class BaseDataSource(ABC):
+    """
+    Abstract class for data sources.
+    """
+
+
     @abstractproperty
     def labels(self):
         """Data source labels."""
@@ -129,7 +134,7 @@ class DrioDataSource(BaseDataSource):
     lables : dict
         Labels and timeseries IDs as key/value pairs.
     get_kwargs : dict, optional
-        Keyword arguments that will be passed on to the ``drio_clien.get`` method.
+        Keyword arguments that will be passed on to the ``drio_client.get`` method.
         See datareservoirio documentation for details.
     """
 
