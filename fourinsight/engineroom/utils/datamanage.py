@@ -9,7 +9,6 @@ class BaseDataSource(ABC):
     Abstract class for data sources.
     """
 
-
     @abstractproperty
     def labels(self):
         """Data source labels."""
