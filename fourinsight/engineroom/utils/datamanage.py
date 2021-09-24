@@ -35,7 +35,7 @@ class BaseDataSource(ABC):
         """
         raise NotImplementedError()
 
-    def get(self, start, end, index_sync=True, tolerance=None):
+    def get(self, start, end, index_sync=False, tolerance=None):
         """
         Get data from source, and perform syncing of the data index (optional).
 
