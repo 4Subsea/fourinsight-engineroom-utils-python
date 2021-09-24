@@ -186,6 +186,20 @@ class TimeseriesSourceMixin:
         indexing_mode="start",
         **kwargs,
     ):
+        """
+        Return a fixed frequency DataIterator.
+
+        Parameters
+        ----------
+        start : str or datetime-like, optional
+            Left bound for generating dates. Will be passed on to ``pandas.date_range()``.
+        end : str or datetime-like, optional
+            Right bound for generating dates. Will be passed on to ``pandas.date_range()``.
+        periods : int, optional
+            Number of periods to generate. Will be passed on to ``pandas.date_range()``.
+        freq : str or DateOffset, default 'D'
+            Frequency. Will be passed on to ``pandas.date_range()``.
+        """
         date_range = pd.date_range(
             start=start, end=end, periods=periods, freq=freq, closed=closed
         )
