@@ -1,5 +1,5 @@
-from abc import ABC, abstractmethod, abstractproperty
 import warnings
+from abc import ABC, abstractmethod, abstractproperty
 
 import numpy as np
 import pandas as pd
@@ -49,9 +49,9 @@ class BaseDataSource(ABC):
             If the index should be synced. If True, a valid tolerance must be given.
         tolerance : int, float or pandas.Timedelta
             Tolerance limit for syncing (see Notes). If ``index_sync`` is set to True,
-            data points that are closer that the tolerance are merged so that they
+            datapoints that are closer that the tolerance are merged so that they
             share a common index. The common index will be the first index of the
-            neighboring data points.
+            neighboring datapoints.
 
         Returns
         -------
@@ -80,9 +80,9 @@ class BaseDataSource(ABC):
         """
         Sync data index.
 
-        Data points that are closer than the tolerance are merged so that they share
+        Datapoints that are closer than the tolerance are merged so that they share
         a common index. The common index will be the first index of the neighboring
-        data points.
+        datapoints.
 
         Parameters
         ----------
