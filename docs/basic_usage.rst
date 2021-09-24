@@ -200,7 +200,7 @@ example could be parameterized wave spectrum data, where the spectrum is only fu
 described when you have all parameters available.
 
 'Data source' objects provide an interface to retrieve groups of sequential data
-from a source. Data source classes must inherit from :class:`BaseDataSource`, and
+from a source. A data source class must inherit from :class:`BaseDataSource`, and
 override the abstract method, ``_get()``, and the abstract property, ``labels``.
 
 The :class:`DrioDataSource` class handles data from the DataReservoir.io. It is
