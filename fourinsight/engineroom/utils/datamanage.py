@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod, abstractproperty
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -109,6 +110,12 @@ class BaseDataSource(ABC):
         for key, series in data.items():
             if isinstance(series, pd.Series):
                 series.name = key
+
+            if tolerance >= np.median(np.diff(series.index)):
+                warnings.warn(
+                    f"Tolerance is greater than the mean sampling frequency of '{key}'."
+                    + " This may lead to loss of data."
+                )
 
             df_synced = pd.merge_asof(
                 df_synced,
