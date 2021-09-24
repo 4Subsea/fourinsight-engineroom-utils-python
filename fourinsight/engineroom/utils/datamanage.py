@@ -49,7 +49,7 @@ class BaseDataSource(ABC):
             If the index should be synced. If True, a valid tolerance must be given.
         tolerance : int, float or pandas.Timedelta
             Tolerance limit for syncing (see Notes). If ``index_sync`` is set to True,
-            datapoints that are closer that the tolerance are merged so that they
+            datapoints that are closer than the tolerance are merged so that they
             share a common index. The common index will be the first index of the
             neighboring datapoints.
 
@@ -113,8 +113,8 @@ class BaseDataSource(ABC):
 
             if tolerance >= np.median(np.diff(series.index)):
                 warnings.warn(
-                    f"Tolerance is greater than the mean sampling frequency of '{key}'."
-                    + " This may lead to loss of data."
+                    f"Tolerance is greater than the median sampling frequency of '{key}'. "
+                    "This may lead to significant loss of data."
                 )
 
             df_synced = pd.merge_asof(
