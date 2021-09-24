@@ -17,9 +17,9 @@ class BaseHandler(TextIOWrapper):
 
     Parameters
     ----------
-    *args
+    *args : tuple
         Passed on to the TextIOWrapper's constructor.
-    **kwargs
+    **kwargs : dict, optional
         Passed on to the TextIOWrapper's constructor.
     """
 
