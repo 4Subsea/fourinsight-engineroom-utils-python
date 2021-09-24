@@ -199,6 +199,11 @@ class TimeseriesSourceMixin:
             Number of periods to generate. Will be passed on to ``pandas.date_range()``.
         freq : str or DateOffset, default 'D'
             Frequency. Will be passed on to ``pandas.date_range()``.
+        closed : {None, 'left', 'right'}, optional
+            Make the interval closed with respect to the given frequency to
+            the 'left', 'right', or both sides (None, the default).
+        **kwargs : optional
+            Keyword arguments passed on to ``source.get()``.
         """
         date_range = pd.date_range(
             start=start, end=end, periods=periods, freq=freq, closed=closed
