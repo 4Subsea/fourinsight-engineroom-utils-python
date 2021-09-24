@@ -129,7 +129,72 @@ class BaseDataSource(ABC):
         return df_synced
 
 
-class DrioDataSource(BaseDataSource):
+class DataIterator:
+    """
+    Data iterator.
+
+    Parameters
+    ----------
+    source : obj
+        Data source object.
+    start : list
+        Start indexes. Will be passed on to source.get().
+    end : list
+        End indexes. Will be passed on to source.get().
+    indexing_mode : str
+        Indexing mode. Must be 'start', 'end' or 'mid'.
+    **kwargs : optional
+        Keyword arguments passed on to ``source.get()``.
+    """
+
+    def __init__(self, source, start, end, indexing_mode="start", **kwargs):
+        self._source = source
+        self._start_end_iter = zip(start, end)
+        self._indexing_mode = indexing_mode
+        self._kwargs = kwargs
+
+        if not isinstance(source, BaseDataSource):
+            raise TypeError("source must be instance of ``BaseDataSource.``")
+
+        if not len(start) == len(end):
+            raise ValueError("Start and end must have the same length.")
+
+    def __next__(self):
+        start, end = next(self._start_end_iter)
+        if self._indexing_mode == "start":
+            index = start
+        elif self._indexing_mode == "end":
+            index = end
+        elif self._indexing_mode == "mid":
+            index = start + (end - start) / 2
+        else:
+            raise ValueError("indexing_mode must be 'start', 'end' or 'mid'.")
+        return index, self._source.get(start, end, **self._kwargs)
+
+    def __iter__(self):
+        return self
+
+
+class TimeseriesSourceMixin:
+    def date_range_iter(
+        self,
+        start=None,
+        end=None,
+        periods=None,
+        freq=None,
+        closed=None,
+        indexing_mode="start",
+        **kwargs,
+    ):
+        date_range = pd.date_range(
+            start=start, end=end, periods=periods, freq=freq, closed=closed
+        )
+        return DataIterator(
+            self, date_range[:-1], date_range[1:], indexing_mode=indexing_mode, **kwargs
+        )
+
+
+class DrioDataSource(TimeseriesSourceMixin, BaseDataSource):
     """
     DataReservoir.io data source.
 
