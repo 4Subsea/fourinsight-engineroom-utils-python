@@ -175,7 +175,7 @@ class DataIterator:
         return self
 
 
-class TimeseriesSourceMixin:
+class DateRangeIterMixin:
     def date_range_iter(
         self,
         start=None,
@@ -213,7 +213,7 @@ class TimeseriesSourceMixin:
         )
 
 
-class DrioDataSource(TimeseriesSourceMixin, BaseDataSource):
+class DrioDataSource(DateRangeIterMixin, BaseDataSource):
     """
     DataReservoir.io data source.
 
