@@ -1,5 +1,5 @@
-from unittest.mock import Mock, call, patch
 import types
+from unittest.mock import Mock, call, patch
 
 import numpy as np
 import pandas as pd
