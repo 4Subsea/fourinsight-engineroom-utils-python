@@ -269,7 +269,7 @@ def date_start_end(
     **kwargs,
 ):
     """
-    Return lists of fixed frequency start/end pairs.
+    Wrapper around ``pandas.date_range``. Return lists of start/end pairs.
 
     Parameters
     ----------
