@@ -134,92 +134,41 @@ class BaseDataSource(ABC):
 
         return df_synced
 
-
-class DataIterator:
-    """
-    Data iterator.
-
-    Parameters
-    ----------
-    source : obj
-        Data source object.
-    start : list
-        Start indexes. Will be passed on to source.get().
-    end : list
-        End indexes. Will be passed on to source.get().
-    indexing_mode : str
-        Indexing mode. Must be 'start', 'end' or 'mid'.
-    **kwargs : optional
-        Keyword arguments passed on to ``source.get()``.
-    """
-
-    def __init__(self, source, start, end, indexing_mode="start", **kwargs):
-        self._source = source
-        self._start_end_iter = zip(start, end)
-        self._indexing_mode = indexing_mode
-        self._kwargs = kwargs
-
-        if not isinstance(source, BaseDataSource):
-            raise TypeError("source must be instance of ``BaseDataSource.``")
-
-        if not len(start) == len(end):
-            raise ValueError("Start and end must have the same length.")
-
-    def __next__(self):
-        start, end = next(self._start_end_iter)
-        if self._indexing_mode == "start":
-            index = start
-        elif self._indexing_mode == "end":
-            index = end
-        elif self._indexing_mode == "mid":
-            index = start + (end - start) / 2
-        else:
-            raise ValueError("indexing_mode must be 'start', 'end' or 'mid'.")
-        return index, self._source.get(start, end, **self._kwargs)
-
-    def __iter__(self):
-        return self
-
-
-class DateRangeIterMixin:
-    def date_range_iter(
-        self,
-        start=None,
-        end=None,
-        periods=None,
-        freq=None,
-        closed=None,
-        indexing_mode="start",
-        **kwargs,
-    ):
+    def iter(self, start_list, end_list, indexing_mode="start"):
         """
-        Return a fixed frequency DataIterator.
+        Data generator yielding tuples of index and data for every start/end pair.
 
         Parameters
         ----------
-        start : str or datetime-like, optional
-            Left bound for generating dates. Will be passed on to ``pandas.date_range()``.
-        end : str or datetime-like, optional
-            Right bound for generating dates. Will be passed on to ``pandas.date_range()``.
-        periods : int, optional
-            Number of periods to generate. Will be passed on to ``pandas.date_range()``.
-        freq : str or DateOffset, default 'D'
-            Frequency. Will be passed on to ``pandas.date_range()``.
-        closed : {None, 'left', 'right'}, optional
-            Make the interval closed with respect to the given frequency to
-            the 'left', 'right', or both sides (None, the default).
-        **kwargs : optional
-            Keyword arguments passed on to ``source.get()``.
+        start_list : array-like
+            Start indexes. 'start' and 'end' must have the same length.
+        end_list : array-like
+            End indexes. 'start' and 'end' must have the same length.
+        indexing_mode : str, optional
+            Indexing mode. Must be 'start', 'end' or 'mid'.
         """
-        date_range = pd.date_range(
-            start=start, end=end, periods=periods, freq=freq, closed=closed
-        )
-        return DataIterator(
-            self, date_range[:-1], date_range[1:], indexing_mode=indexing_mode, **kwargs
+        start = np.asarray_chkfinite(start_list)
+        end = np.asarray_chkfinite(end_list)
+
+        if not len(start) == len(end):
+            raise ValueError("'start' and 'end' does not have the same length.")
+
+        if indexing_mode == "start":
+            index = start
+        elif indexing_mode == "end":
+            index = end
+        elif indexing_mode == "mid":
+            index = start + (end - start) / 2.0
+        else:
+            raise ValueError("'indexing_mode' must be 'start', 'end' or 'mid'.")
+
+        return (
+            (index, self.get(start, end))
+            for index, start, end in zip(index, start, end)
         )
 
 
-class DrioDataSource(DateRangeIterMixin, BaseDataSource):
+class DrioDataSource(BaseDataSource):
     """
     DataReservoir.io data source.
 
@@ -300,3 +249,127 @@ class DrioDataSource(DateRangeIterMixin, BaseDataSource):
     def labels(self):
         """Data source labels."""
         return tuple(self._labels.keys())
+
+
+def date_range_iter(
+    source,
+    start=None,
+    end=None,
+    periods=None,
+    freq=None,
+    closed=None,
+    indexing_mode="start",
+):
+    """
+    Return a fixed frequency data generator.
+
+    Parameters
+    ----------
+    start : str or datetime-like, optional
+        Left bound for generating dates. Will be passed on to ``pandas.date_range()``.
+    end : str or datetime-like, optional
+        Right bound for generating dates. Will be passed on to ``pandas.date_range()``.
+    periods : int, optional
+        Number of periods to generate. Will be passed on to ``pandas.date_range()``.
+    freq : str or DateOffset, default 'D'
+        Frequency. Will be passed on to ``pandas.date_range()``.
+    closed : {None, 'left', 'right'}, optional
+        Make the interval closed with respect to the given frequency to
+        the 'left', 'right', or both sides (None, the default).
+    indexing_mode : str, optional
+        Indexing mode. Must be 'start', 'end' or 'mid'.
+    """
+    start_end = pd.date_range(start=start, end=end, periods=periods, freq=freq, closed=closed)
+    return source.iter(start_end[:-1], start_end[1:], indexing_mode=indexing_mode)
+
+
+# class DataIterator:
+#     """
+#     Data iterator.
+
+#     Parameters
+#     ----------
+#     source : obj
+#         Data source object.
+#     start : list
+#         Start indexes. Will be passed on to source.get().
+#     end : list
+#         End indexes. Will be passed on to source.get().
+#     indexing_mode : str
+#         Indexing mode. Must be 'start', 'end' or 'mid'.
+#     **kwargs : optional
+#         Keyword arguments passed on to ``source.get()``.
+#     """
+
+#     def __init__(self, source, start, end, indexing_mode="start"):
+#         if not isinstance(source, BaseDataSource):
+#             raise TypeError("'source' must be instance of ``BaseDataSource.``")
+
+#         if not len(start) == len(end):
+#             raise ValueError("Start and end must have the same length.")
+
+#         self._source = source
+#         self._start = np.asarray_chkfinite(start)
+#         self._end = np.asarray_chkfinite(end)
+
+#         if indexing_mode == "start":
+#             self._index = self._start
+#         elif indexing_mode == "end":
+#             self._index = self._end
+#         elif indexing_mode == "mid":
+#             self._index = start + (end - start) / 2.0
+
+#         self._index_start_end_iter = zip(self._index, self._start, self._end)
+
+#     def __next__(self):
+#         start, end = next(self._start_end_iter)
+#         if self._indexing_mode == "start":
+#             index = start
+#         elif self._indexing_mode == "end":
+#             index = end
+#         elif self._indexing_mode == "mid":
+#             index = start + (end - start) / 2
+#         else:
+#             raise ValueError("indexing_mode must be 'start', 'end' or 'mid'.")
+#         return index, self._source.get(start, end, **self._kwargs)
+
+#     def __iter__(self):
+#         return self
+
+
+# class DateRangeIterMixin:
+#     def date_range_iter(
+#         self,
+#         start=None,
+#         end=None,
+#         periods=None,
+#         freq=None,
+#         closed=None,
+#         indexing_mode="start",
+#         **kwargs,
+#     ):
+#         """
+#         Return a fixed frequency DataIterator.
+
+#         Parameters
+#         ----------
+#         start : str or datetime-like, optional
+#             Left bound for generating dates. Will be passed on to ``pandas.date_range()``.
+#         end : str or datetime-like, optional
+#             Right bound for generating dates. Will be passed on to ``pandas.date_range()``.
+#         periods : int, optional
+#             Number of periods to generate. Will be passed on to ``pandas.date_range()``.
+#         freq : str or DateOffset, default 'D'
+#             Frequency. Will be passed on to ``pandas.date_range()``.
+#         closed : {None, 'left', 'right'}, optional
+#             Make the interval closed with respect to the given frequency to
+#             the 'left', 'right', or both sides (None, the default).
+#         **kwargs : optional
+#             Keyword arguments passed on to ``source.get()``.
+#         """
+#         date_range = pd.date_range(
+#             start=start, end=end, periods=periods, freq=freq, closed=closed
+#         )
+#         return DataIterator(
+#             self, date_range[:-1], date_range[1:], indexing_mode=indexing_mode, **kwargs
+#         )
