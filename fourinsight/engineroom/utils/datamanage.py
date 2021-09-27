@@ -10,6 +10,10 @@ class BaseDataSource(ABC):
     Abstract class for data sources.
     """
 
+    def __init__(self, index_sync=False, tolerance=None):
+        self._index_sync = index_sync
+        self._tolerance = tolerance
+
     @abstractproperty
     def labels(self):
         """Data source labels."""
@@ -35,7 +39,7 @@ class BaseDataSource(ABC):
         """
         raise NotImplementedError()
 
-    def get(self, start, end, index_sync=False, tolerance=None):
+    def get(self, start, end):
         """
         Get data from source, and perform syncing of the data index (optional).
 
@@ -68,12 +72,12 @@ class BaseDataSource(ABC):
         """
 
         data = self._get(start, end)
-        if not index_sync:
+        if not self._index_sync:
             return pd.DataFrame(data)
         else:
-            if not tolerance:
+            if not self._tolerance:
                 raise ValueError("No tolerance given.")
-            return self._sync_data(data, tolerance)
+            return self._sync_data(data, self._tolerance)
 
     @staticmethod
     def _sync_data(data, tolerance):
@@ -232,11 +236,18 @@ class DrioDataSource(DateRangeIterMixin, BaseDataSource):
         self,
         drio_client,
         labels,
-        get_kwargs={"convert_date": True, "raise_empty": False},
+        index_sync=False,
+        tolerance=None,
+        convert_date=True,
+        raise_empty=False,
+        # get_kwargs={"convert_date": True, "raise_empty": False},
     ):
         self._drio_client = drio_client
         self._labels = labels
-        self._get_opt = get_kwargs
+        # self._get_opt = get_kwargs
+        self._convert_date = convert_date
+        self._raise_empty = raise_empty
+        super().__init__(index_sync=index_sync, tolerance=tolerance)
 
     def _get(self, start, end):
         """
@@ -258,7 +269,11 @@ class DrioDataSource(DateRangeIterMixin, BaseDataSource):
         data = {}
         for label in self.labels:
             data[label] = self._drio_client.get(
-                self._labels[label], start=start, end=end, **self._get_opt
+                self._labels[label],
+                start=start,
+                end=end,
+                convert_date=self._convert_date,
+                raise_empty=self._raise_empty,
             )
         return data
 

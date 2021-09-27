@@ -18,6 +18,11 @@ class BaseDataSourceForTesting(BaseDataSource):
 
 
 class Test_BaseDataSource:
+    def test__init__(self):
+        source = BaseDataSourceForTesting(index_sync=True, tolerance=1)
+        assert source._index_sync is True
+        assert source._tolerance == 1
+
     def test_labels(self):
         source = BaseDataSourceForTesting()
         with pytest.raises(NotImplementedError):
@@ -321,8 +326,8 @@ class Test_BaseDataSource:
 
         mock_get.return_value = data
 
-        source = BaseDataSourceForTesting()
-        df_out = source.get("<start-time>", "<end-time>", index_sync=False)
+        source = BaseDataSourceForTesting(index_sync=False)
+        df_out = source.get("<start-time>", "<end-time>")
 
         df_expect = pd.DataFrame(
             data={
@@ -391,10 +396,8 @@ class Test_BaseDataSource:
 
         mock_get.return_value = data
 
-        source = BaseDataSourceForTesting()
-        df_out = source.get(
-            "<start-time>", "<end-time>", index_sync=True, tolerance=0.2
-        )
+        source = BaseDataSourceForTesting(index_sync=True, tolerance=0.2)
+        df_out = source.get("<start-time>", "<end-time>")
 
         df_expect = pd.DataFrame(
             data={
@@ -411,10 +414,10 @@ class Test_BaseDataSource:
 
     @patch.object(BaseDataSourceForTesting, "_get")
     def test_get_raises_no_tolerance(self, mock_get):
-        source = BaseDataSourceForTesting()
+        source = BaseDataSourceForTesting(index_sync=True, tolerance=None)
 
         with pytest.raises(ValueError):
-            source.get("<start-time>", "<end-time>", index_sync=True, tolerance=None)
+            source.get("<start-time>", "<end-time>")
 
     @patch.object(BaseDataSourceForTesting, "_get")
     def test_get_sync_datetimeindex(self, mock_get):
@@ -446,13 +449,10 @@ class Test_BaseDataSource:
 
         mock_get.return_value = data
 
-        source = BaseDataSourceForTesting()
-        df_out = source.get(
-            "<start-time>",
-            "<end-time>",
-            index_sync=True,
-            tolerance=pd.to_timedelta("2s"),
+        source = BaseDataSourceForTesting(
+            index_sync=True, tolerance=pd.to_timedelta("2s")
         )
+        df_out = source.get("<start-time>", "<end-time>")
 
         df_expect = pd.DataFrame(
             data={
@@ -475,11 +475,22 @@ class Test_DrioDataSource:
             "b": "timeseriesid-b",
             "c": "timeseriesid-c",
         }
-        source = DrioDataSource(drio_client, labels)
+        source = DrioDataSource(
+            drio_client,
+            labels,
+            index_sync=True,
+            tolerance=1,
+            convert_date=False,
+            raise_empty=True,
+        )
 
         assert isinstance(source, BaseDataSource)
         assert source._drio_client == drio_client
         assert source._labels == labels
+        assert source._index_sync is True
+        assert source._tolerance == 1
+        assert source._convert_date is False
+        assert source._raise_empty is True
 
     def test__labels(self):
         labels = {
@@ -501,7 +512,9 @@ class Test_DrioDataSource:
             "b": "timeseriesid-b",
             "c": "timeseriesid-c",
         }
-        source = DrioDataSource(drio_client, labels)
+        source = DrioDataSource(
+            drio_client, labels, convert_date=True, raise_empty=False
+        )
 
         data_out = source._get("<start-time>", "<end-time>")
 
