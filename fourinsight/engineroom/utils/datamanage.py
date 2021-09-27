@@ -8,6 +8,23 @@ import pandas as pd
 class BaseDataSource(ABC):
     """
     Abstract class for data sources.
+
+    Parameters
+    ----------
+    index_sync : bool, optional
+        If the index should be synced. If True, a valid tolerance must be given.
+    tolerance : int, float or pandas.Timedelta
+        Tolerance limit for syncing (see Notes). If ``index_sync`` is set to True,
+        datapoints that are closer than the tolerance are merged so that they
+        share a common index. The common index will be the first index of the
+        neighboring datapoints.
+
+    Notes
+    -----
+    The tolerance must be of a type that is comparable to the data index. E.g.
+    if the data has a ``DatetimeIndex``, the tolerance should be of type
+    ``pandas.Timestamp``. And if the data has a ``Int64Index``, the tolerance
+    should be an integer.
     """
 
     def __init__(self, index_sync=False, tolerance=None):
@@ -41,7 +58,7 @@ class BaseDataSource(ABC):
 
     def get(self, start, end):
         """
-        Get data from source, and perform syncing of the data index (optional).
+        Get data from source.
 
         Parameters
         ----------
@@ -49,26 +66,11 @@ class BaseDataSource(ABC):
             Start index of the data. Will be passed on to the ``_get`` method.
         end :
             End index of the data. Will be passed on to the ``_get`` method.
-        index_sync : bool, optional
-            If the index should be synced. If True, a valid tolerance must be given.
-        tolerance : int, float or pandas.Timedelta
-            Tolerance limit for syncing (see Notes). If ``index_sync`` is set to True,
-            datapoints that are closer than the tolerance are merged so that they
-            share a common index. The common index will be the first index of the
-            neighboring datapoints.
 
         Returns
         -------
         pandas.DataFrame
             Source data.
-
-        Notes
-        -----
-        The tolerance must be of a type that is comparable to the data index. E.g.
-        if the data has a ``DatetimeIndex``, the tolerance should be of type
-        ``pandas.Timestamp``. And if the data has a ``Int64Index``, the tolerance
-        should be an integer.
-
         """
 
         data = self._get(start, end)
@@ -227,9 +229,28 @@ class DrioDataSource(DateRangeIterMixin, BaseDataSource):
         DataReservoir.io client.
     lables : dict
         Labels and timeseries IDs as key/value pairs.
-    get_kwargs : dict, optional
-        Keyword arguments that will be passed on to the ``drio_client.get`` method.
-        See datareservoirio documentation for details.
+    index_sync : bool, optional
+        If the index should be synced. If True, a valid tolerance must be given.
+    tolerance : int, float or pandas.Timedelta
+        Tolerance limit for syncing (see Notes). If ``index_sync`` is set to True,
+        datapoints that are closer than the tolerance are merged so that they
+        share a common index. The common index will be the first index of the
+        neighboring datapoints.
+    convert_date : bool
+        If True (default), the index is converted to DatetimeIndex.
+        If False, index is returned as ascending integers. Will be passed on to
+        the ``drio_client._get`` method.
+    raise_empty : bool
+        If True, raise ValueError if no data exist in the provided
+        interval. Otherwise, return an empty pandas.Series (default). Will be passed
+        on to the ``drio_client.get`` method.
+
+    Notes
+    -----
+    The tolerance must be of a type that is comparable to the data index. E.g.
+    if the data has a ``DatetimeIndex``, the tolerance should be of type
+    ``pandas.Timestamp``. And if the data has a ``Int64Index``, the tolerance
+    should be an integer.
     """
 
     def __init__(
@@ -240,11 +261,9 @@ class DrioDataSource(DateRangeIterMixin, BaseDataSource):
         tolerance=None,
         convert_date=True,
         raise_empty=False,
-        # get_kwargs={"convert_date": True, "raise_empty": False},
     ):
         self._drio_client = drio_client
         self._labels = labels
-        # self._get_opt = get_kwargs
         self._convert_date = convert_date
         self._raise_empty = raise_empty
         super().__init__(index_sync=index_sync, tolerance=tolerance)
