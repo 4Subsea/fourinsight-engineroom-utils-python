@@ -1,4 +1,5 @@
 from unittest.mock import Mock, call, patch
+import types
 
 import numpy as np
 import pandas as pd
@@ -465,6 +466,73 @@ class Test_BaseDataSource:
         )
 
         pd.testing.assert_frame_equal(df_out, df_expect)
+
+    @patch.object(BaseDataSourceForTesting, "get")
+    def test_iter_index_mode_start(self, mock_get):
+        mock_get.side_effect = lambda start, end: (start, end)
+
+        source = BaseDataSourceForTesting()
+
+        start = [1, 2, 3]
+        end = [2, 3, 4]
+        data_iter = source.iter(start, end, index_mode="start")
+
+        assert isinstance(data_iter, types.GeneratorType)
+        for i, (index_i, data_i) in enumerate(data_iter):
+            assert index_i == start[i]
+            assert data_i == (start[i], end[i])
+
+    @patch.object(BaseDataSourceForTesting, "get")
+    def test_iter_index_mode_end(self, mock_get):
+        mock_get.side_effect = lambda start, end: (start, end)
+
+        source = BaseDataSourceForTesting()
+
+        start = [1, 2, 3]
+        end = [2, 3, 4]
+        data_iter = source.iter(start, end, index_mode="end")
+
+        assert isinstance(data_iter, types.GeneratorType)
+        for i, (index_i, data_i) in enumerate(data_iter):
+            assert index_i == end[i]
+            assert data_i == (start[i], end[i])
+
+    @patch.object(BaseDataSourceForTesting, "get")
+    def test_iter_index_mode_mid(self, mock_get):
+        mock_get.side_effect = lambda start, end: (start, end)
+
+        source = BaseDataSourceForTesting()
+
+        start = [1, 2, 3]
+        end = [2, 3, 4]
+        data_iter = source.iter(start, end, index_mode="mid")
+
+        assert isinstance(data_iter, types.GeneratorType)
+        for i, (index_i, data_i) in enumerate(data_iter):
+            assert index_i == start[i] + (end[i] - start[i]) / 2.0
+            assert data_i == (start[i], end[i])
+
+    @patch.object(BaseDataSourceForTesting, "get")
+    def test_iter_raises_length(self, mock_get):
+        mock_get.side_effect = lambda start, end: (start, end)
+
+        source = BaseDataSourceForTesting()
+
+        start = [1, 2, 3]
+        end = [2, 3]
+        with pytest.raises(ValueError):
+            source.iter(start, end, index_mode="start")
+
+    @patch.object(BaseDataSourceForTesting, "get")
+    def test_iter_raises_index_mode(self, mock_get):
+        mock_get.side_effect = lambda start, end: (start, end)
+
+        source = BaseDataSourceForTesting()
+
+        start = [1, 2, 3]
+        end = [2, 3, 4]
+        with pytest.raises(ValueError):
+            source.iter(start, end, index_mode="invalide-mode")
 
 
 class Test_DrioDataSource:
