@@ -134,37 +134,46 @@ class BaseDataSource(ABC):
 
         return df_synced
 
-    def iter(self, start_list, end_list, indexing_mode="start"):
+    def iter(self, start, end, index_mode="start"):
         """
-        Data generator yielding tuples of index and data for every start/end pair.
+        Iterate over source data as (index, data) pairs.
 
         Parameters
         ----------
-        start_list : array-like
-            Start indexes. 'start' and 'end' must have the same length.
-        end_list : array-like
-            End indexes. 'start' and 'end' must have the same length.
-        indexing_mode : str, optional
-            Indexing mode. Must be 'start', 'end' or 'mid'.
+        start : array-like
+            Sequence of start indexes.
+        end : array-like
+            Sequence of end indexes.
+        index_mode : str, optional
+            How to index/label the data. Must be 'start', 'end' or 'mid'. If 'start',
+            start is used as index. If 'end', end is used as index. If 'mid', the
+            index is set to ``start + (end - start) / 2.0``.
+
+        Yields
+        ------
+        index : label
+            The index of the data.
+        data : pandas.DataFrame
+            The source data.
         """
-        start = np.asarray_chkfinite(start_list)
-        end = np.asarray_chkfinite(end_list)
+        start = np.asarray_chkfinite(start)
+        end = np.asarray_chkfinite(end)
 
         if not len(start) == len(end):
-            raise ValueError("'start' and 'end' does not have the same length.")
+            raise ValueError("'start' and 'end' must have the same length.")
 
-        if indexing_mode == "start":
+        if index_mode == "start":
             index = start
-        elif indexing_mode == "end":
+        elif index_mode == "end":
             index = end
-        elif indexing_mode == "mid":
+        elif index_mode == "mid":
             index = start + (end - start) / 2.0
         else:
-            raise ValueError("'indexing_mode' must be 'start', 'end' or 'mid'.")
+            raise ValueError("'index_mode' must be 'start', 'end' or 'mid'.")
 
         return (
-            (index, self.get(start, end))
-            for index, start, end in zip(index, start, end)
+            (index_i, self.get(start_i, end_i))
+            for index_i, start_i, end_i in zip(index, start, end)
         )
 
 
@@ -251,33 +260,41 @@ class DrioDataSource(BaseDataSource):
         return tuple(self._labels.keys())
 
 
-def date_range_iter(
-    source,
+def date_start_end(
     start=None,
     end=None,
     periods=None,
     freq=None,
     closed=None,
-    indexing_mode="start",
+    **kwargs,
 ):
     """
-    Return a fixed frequency data generator.
+    Return lists of fixed frequency start/end pairs.
 
     Parameters
     ----------
     start : str or datetime-like, optional
-        Left bound for generating dates. Will be passed on to ``pandas.date_range()``.
+        Left bound for generating dates.
     end : str or datetime-like, optional
-        Right bound for generating dates. Will be passed on to ``pandas.date_range()``.
+        Right bound for generating dates.
     periods : int, optional
-        Number of periods to generate. Will be passed on to ``pandas.date_range()``.
+        Number of periods to generate.
     freq : str or DateOffset, default 'D'
-        Frequency. Will be passed on to ``pandas.date_range()``.
+        Frequency.
     closed : {None, 'left', 'right'}, optional
         Make the interval closed with respect to the given frequency to
         the 'left', 'right', or both sides (None, the default).
-    indexing_mode : str, optional
-        Indexing mode. Must be 'start', 'end' or 'mid'.
+    **kwargs :
+        Additional keyword arguments that will be passed on to ``pandas.date_range()``.
+
+    Returns
+    -------
+    start : list
+        Sequence of start values as `pandas.Timestamp`.
+    end : list
+        Sequence of end values as `pandas.Timestamp`.
     """
-    start_end = pd.date_range(start=start, end=end, periods=periods, freq=freq, closed=closed)
-    return source.iter(start_end[:-1], start_end[1:], indexing_mode=indexing_mode)
+    start_end = pd.date_range(
+        start=start, end=end, periods=periods, freq=freq, closed=closed, **kwargs
+    )
+    return list(start_end[:-1]), list(start_end[1:])
