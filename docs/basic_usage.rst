@@ -261,8 +261,8 @@ The ``get()`` method is used to download data from the source between two index 
     # download data as a 'pandas.DataFrame'
     df = source.get("2020-01-01 00:00", "2020-01-02 00:00")
 
-The ``iter()`` method is used to iterate over 'chunks' of data. Two equal length
-lists, of start and end indexes, are required as input.
+The ``iter()`` method is used to iterate over 'chunks' of data. Lists of start and
+end indexes are required as input.
 
 .. code-block:: python
 
@@ -270,12 +270,11 @@ lists, of start and end indexes, are required as input.
     end = ["2020-01-01 01:00", "2020-01-01 02:00", "2020-01-01 03:00"]
 
     for index_i, data_i in source.iter(start, end):
-        # Using a for-loop, operations can be done on each chunk of data
-        count_i = data_i.count()
+        pass
 
-For fixed-frequency date iteration, a convenience function for generating start
-and end dates is provided by ``date_start_end()``. This function is a wrapper around
-``pandas.date_range()``, and takes the same input arguments.
+For timeseries data where the index is datetime-like, a convenience function for generating
+fixed-frequency start and end indexes is provided by ``date_start_end()``. This function
+is a wrapper around ``pandas.date_range()``, and takes the same input arguments.
 
 .. code-block:: python
 
@@ -285,6 +284,4 @@ and end dates is provided by ``date_start_end()``. This function is a wrapper ar
     start, end = date_start_end(start="2020-01-01 00:00", end="2020-02-01 00:00", freq="1H")
 
     for index_i, data_i in source.iter(start, end):
-        count_i = data_i.count()
-
-
+        pass

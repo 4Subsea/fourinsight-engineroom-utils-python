@@ -152,7 +152,7 @@ class BaseDataSource(ABC):
         Yields
         ------
         index : label
-            The index of the data.
+            The index/label.
         data : pandas.DataFrame
             The source data.
         """
@@ -269,7 +269,7 @@ def date_start_end(
     **kwargs,
 ):
     """
-    Wrapper around ``pandas.date_range``. Return lists of start/end pairs.
+    Return lists of start/end pairs. Wrapper around ``pandas.date_range``.
 
     Parameters
     ----------
