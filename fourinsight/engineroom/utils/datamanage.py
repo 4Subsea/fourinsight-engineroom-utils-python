@@ -147,7 +147,8 @@ class BaseDataSource(ABC):
         index_mode : str, optional
             How to index/label the data. Must be 'start', 'end' or 'mid'. If 'start',
             start is used as index. If 'end', end is used as index. If 'mid', the
-            index is set to ``start + (end - start) / 2.0``.
+            index is set to ``start + (end - start) / 2.0``. Then, the start and end
+            objects must be of such type that this operation is possible.
 
         Yields
         ------
