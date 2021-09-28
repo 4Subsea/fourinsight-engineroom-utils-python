@@ -9,5 +9,7 @@ It may be usefull to divide topics into seperate ``.rst`` files.
    :maxdepth: 2
    :hidden:
 
+   simple_app
+   basic_concepts/index
    topic_a
    topic_b

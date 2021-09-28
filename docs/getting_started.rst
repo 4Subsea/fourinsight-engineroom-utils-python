@@ -17,21 +17,21 @@ This package is tested with the latest Windows, MacOS, and Ubuntu (Linux) versio
 
 Install
 -------
-``fourinsight.xyz`` can be installed via pip from `PyPI`_.
+``fourinsight.engineroom.utils`` can be installed via pip from `PyPI`_.
 
 .. code-block:: shell
 
-   pip install fourinsight-xyz
+   pip install fourinsight-engineroom-utils
 
 .. _upgrade:
 
 Upgrade
 -------
-``fourinsight.xyz`` can be upgraded via pip from `PyPI`_.
+``fourinsight.engineroom.utils`` can be upgraded via pip from `PyPI`_.
 
 .. code-block:: shell
 
-   pip install --upgrade fourinsight-xyz
+   pip install --upgrade fourinsight-engineroom-utils
 
 .. _Python.org: https://python.org
 .. _PyPI: https://pypi.org/

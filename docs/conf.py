@@ -21,7 +21,7 @@ sys.path.insert(0, os.path.abspath("../"))
 # -- Project information -----------------------------------------------------
 _TEMPLATE_VERSION = "1.0.0"
 
-project = "4subsea sphinx documentation template for Python"
+project = "4Insight EngineRoom Utilites for Python"
 copyright = f"{date.today().year}, 4Subsea"
 author = "4Subsea"
 
