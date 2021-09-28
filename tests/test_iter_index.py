@@ -20,7 +20,9 @@ class Test_date_range:
         start = "2020-01-01 00:00"
         end = "2020-01-01 05:00"
         periods = 2
-        start_out, end_out = iter_index.date_range(start=start, end=end, periods=periods)
+        start_out, end_out = iter_index.date_range(
+            start=start, end=end, periods=periods
+        )
 
         date_range = pd.date_range(start=start, end=end, periods=periods)
         start_expect, end_expect = date_range[:-1], date_range[1:]
