@@ -1,0 +1,14 @@
+API reference
+=============
+This section gives an overview of all public ``fourinsight.xyz`` objects, functions and methods.
+
+All classes and functions exposed in ``fourinsight.xyz`` namespace are presented in this page.
+Sub-modules are presented in their seperate pages:
+
+.. toctree::
+   :maxdepth: 1
+
+   module_a
+   module_b
+
+*--Auto-generated API documentation--*

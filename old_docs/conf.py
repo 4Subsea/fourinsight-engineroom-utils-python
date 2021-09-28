@@ -13,21 +13,19 @@
 import os
 import sys
 from datetime import date
-# from importlib import metadata
+from importlib import metadata
 
 sys.path.insert(0, os.path.abspath("../"))
 
 
 # -- Project information -----------------------------------------------------
-_TEMPLATE_VERSION = "1.0.0"
 
-project = "4subsea sphinx documentation template for Python"
+project = "4Insight EngineRoom Utilites for Python"
 copyright = f"{date.today().year}, 4Subsea"
 author = "4Subsea"
 
 # The full version, including alpha/beta/rc tags
-# version = metadata.version("fourinsight-engineroom-utils")
-version = "0.0.1"
+version = metadata.version("fourinsight-engineroom-utils")
 release = version
 
 
@@ -40,6 +38,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
     "sphinx.ext.intersphinx",
+    "sphinx.ext.autosectionlabel",
 ]
 
 # Napoleon settings
@@ -49,6 +48,8 @@ napoleon_numpy_docstring = True
 # Intershpinx mapping
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
+    "pandas": ("http://pandas.pydata.org/pandas-docs/stable/", None),
+    "datareservoirio": ("https://www.datareservoir.io/python/docs/latest/", None),
 }
 
 # Add any paths that contain templates here, relative to this directory.
@@ -70,23 +71,7 @@ html_theme = "pydata_sphinx_theme"
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ["_static"]
-html_css_files = ['css/custom.css']
-html_logo = "_static/4insight-logo.svg" # "_static/Logo 4Subsea horisontal negative.png"
-html_theme_options = {
-    "external_links": [
-        {"name": "4Insight.io", "url": "https://4insight.io"},
-    ],
-    "icon_links": [
-        {
-            "name": "GitHub",
-            "url": "https://github.com/4subsea/fourinsight-xyz",
-            "icon": "fab fa-github",
-        },
-        {
-            "name": "PyPI",
-            "url": "https://pypi.org/project/fourinsight-xyz",
-            "icon": "fas fa-box",
-        }
-    ]
-}
+html_static_path = []
+
+# Remove module names in API documentation
+add_module_names = False
