@@ -5,6 +5,7 @@ from .core import (
     PersistentJSON,
     ResultCollector,
 )
-from .datamanage import DrioDataSource, date_start_end
+from .datamanage import DrioDataSource
+from . import iter_index
 
 __version__ = "0.0.1"

@@ -272,16 +272,18 @@ end indexes are required as input.
     for index_i, data_i in source.iter(start, end):
         pass
 
-For timeseries data where the index is datetime-like, a convenience function for generating
-fixed-frequency start and end indexes is provided by ``date_start_end()``. This function
-is a wrapper around ``pandas.date_range()``, and takes the same input arguments.
+Convenience functions for generating start and end indexes are available in the
+:mod:`iter_index` module. For example, for timeseries data, where the index is datetime-like,
+fixed-frequency start and end index pairs can be generated with ``iter_index.date_range()``.
 
 .. code-block:: python
 
-    from fourinsight.engineroom.utils import date_start_end
+    from fourinsight.engineroom.utils import iter_index
 
 
-    start, end = date_start_end(start="2020-01-01 00:00", end="2020-02-01 00:00", freq="1H")
+    start, end = iter_index.date_range(
+        start="2020-01-01 00:00", end="2020-02-01 00:00", freq="1H"
+    )
 
     for index_i, data_i in source.iter(start, end):
         pass
