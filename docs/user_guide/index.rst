@@ -11,5 +11,6 @@ It may be usefull to divide topics into seperate ``.rst`` files.
 
    simple_app
    basic_concepts/index
+   advanced_app
    topic_a
    topic_b
