@@ -1,15 +1,15 @@
 Make a simple EngineRoom application
 ====================================
 
-This tutorial walks you through how to set up a simple EngineRoom application. It
-will show you how to add the necessary files and structure, how to make a zip-file
+This tutorial walks you through how to set up a simple EngineRoom Python application.
+It will show you how to add the necessary files and structure, how to make a zip-file
 of the application content, and how to upload it to EngineRoom.
 
 A simple application
 --------------------
 
-We will set up a simple application named `example_app`. The application will import
-two packages, :mod:`numpy` and :mod:`pandas`, and print the text, "Hello, World!".
+We will set up a simple Python application named `example_app`. The application will
+import two packages, :mod:`numpy` and :mod:`pandas`, and print the text, "Hello, World!".
 
 Create the following folder structure locally:
 
@@ -32,17 +32,18 @@ the following content:
 
     print("Hello, World!")
 
-The `requirements.txt` file includes all the application dependencies. Open this file
-and enter the following content:
+The `requirements.txt` specifies which Python packages are required to run the application.
+Open this file and enter the following content:
 
 ::
 
     numpy
     pandas
 
-EngineRoom applications does not require a `README.md` file. But we recommend to
-include it anyway, and provide a description of the application and how it should
-be used. Open the file and enter the following content:
+The `README.md` file should contain a description of the application and information
+about how to use it. This file is not required by EngineRoom, but it is considered
+good practice to include it in the project folder. Open the file and enter the following
+content:
 
 ::
 
@@ -51,16 +52,19 @@ be used. Open the file and enter the following content:
     This is a simple example application.
 
 
-Make a zip-file of the application content
-------------------------------------------
+Create a zip-file of the application content
+--------------------------------------------
 
-Make a zip-file of the content inside the `src` folder. All that EngineRoom needs to
-run an application, is a `run.py` file with the Python script to run and a `requirements.txt`
-file listing all required packages.
+EngineRoom only requires two files to run a Python application, i.e., the `run.py`
+file and the `requirements.txt` file. For this simple application, these two files
+are sufficient. For more complex applications, it may be necessary to include other
+supporting files.
+
+Make a zip-file of the content inside the `src` folder.
 
 ::
 
-    example_app_zip/
+    example_app.zip/
     ├── run.py
     └── requirements.txt
 
@@ -68,4 +72,5 @@ file listing all required packages.
 Upload the application to EngineRoom
 ------------------------------------
 
-Upload the zip file to EngineRoom.
+Go to `<https://4insight.io/#/engineroom>`_, and upload the zip-file to your EngineRoom
+application.
