@@ -1,3 +1,5 @@
+.. _basic-concepts:
+
 Basic Concepts
 ==============
 These are some basic concepts.

@@ -20,7 +20,7 @@ Values can be updated,
 
 .. code-block:: python
 
-    new_state = {"state parameter #1": 0, "State parameter #2": "some value"}
+    new_state = {"state parameter #1": 0, "state parameter #2": "some text value"}
     state.update(new_state)
 
 And retrieved,

@@ -1,3 +1,5 @@
+.. _simple-application:
+
 Make a simple EngineRoom application
 ====================================
 

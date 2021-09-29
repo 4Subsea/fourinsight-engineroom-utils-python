@@ -45,21 +45,12 @@ collecting results.
 
 
 By initializing with a suitable :ref:`handler<text_content_handlers>`, results can
-be pushed and pulled from a source.
+be 'pushed' and 'pulled' from a source.
 
 .. code-block:: python
 
-    headers = {"a": float, "b": str}
-    results = ResultCollector(headers, handler=handler)
-
     # pull the results from an existing source
     results.pull()
-
-    # make a new row
-    results.new_row()
-
-    # collect some more results
-    results.collect(a=1.0)
 
     # update the source with the latest results
     results.push()

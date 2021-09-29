@@ -82,8 +82,12 @@ end indexes are required as input.
     for index_i, data_i in source.iter(start, end):
         pass
 
-Convenience functions for generating start and end indexes are available in the
-:mod:`iter_index` module. For example, for timeseries data, where the index is datetime-like,
+
+Iterator 'start' and 'end' indexes
+..................................
+
+Convenience functions for generating iterator start and end indexes are available in the
+:mod:`iter_index` module. For example, for timeseries data where the index is datetime-like,
 fixed-frequency start and end index pairs can be generated with ``iter_index.date_range()``.
 
 .. code-block:: python
