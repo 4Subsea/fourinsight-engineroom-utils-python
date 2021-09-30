@@ -1,3 +1,5 @@
+.. _advanced-application:
+
 Putting it all together
 =======================
 
