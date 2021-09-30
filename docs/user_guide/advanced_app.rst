@@ -6,14 +6,21 @@ An advanced EngineRoom application
 
 Here is an example on how you could utilize some of the :ref:`basic concepts<basic-concepts>`
 and utilities provided by :mod:`fourinsight.engineroom.utils` in your Python application.
-The example script will download two timeseries, 'A' and 'B', from the DataReservoir.io.
-Then it collects the standard deviation of the two signals and a calculated variable, 'C'.
-In the example, :class:`PersistentJSON` is used to keep track of 'state' parameters,
-:mod:`ResultCollector` provides collecting and storing of results, and the
-:mod:`LocalFileHandler` facilitates 'pushing' and 'pulling' of text content to local files.
+This example script will download two timeseries, 'A' and 'B', from the DataReservoir.io.
+Another variable, 'C', is then calculated from signal 'A' and 'B'. The script will collect
+the 1-hour standard deviation of each variable, and store it in Azure Blob Storage.
 
-This example script could go into the `run.py` file of an EngineRoom application.
-See the :ref:`simple application example<simple-application>` for details on how to set up your first EngineRoom application.
+A :class:`DrioDataSource` object is used to download the data group, 'A' and 'B',
+from the DataReservoir.io. The data is downloaded in 1-hour chunks using the :meth:`iter()`
+method and the :meth:`iter_index.date_range()` convenience function.
+
+:class:`PersistentJSON` is used to keep track of the state parameter, 'TimeOfLastIndex'.
+This state parameter tells the script which results it has already collected, so that the
+script can continue where it left off last time it ran. The state is stored persistently
+in a local file using the :class:`LocalFileHandler`.
+
+The :class:`ResultCollector` provides collecting and storing of results. Results
+are stored in an Azure Storage Blob using the :class:`AzureBlobHandler`.
 
 .. code-block:: python
 
@@ -28,6 +35,7 @@ See the :ref:`simple application example<simple-application>` for details on how
         PersistentJSON,
         ResultCollector,
         LocalFileHandler,
+        AzureBlobHandler,
         iter_index,
     )
 
@@ -35,62 +43,83 @@ See the :ref:`simple application example<simple-application>` for details on how
     auth = ClientAuthenticator(os.environ["APP_CLIENT_ID"], os.environ["APP_CLIENT_SECRET"])
     drio_client = drio.Client(auth)
 
+    # Initialize a data source object with labels 'A' and 'B'
     data_labels = {
         "A": "8b1683bb-32a9-4e64-b122-6a0534eff592",
         "B": "4bf4606b-b18e-408d-9d4d-3f1465ed23f2"
     }
     source = DrioDataSource(drio_client, data_labels)
 
-    # get the application state
+    # Get the application state
     state_handler = LocalFileHandler("state.json")
     state = PersistentJSON(state_handler)
     state.pull(raise_on_missing=False)
 
-    # initialize a ResultCollector
-    result_handler = LocalFileHandler("results.csv")
+    # Initialize a ResultCollector
+    results_handler = AzureBlobHandler(
+        os.environ["APP_CONNECTION_STRING"],
+        "example_container",
+        "example_blob_folder/results.csv"
+    )
     result_headers = {"a_std": float, "b_std": float, "c_std": float}
     results = ResultCollector(result_headers, handler=result_handler, indexing_mode="timestamp")
+    results.pull()   # 'pull' already collected results from source
 
-    start = state.get("TimeOfLastSample", default="2021-09-28 00:00")
+     # Start from '2021-09-28 00:00' and end 'now'
+     # If the app has already run previously, start from last collected index
+    start = state.get("TimeOfLastIndex", default="2021-09-28 00:00")
     start = pd.to_datetime(start, utc=True)
     end = pd.to_datetime("now", utc=True)
 
-    # iterate over the data as 1-hour chunks
+    # Iterate over the data in 1-hour chunks
     for index_i, data_i in source.iter(*iter_index.date_range(start, end, freq="1H")):
         results.new_row(index_i)
 
         series_a = data_i["A"]
         series_b = data_i["B"]
 
-        # collect the standard deviation of timeseries A and B
+        # Collect the standard deviation of timeseries A and B
         results.collect(a_std=np.std(series_a), b_std=np.std(series_b))
 
-        # do some calculations with your timeseries data
+        # Do some calculations with your timeseries data
         series_a = series_a + np.random.random(size=len(series_a))
         series_b = series_b - 1.0
         series_c = (series_a + series_b) / 2.0
 
-        # collect the standard deviation of the calculated variable c
+        # Collect the standard deviation of the calculated variable C
         results.collect(c_std=np.std(series_c))
 
-    # store the results
+    # Store the results
     results.push()
 
-    # update the application state 
-    state["TimeOfLastSample"] = results.dataframe.index[-1].isoformat()
+    # Update the application state wih the latest collected index
+    state["TimeOfLastIndex"] = results.dataframe.index[-1].isoformat()
     state.push()
+
+This example script could go into the `run.py` file of an EngineRoom application.
+See the :ref:`simple application example<simple-application>` for details on how
+to set up your first EngineRoom application.
 
 Store secret parameters as environment variables
 ................................................
 
-Store secret parameters as environment variables in EngineRoom.
+Secret variables, that you do not want to expose to others, can be stored as environmental
+variables in EngineRoom. In the example script above, three parameters, i.e., the
+'APP_CLIENT_ID', the 'APP_CLIENT_SECRET' and the 'APP_CONNECTION_STRING', has been
+retrieved from the user's environmental variables.
 
-
+.. tip::
+    Environmental variables can be used to store other configuration parameters as well,
+    even though they are not really secret. This way you can separate the configuration
+    of your application from the code.
 
 Going forward
 -------------
 
-This is an advanced application, where the provided tools are utilized.
+The only files that EngineRoom really needs to run a Python application, is the
+`run.py` file and the `requirements.txt` file. Going forward with more complex applications,
+you may want to include some extra files in your application. Here is an example of
+a more extensive folder structure of a more advanced application:
 
 ::
 
@@ -104,18 +133,35 @@ This is an advanced application, where the provided tools are utilized.
         │   ├── __init__.py
         │   ├── module_a.py
         │   └── module_b.py
+        ├── packages/
+        │   └── private_package.whl
         ├── run.py
         └── requirements.txt
 
-Put configuration parameters in separate files
-..............................................
-
-It is good practice to separate the application code and configuration parameters.
-This ensures overview and easy altering of the configuration parameters.
-
-
 Divide application into smaller sub-modules
 ...........................................
+In larger applications, it may be useful to separate the application into several
+sub-modules. It is good practice to keep such sub-modules in an importable 'app'
+module. Import these packages in your `run.py` file, and execute each sub-module
+from there.
 
-For more complex application, it can be useful to separate the application into
-sub modules.
+Separate the code from the configuration
+........................................
+It is good practice to separate the application code and the configuration parameters.
+This ensures overview and easy altering of the configuration. One way to store
+configuration parameters, is to keep them in json files and read these files in the
+application code. Another way of storing configuration parameters, is to define
+them as environmental variables in EngineRoom. Remember that these are just two
+examples of how to store configuration, there may be other ways that better fit
+your purpose.
+
+Include private packages
+........................
+Sometimes your application requires Python packages that are not available through
+PyPi. Such packages can be included in the application by pip-installable WHL files.
+Remember to add these packages to the `requirements.txt` file:
+
+::
+
+    -f ./packages
+    private_package
