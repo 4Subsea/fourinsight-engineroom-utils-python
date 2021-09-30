@@ -98,16 +98,16 @@ are stored in an Azure Storage Blob using the :class:`AzureBlobHandler`.
     state["TimeOfLastIndex"] = results.dataframe.index[-1].isoformat()
     state.push()
 
-This example script could go into the `run.py` file of an EngineRoom application.
+This code could go into the `run.py` file of an EngineRoom application.
 See the :ref:`simple application example<simple-application>` for details on how
 to set up your first EngineRoom application.
 
 Store secret parameters as environment variables
 ................................................
 
-Secret variables, that you do not want to expose to others, can be stored as environmental
-variables in EngineRoom. In the example script above, three parameters, i.e., the
-'APP_CLIENT_ID', the 'APP_CLIENT_SECRET' and the 'APP_CONNECTION_STRING', has been
+Secret parameters, that you do not want to expose to others, can be stored as environmental
+variables in EngineRoom. In the example code above, three parameters, i.e., the
+'APP_CLIENT_ID', the 'APP_CLIENT_SECRET' and the 'APP_CONNECTION_STRING', are
 retrieved from the user's environmental variables.
 
 .. tip::
@@ -142,23 +142,23 @@ a more extensive folder structure of a more advanced application:
 
 Divide application into smaller sub-modules
 ...........................................
-In larger applications, it may be useful to separate the application into several
+In larger applications, it may be useful to divide the application into several
 sub-modules. It is good practice to keep such sub-modules in an importable 'app'
-module. Import these packages in your `run.py` file, and execute each sub-module
+module. Import these modules in your `run.py` file, and execute each sub-module
 from there.
 
-Separate the code from the configuration
+Separate the configuration from the code
 ........................................
 It is good practice to separate the application code and the configuration parameters.
 This ensures overview and easy altering of the configuration. One way to store
 configuration parameters, is to keep them in json files and read these files in the
 application code. Another way of storing configuration parameters, is to define
-them as environmental variables in EngineRoom. Remember that these are just two
+them as environmental variables in EngineRoom. Note that these are just two
 examples of how to store configuration, there may be other ways that better fit
 your purpose.
 
-Include private packages
-........................
+Include private packages as WHL files
+.....................................
 Sometimes your application requires Python packages that are not available through
 PyPi. Such packages can be included in the application by pip-installable WHL files.
 Remember to add these packages to the `requirements.txt` file:
