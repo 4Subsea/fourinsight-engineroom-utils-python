@@ -1,7 +1,7 @@
 .. _advanced-application:
 
-Putting it all together
-=======================
+Utilize the tools in an 'advanced' application
+==============================================
 
 An advanced EngineRoom application
 ----------------------------------

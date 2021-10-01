@@ -1,7 +1,7 @@
 .. _simple-application:
 
-Make a simple EngineRoom application
-====================================
+Make a 'simple' EngineRoom application
+======================================
 
 This tutorial walks you through how to set up a simple EngineRoom Python application.
 It will show you how to add the necessary files and structure, how to make a zip-file
