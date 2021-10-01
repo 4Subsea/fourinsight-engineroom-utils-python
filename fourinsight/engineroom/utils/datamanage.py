@@ -156,6 +156,11 @@ class BaseDataSource(ABC):
             The index/label.
         data : pandas.DataFrame
             The source data.
+
+        See Also
+        --------
+        fourinsight.engineroom.utils.iter_index :
+            Convenience functions for generating 'start' and 'end' indexes.
         """
         start = np.asarray_chkfinite(start)
         end = np.asarray_chkfinite(end)
