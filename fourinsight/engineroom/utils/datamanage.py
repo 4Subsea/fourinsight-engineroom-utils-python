@@ -113,19 +113,19 @@ class BaseDataSource(ABC):
         index_common = index_common[index_keep]
         df_synced = pd.DataFrame(index=index_common)
 
-        for key, series in data.items():
-            if isinstance(series, pd.Series):
-                series.name = key
+        for key_i, series_i in data.items():
+            if isinstance(series_i, pd.Series):
+                series_i.name = key_i
 
-            if tolerance >= np.median(np.diff(series.index)):
+            if tolerance >= np.median(np.diff(series_i.index)):
                 warnings.warn(
-                    f"Tolerance is greater than the median sampling frequency of '{key}'. "
+                    f"Tolerance is greater than the median sampling frequency of '{key_i}'. "
                     "This may lead to significant loss of data."
                 )
 
             df_synced = pd.merge_asof(
                 df_synced,
-                series,
+                series_i,
                 left_index=True,
                 right_index=True,
                 tolerance=tolerance,
