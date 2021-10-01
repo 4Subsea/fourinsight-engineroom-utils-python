@@ -167,3 +167,14 @@ Remember to add these packages to the `requirements.txt` file:
 
     -f ./packages
     private_package
+
+Finally, be creative and and use the utilities you find useful to create your own Python application that creates insight!
+..........................................................................................................................
+Don't let these guidelines be a showstopper when you start setting up your own EngineRoom application.
+The utilities provided by :mod:`fourinsight.engineroom.utils` are just meant to
+aid and speed-up the Python app development. If you don't find any of the utilities
+and basic concepts useful, don't bother using them. EngineRoom is able to execute
+any type of Python code - as long as you provide a `run.py` file and a `requirements.txt`
+file.
+
+Happy coding!

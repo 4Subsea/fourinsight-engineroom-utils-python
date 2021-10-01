@@ -5,7 +5,7 @@ Timeseries data (or other types of sequential data) are often most valueable whe
 they are considered in groups. Insight is usually found by investigating the relationship
 between different state variables of a system. An example could be measurements from
 a motion sensor; to be able to calcuate the tilt angle of the sensor, you would need
-to access acceleration and gyro measurements for all three axis of the sensor. Another
+to access acceleration and gyro measurements from all three axis of the sensor. Another
 example could be parameterized wave spectrum data, where the spectrum is only fully
 described when you have all parameters available.
 
