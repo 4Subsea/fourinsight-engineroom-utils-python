@@ -236,15 +236,12 @@ class DrioDataSource(BaseDataSource):
             Label and data as key/value pairs. The data is returned as ``pandas.Series``
             objects.
         """
-        data = {}
-        for label in self.labels:
-            data[label] = self._drio_client.get(
-                self._labels[label],
-                start=start,
-                end=end,
-                **self._get_kwargs,
+        return {
+            label: self._drio_client.get(
+                ts_id, start=start, end=end, **self._get_kwargs
             )
-        return data
+            for label, ts_id in self._labels.items()
+        }
 
     @property
     def labels(self):
