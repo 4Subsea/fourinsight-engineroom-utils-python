@@ -12,17 +12,17 @@ This example script will download two timeseries, 'A' and 'B', from the DataRese
 Another variable, 'C', is then calculated from signal 'A' and 'B'. The script will collect
 the 1-hour standard deviation of each variable, and store it in Azure Blob Storage.
 
-A :class:`DrioDataSource` object is used to download the data group, 'A' and 'B',
-from the DataReservoir.io. The data is downloaded in 1-hour chunks using the :meth:`iter()`
-method and the :meth:`iter_index.date_range()` convenience function.
+A :class:`~fourinsight.engineroom.utils.DrioDataSource` object is used to download the data group, 'A' and 'B',
+from the DataReservoir.io. The data is downloaded in 1-hour chunks using the :meth:`~fourinsight.engineroom.utils.DrioDataSource.iter()`
+method and the :meth:`~fourinsight.engineroom.utils.iter_index.date_range()` convenience function.
 
-:class:`PersistentJSON` is used to keep track of the state parameter, 'TimeOfLastIndex'.
+:class:`~fourinsight.engineroom.utils.PersistentJSON` is used to keep track of the state parameter, 'TimeOfLastIndex'.
 This state parameter tells the script which results it has already collected, so that the
 script can continue where it left off last time it ran. The state is stored persistently
-in a local file using the :class:`LocalFileHandler`.
+in a local file using the :class:`~fourinsight.engineroom.utils.LocalFileHandler`.
 
-The :class:`ResultCollector` provides collecting and storing of results. Results
-are stored in an Azure Storage Blob using the :class:`AzureBlobHandler`.
+The :class:`~fourinsight.engineroom.utils.ResultCollector` provides collecting and storing of results. Results
+are stored in an Azure Storage Blob using the :class:`~fourinsight.engineroom.utils.AzureBlobHandler`.
 
 .. code-block:: python
 

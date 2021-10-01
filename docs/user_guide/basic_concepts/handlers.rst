@@ -6,11 +6,11 @@ Handlers
 Some of the core functionality provided by :mod:`fourinsight.engineroom.utils` relies
 on handlers that facilitate downloading and uploading of text content from a source.
 The source can be a local file, an Azure Storage Blob, or any other suitable storage
-place. Two handlers, the :class:`~fourinsight.engineroom.utils.LocalFileHandler` and the :class:`AzureBlobHandler`
+place. Two handlers, the :class:`~fourinsight.engineroom.utils.LocalFileHandler` and the :class:`~fourinsight.engineroom.utils.AzureBlobHandler`
 are available out-of-the-box. :ref:`Custom handlers<custom_handlers>` are easily set up by inheriting from
 :class:`~fourinsight.engineroom.utils.core.BaseHandler`.
 
-The :class:`LocalFileHandler` is used to store text content in a local file.
+The :class:`~fourinsight.engineroom.utils.LocalFileHandler` is used to store text content in a local file.
 
 .. code-block:: python
 
@@ -19,7 +19,7 @@ The :class:`LocalFileHandler` is used to store text content in a local file.
 
     handler = LocalFileHandler(<file-path>)
 
-The :class:`AzureBlobHandler` is used to store text content in *Azure Blob Storage*.
+The :class:`~fourinsight.engineroom.utils.AzureBlobHandler` is used to store text content in *Azure Blob Storage*.
 
 .. code-block:: python
 
@@ -47,8 +47,8 @@ The handlers behave like *streams*, and provide all the normal stream capabiliti
     # etc...
 
 In addition, downloading and uploading of the text content is provided by a push/pull
-strategy; content is retrieved from the source by a ``pull()`` request, and uploaded
-to the source by a ``push()``.
+strategy; content is retrieved from the source by a :meth:`~fourinsight.engineroom.utils.core.BaseHandler.pull()` request, and uploaded
+to the source by a :meth:`~fourinsight.engineroom.utils.core.BaseHandler.push()`.
 
 
 .. _custom_handlers:
@@ -58,8 +58,8 @@ Custom handlers
 
 This example shows how you can set up a custom handler based on FTP. The handler
 must inherit from :class:`~fourinsight.engineroom.utils.core.BaseHandler`, and override
-the two abstract methods, ``_push()`` and ``_pull()``. It is recommended to also
-set the class variable, ``_SOURCE_NOT_FOUND_ERROR``, to the type of exception that
+the two abstract methods, :meth:`~fourinsight.engineroom.utils.core.BaseHandler._push()` and :meth:`~fourinsight.engineroom.utils.core.BaseHandler._pull()`. It is recommended to also
+set the class variable, :attr:`~fourinsight.engineroom.utils.core.BaseHandler._SOURCE_NOT_FOUND_ERROR`, to the type of exception that
 is expected to be raised if the source file can not be read.
 
 .. code-block:: python

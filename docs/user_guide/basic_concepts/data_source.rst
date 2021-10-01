@@ -12,9 +12,9 @@ described when you have all parameters available.
 'Data source' objects provide an interface to retrieve groups of sequential data
 from a source. A data source class must inherit from
 :class:`~fourinsight.engineroom.utils.datamanage.BaseDataSource`, and override the abstract
-method, ``_get()``, and the abstract property, ``labels``.
+method, :meth:`~fourinsight.engineroom.utils.datamanage.BaseDataSource._get()`, and the abstract property, :attr:`~fourinsight.engineroom.utils.datamanage.BaseDataSource.labels`.
 
-The :class:`DrioDataSource` class handles data from the DataReservoir.io. It is
+The :class:`~fourinsight.engineroom.utils.DrioDataSource` class handles data from the DataReservoir.io. It is
 initialized with a :class:`datareservoirio.Client` object and a dictionary containing
 labels and timeseries IDs as key/value pairs.
 
@@ -64,14 +64,14 @@ between neighboring datapoints to merge.
 Download data
 -------------
 
-The ``get()`` method is used to download data from the source between two index values.
+The :meth:`~fourinsight.engineroom.utils.datamanage.BaseDataSource.get()` method is used to download data from the source between two index values.
 
 .. code-block:: python
 
     # download data as a 'pandas.DataFrame'
     df = source.get("2020-01-01 00:00", "2020-01-02 00:00")
 
-The ``iter()`` method is used to iterate over 'chunks' of data. Lists of start and
+The :meth:`~fourinsight.engineroom.utils.datamanage.BaseDataSource.iter()` method is used to iterate over 'chunks' of data. Lists of start and
 end indexes are required as input.
 
 .. code-block:: python
@@ -87,8 +87,8 @@ Iterator 'start' and 'end' indexes
 ..................................
 
 Convenience functions for generating iterator start and end indexes are available in the
-:mod:`iter_index` module. For example, for timeseries data where the index is datetime-like,
-fixed-frequency start and end index pairs can be generated with ``iter_index.date_range()``.
+:mod:`~fourinsight.engineroom.utils.iter_index` module. For example, for timeseries data where the index is datetime-like,
+fixed-frequency start and end index pairs can be generated with :meth:`~fourinsight.engineroom.utils.iter_index.date_range()`.
 
 .. code-block:: python
 

@@ -2,11 +2,11 @@ State
 =====
 
 Sometimes it is useful to remember the current 'state' of your Python application.
-Using the :class:`PersistentJSON` class and an appropriate :ref:`handler<text_content_handlers>`,
+Using the :class:`~fourinsight.engineroom.utils.PersistentJSON` class and an appropriate :ref:`handler<text_content_handlers>`,
 key state parameters can be stored persistently at a remote location, and be available
 next time the application runs.
 
-:class:`PersistentJSON` behaves similar to dictionaries, and can keep track of state
+:class:`~fourinsight.engineroom.utils.PersistentJSON` behaves similar to dictionaries, and can keep track of state
 parameters in key/value pairs.
 
 .. code-block:: python
@@ -41,14 +41,14 @@ As well as deleted, printed, etc...
 
     # etc...
 
-To store the state for later, you simply just update the source with a ``push()``.
+To store the state for later, you simply just update the source with a :meth:`~fourinsight.engineroom.utils.PersistentJSON.push()`.
 
 .. code-block:: python
 
     # Update remote source
     state.push()
 
-Then, the state is available next time you run your script by doing a ``pull()``.
+Then, the state is available next time you run your script by doing a :meth:`~fourinsight.engineroom.utils.PersistentJSON.pull()`.
 
 .. code-block:: python
 
