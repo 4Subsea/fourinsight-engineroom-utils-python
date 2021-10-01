@@ -12,6 +12,5 @@ built to aid and speed-up Python app development in `4Insight EngineRoom`_.
    getting_started
    user_guide/index
    api_ref/index
-   other/index
    release_notes
    support

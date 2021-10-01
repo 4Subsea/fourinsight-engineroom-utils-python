@@ -14,5 +14,3 @@ EngineRoom app<simple-application>` or utilizing the provided utilities in a mor
    simple_app
    basic_concepts/index
    advanced_app
-   topic_a
-   topic_b
