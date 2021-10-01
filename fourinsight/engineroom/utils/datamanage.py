@@ -160,7 +160,7 @@ class BaseDataSource(ABC):
         See Also
         --------
         fourinsight.engineroom.utils.iter_index :
-            Convenience functions for generating 'start' and 'end' indexes.
+            Convenience functions for generating 'start' and 'end' index lists.
         """
         start = np.asarray_chkfinite(start)
         end = np.asarray_chkfinite(end)

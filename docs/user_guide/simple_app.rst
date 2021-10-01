@@ -43,7 +43,7 @@ Open this file and enter the following content:
     pandas
 
 The `README.md` file should contain a description of the application and information
-about how to use it. This file is not required by EngineRoom, but it is considered
+on how to use it. This file is not required by EngineRoom, but it is considered
 good practice to include it in the project folder. Open the file and enter the following
 content:
 
