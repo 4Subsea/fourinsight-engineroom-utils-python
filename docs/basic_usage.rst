@@ -224,13 +224,6 @@ labels and timeseries IDs as key/value pairs.
 
     source = DrioDataSource(drio_client, labels)
 
-The ``get()`` method is used to download data from the source.
-
-.. code-block:: python
-
-    # download data as a 'pandas.DataFrame'
-    df = source.get("2020-01-01 00:00", "2020-01-02 00:00")
-
 The data index can be synced during download by setting the ``index_sync`` flag
 to ``True`` and providing a suitable ``tolerance`` limit. Neighboring datapoints are
 then merged together at a 'common' index. The common index will be the smallest
@@ -239,9 +232,9 @@ between neighboring datapoints to merge.
 
 .. code-block:: python
 
-    df = source.get(
-        "2020-01-01 00:00",
-        "2020-01-02 00:00",
+    source = DrioDataSource(
+        drio_client,
+        labels,
         index_sync=True,
         tolerance=pd.to_timedelta("1ms")
     )
@@ -256,3 +249,41 @@ between neighboring datapoints to merge.
     the different label indexes, do a sorting, and then remove all index steps that are
     smaller than the tolerance. Datapoints are then merged into the common index
     if they are closer than the tolerance limit.
+
+
+Download data
+.............
+
+The ``get()`` method is used to download data from the source between two index values.
+
+.. code-block:: python
+
+    # download data as a 'pandas.DataFrame'
+    df = source.get("2020-01-01 00:00", "2020-01-02 00:00")
+
+The ``iter()`` method is used to iterate over 'chunks' of data. Lists of start and
+end indexes are required as input.
+
+.. code-block:: python
+
+    start = ["2020-01-01 00:00", "2020-01-01 01:00", "2020-01-01 02:00"]
+    end = ["2020-01-01 01:00", "2020-01-01 02:00", "2020-01-01 03:00"]
+
+    for index_i, data_i in source.iter(start, end):
+        pass
+
+Convenience functions for generating start and end indexes are available in the
+:mod:`iter_index` module. For example, for timeseries data, where the index is datetime-like,
+fixed-frequency start and end index pairs can be generated with ``iter_index.date_range()``.
+
+.. code-block:: python
+
+    from fourinsight.engineroom.utils import iter_index
+
+
+    start, end = iter_index.date_range(
+        start="2020-01-01 00:00", end="2020-02-01 00:00", freq="1H"
+    )
+
+    for index_i, data_i in source.iter(start, end):
+        pass

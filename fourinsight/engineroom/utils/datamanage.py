@@ -8,7 +8,28 @@ import pandas as pd
 class BaseDataSource(ABC):
     """
     Abstract class for data sources.
+
+    Parameters
+    ----------
+    index_sync : bool, optional
+        If the index should be synced. If True, a valid tolerance must be given.
+    tolerance : int, float or pandas.Timedelta
+        Tolerance limit for syncing (see Notes). If ``index_sync`` is set to True,
+        datapoints that are closer than the tolerance are merged so that they
+        share a common index. The common index will be the first index of the
+        neighboring datapoints.
+
+    Notes
+    -----
+    The tolerance must be of a type that is comparable to the data index. E.g.
+    if the data has a ``DatetimeIndex``, the tolerance should be of type
+    ``pandas.Timestamp``. And if the data has a ``Int64Index``, the tolerance
+    should be an integer.
     """
+
+    def __init__(self, index_sync=False, tolerance=None):
+        self._index_sync = index_sync
+        self._tolerance = tolerance
 
     @abstractproperty
     def labels(self):
@@ -35,9 +56,9 @@ class BaseDataSource(ABC):
         """
         raise NotImplementedError()
 
-    def get(self, start, end, index_sync=False, tolerance=None):
+    def get(self, start, end):
         """
-        Get data from source, and perform syncing of the data index (optional).
+        Get data from source.
 
         Parameters
         ----------
@@ -45,35 +66,20 @@ class BaseDataSource(ABC):
             Start index of the data. Will be passed on to the ``_get`` method.
         end :
             End index of the data. Will be passed on to the ``_get`` method.
-        index_sync : bool, optional
-            If the index should be synced. If True, a valid tolerance must be given.
-        tolerance : int, float or pandas.Timedelta
-            Tolerance limit for syncing (see Notes). If ``index_sync`` is set to True,
-            datapoints that are closer than the tolerance are merged so that they
-            share a common index. The common index will be the first index of the
-            neighboring datapoints.
 
         Returns
         -------
         pandas.DataFrame
             Source data.
-
-        Notes
-        -----
-        The tolerance must be of a type that is comparable to the data index. E.g.
-        if the data has a ``DatetimeIndex``, the tolerance should be of type
-        ``pandas.Timestamp``. And if the data has a ``Int64Index``, the tolerance
-        should be an integer.
-
         """
 
         data = self._get(start, end)
-        if not index_sync:
+        if not self._index_sync:
             return pd.DataFrame(data)
         else:
-            if not tolerance:
+            if not self._tolerance:
                 raise ValueError("No tolerance given.")
-            return self._sync_data(data, tolerance)
+            return self._sync_data(data, self._tolerance)
 
     @staticmethod
     def _sync_data(data, tolerance):
@@ -107,19 +113,19 @@ class BaseDataSource(ABC):
         index_common = index_common[index_keep]
         df_synced = pd.DataFrame(index=index_common)
 
-        for key, series in data.items():
-            if isinstance(series, pd.Series):
-                series.name = key
+        for key_i, series_i in data.items():
+            if isinstance(series_i, pd.Series):
+                series_i.name = key_i
 
-            if tolerance >= np.median(np.diff(series.index)):
+            if tolerance >= np.median(np.diff(series_i.index)):
                 warnings.warn(
-                    f"Tolerance is greater than the median sampling frequency of '{key}'. "
+                    f"Tolerance is greater than the median sampling frequency of '{key_i}'. "
                     "This may lead to significant loss of data."
                 )
 
             df_synced = pd.merge_asof(
                 df_synced,
-                series,
+                series_i,
                 left_index=True,
                 right_index=True,
                 tolerance=tolerance,
@@ -127,6 +133,49 @@ class BaseDataSource(ABC):
             )
 
         return df_synced
+
+    def iter(self, start, end, index_mode="start"):
+        """
+        Iterate over source data as (index, data) pairs.
+
+        Parameters
+        ----------
+        start : array-like
+            Sequence of start indexes.
+        end : array-like
+            Sequence of end indexes.
+        index_mode : str, optional
+            How to index/label the data. Must be 'start', 'end' or 'mid'. If 'start',
+            start is used as index. If 'end', end is used as index. If 'mid', the
+            index is set to ``start + (end - start) / 2.0``. Then, the start and end
+            objects must be of such type that this operation is possible.
+
+        Yields
+        ------
+        index : label
+            The index/label.
+        data : pandas.DataFrame
+            The source data.
+        """
+        start = np.asarray_chkfinite(start)
+        end = np.asarray_chkfinite(end)
+
+        if not len(start) == len(end):
+            raise ValueError("'start' and 'end' must have the same length.")
+
+        if index_mode == "start":
+            index = start
+        elif index_mode == "end":
+            index = end
+        elif index_mode == "mid":
+            index = start + (end - start) / 2.0
+        else:
+            raise ValueError("'index_mode' must be 'start', 'end' or 'mid'.")
+
+        return (
+            (index_i, self.get(start_i, end_i))
+            for index_i, start_i, end_i in zip(index, start, end)
+        )
 
 
 class DrioDataSource(BaseDataSource):
@@ -139,20 +188,36 @@ class DrioDataSource(BaseDataSource):
         DataReservoir.io client.
     lables : dict
         Labels and timeseries IDs as key/value pairs.
-    get_kwargs : dict, optional
+    index_sync : bool, optional
+        If the index should be synced. If True, a valid tolerance must be given.
+    tolerance : int, float or pandas.Timedelta
+        Tolerance limit for syncing (see Notes). If ``index_sync`` is set to True,
+        datapoints that are closer than the tolerance are merged so that they
+        share a common index. The common index will be the first index of the
+        neighboring datapoints.
+    **get_kwargs : optional
         Keyword arguments that will be passed on to the ``drio_client.get`` method.
-        See datareservoirio documentation for details.
+
+    Notes
+    -----
+    The tolerance must be of a type that is comparable to the data index. E.g.
+    if the data has a ``DatetimeIndex``, the tolerance should be of type
+    ``pandas.Timestamp``. And if the data has a ``Int64Index``, the tolerance
+    should be an integer.
     """
 
     def __init__(
         self,
         drio_client,
         labels,
-        get_kwargs={"convert_date": True, "raise_empty": False},
+        index_sync=False,
+        tolerance=None,
+        **get_kwargs,
     ):
         self._drio_client = drio_client
         self._labels = labels
-        self._get_opt = get_kwargs
+        self._get_kwargs = get_kwargs
+        super().__init__(index_sync=index_sync, tolerance=tolerance)
 
     def _get(self, start, end):
         """
@@ -171,12 +236,12 @@ class DrioDataSource(BaseDataSource):
             Label and data as key/value pairs. The data is returned as ``pandas.Series``
             objects.
         """
-        data = {}
-        for label in self.labels:
-            data[label] = self._drio_client.get(
-                self._labels[label], start=start, end=end, **self._get_opt
+        return {
+            label: self._drio_client.get(
+                ts_id, start=start, end=end, **self._get_kwargs
             )
-        return data
+            for label, ts_id in self._labels.items()
+        }
 
     @property
     def labels(self):

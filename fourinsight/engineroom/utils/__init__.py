@@ -1,3 +1,4 @@
+from . import iter_index
 from .core import (
     AzureBlobHandler,
     LocalFileHandler,

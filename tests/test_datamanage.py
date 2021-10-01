@@ -1,3 +1,4 @@
+import types
 from unittest.mock import Mock, call, patch
 
 import numpy as np
@@ -18,6 +19,11 @@ class BaseDataSourceForTesting(BaseDataSource):
 
 
 class Test_BaseDataSource:
+    def test__init__(self):
+        source = BaseDataSourceForTesting(index_sync=True, tolerance=1)
+        assert source._index_sync is True
+        assert source._tolerance == 1
+
     def test_labels(self):
         source = BaseDataSourceForTesting()
         with pytest.raises(NotImplementedError):
@@ -321,8 +327,8 @@ class Test_BaseDataSource:
 
         mock_get.return_value = data
 
-        source = BaseDataSourceForTesting()
-        df_out = source.get("<start-time>", "<end-time>", index_sync=False)
+        source = BaseDataSourceForTesting(index_sync=False)
+        df_out = source.get("<start-time>", "<end-time>")
 
         df_expect = pd.DataFrame(
             data={
@@ -391,10 +397,8 @@ class Test_BaseDataSource:
 
         mock_get.return_value = data
 
-        source = BaseDataSourceForTesting()
-        df_out = source.get(
-            "<start-time>", "<end-time>", index_sync=True, tolerance=0.2
-        )
+        source = BaseDataSourceForTesting(index_sync=True, tolerance=0.2)
+        df_out = source.get("<start-time>", "<end-time>")
 
         df_expect = pd.DataFrame(
             data={
@@ -411,10 +415,10 @@ class Test_BaseDataSource:
 
     @patch.object(BaseDataSourceForTesting, "_get")
     def test_get_raises_no_tolerance(self, mock_get):
-        source = BaseDataSourceForTesting()
+        source = BaseDataSourceForTesting(index_sync=True, tolerance=None)
 
         with pytest.raises(ValueError):
-            source.get("<start-time>", "<end-time>", index_sync=True, tolerance=None)
+            source.get("<start-time>", "<end-time>")
 
     @patch.object(BaseDataSourceForTesting, "_get")
     def test_get_sync_datetimeindex(self, mock_get):
@@ -446,13 +450,10 @@ class Test_BaseDataSource:
 
         mock_get.return_value = data
 
-        source = BaseDataSourceForTesting()
-        df_out = source.get(
-            "<start-time>",
-            "<end-time>",
-            index_sync=True,
-            tolerance=pd.to_timedelta("2s"),
+        source = BaseDataSourceForTesting(
+            index_sync=True, tolerance=pd.to_timedelta("2s")
         )
+        df_out = source.get("<start-time>", "<end-time>")
 
         df_expect = pd.DataFrame(
             data={
@@ -466,6 +467,73 @@ class Test_BaseDataSource:
 
         pd.testing.assert_frame_equal(df_out, df_expect)
 
+    @patch.object(BaseDataSourceForTesting, "get")
+    def test_iter_index_mode_start(self, mock_get):
+        mock_get.side_effect = lambda start, end: (start, end)
+
+        source = BaseDataSourceForTesting()
+
+        start = [1, 2, 3]
+        end = [2, 3, 4]
+        data_iter = source.iter(start, end, index_mode="start")
+
+        assert isinstance(data_iter, types.GeneratorType)
+        for i, (index_i, data_i) in enumerate(data_iter):
+            assert index_i == start[i]
+            assert data_i == (start[i], end[i])
+
+    @patch.object(BaseDataSourceForTesting, "get")
+    def test_iter_index_mode_end(self, mock_get):
+        mock_get.side_effect = lambda start, end: (start, end)
+
+        source = BaseDataSourceForTesting()
+
+        start = [1, 2, 3]
+        end = [2, 3, 4]
+        data_iter = source.iter(start, end, index_mode="end")
+
+        assert isinstance(data_iter, types.GeneratorType)
+        for i, (index_i, data_i) in enumerate(data_iter):
+            assert index_i == end[i]
+            assert data_i == (start[i], end[i])
+
+    @patch.object(BaseDataSourceForTesting, "get")
+    def test_iter_index_mode_mid(self, mock_get):
+        mock_get.side_effect = lambda start, end: (start, end)
+
+        source = BaseDataSourceForTesting()
+
+        start = [1, 2, 3]
+        end = [2, 3, 4]
+        data_iter = source.iter(start, end, index_mode="mid")
+
+        assert isinstance(data_iter, types.GeneratorType)
+        for i, (index_i, data_i) in enumerate(data_iter):
+            assert index_i == start[i] + (end[i] - start[i]) / 2.0
+            assert data_i == (start[i], end[i])
+
+    @patch.object(BaseDataSourceForTesting, "get")
+    def test_iter_raises_length(self, mock_get):
+        mock_get.side_effect = lambda start, end: (start, end)
+
+        source = BaseDataSourceForTesting()
+
+        start = [1, 2, 3]
+        end = [2, 3]
+        with pytest.raises(ValueError):
+            source.iter(start, end, index_mode="start")
+
+    @patch.object(BaseDataSourceForTesting, "get")
+    def test_iter_raises_index_mode(self, mock_get):
+        mock_get.side_effect = lambda start, end: (start, end)
+
+        source = BaseDataSourceForTesting()
+
+        start = [1, 2, 3]
+        end = [2, 3, 4]
+        with pytest.raises(ValueError):
+            source.iter(start, end, index_mode="invalide-mode")
+
 
 class Test_DrioDataSource:
     def test__init__(self):
@@ -475,11 +543,21 @@ class Test_DrioDataSource:
             "b": "timeseriesid-b",
             "c": "timeseriesid-c",
         }
-        source = DrioDataSource(drio_client, labels)
+        source = DrioDataSource(
+            drio_client,
+            labels,
+            index_sync=True,
+            tolerance=1,
+            convert_date=False,
+            raise_empty=True,
+        )
 
         assert isinstance(source, BaseDataSource)
         assert source._drio_client == drio_client
         assert source._labels == labels
+        assert source._index_sync is True
+        assert source._tolerance == 1
+        assert source._get_kwargs == {"convert_date": False, "raise_empty": True}
 
     def test__labels(self):
         labels = {
@@ -501,7 +579,9 @@ class Test_DrioDataSource:
             "b": "timeseriesid-b",
             "c": "timeseriesid-c",
         }
-        source = DrioDataSource(drio_client, labels)
+        source = DrioDataSource(
+            drio_client, labels, convert_date=True, raise_empty=False
+        )
 
         data_out = source._get("<start-time>", "<end-time>")
 
