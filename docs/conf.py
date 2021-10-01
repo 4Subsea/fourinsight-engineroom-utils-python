@@ -83,12 +83,12 @@ html_theme_options = {
     "icon_links": [
         {
             "name": "GitHub",
-            "url": "https://github.com/4subsea/fourinsight-xyz",
+            "url": "https://github.com/4subsea/fourinsight-engineroom-utils-python",
             "icon": "fab fa-github",
         },
         {
             "name": "PyPI",
-            "url": "https://pypi.org/project/fourinsight-xyz",
+            "url": "https://pypi.org/project/fourinsight-engineroom-utils",
             "icon": "fas fa-box",
         },
     ],
