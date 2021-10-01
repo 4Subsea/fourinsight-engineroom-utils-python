@@ -9,7 +9,17 @@ are presented in this page. Sub-modules are presented in their seperate pages:
 .. toctree::
    :maxdepth: 1
 
-   module_a
-   module_b
+   core
+   datamanage
 
 *--Auto-generated API documentation--*
+
+.. automodule:: fourinsight.engineroom.utils
+   :members:
+      AzureBlobHandler,
+      DrioDataSource,
+      LocalFileHandler,
+      NullHandler,
+      PersistentJSON,
+      ResultCollector
+   :undoc-members:

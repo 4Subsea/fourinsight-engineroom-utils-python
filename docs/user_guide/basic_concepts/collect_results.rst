@@ -29,7 +29,7 @@ The basic usage is illustrated with the examples below.
 
 If you are dealing with time-dependent results, and want to 'stamp' the results
 with a datetime value, this is facilitated by setting 'indexing_mode' to 'timestamp'
-during initialization. Then, a datetime value must be passed to :meth:`.new_row()` when
+during initialization. Then, a datetime value must be passed to `.new_row()` when
 collecting results.
 
 .. code-block:: python
