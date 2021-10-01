@@ -63,9 +63,9 @@ class BaseDataSource(ABC):
         Parameters
         ----------
         start :
-            Start index of the data. Will be passed on to the ``_get`` method.
+            Start index of the data. Will be passed on to the :meth:`_get` method.
         end :
-            End index of the data. Will be passed on to the ``_get`` method.
+            End index of the data. Will be passed on to the :meth:`_get` method.
 
         Returns
         -------
