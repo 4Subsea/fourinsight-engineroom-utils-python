@@ -10,5 +10,6 @@ functions and methods.
    persistent_json
    result_collector
    data_source/index
+   iter_index
 
 *--Auto-generated API documentation--*
