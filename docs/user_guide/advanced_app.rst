@@ -176,5 +176,3 @@ aid and speed-up the Python app development. If you don't find any of the utilit
 and basic concepts useful, don't bother using them. EngineRoom is able to execute
 any type of Python code - as long as you provide a `run.py` file and a `requirements.txt`
 file.
-
-Happy coding!
