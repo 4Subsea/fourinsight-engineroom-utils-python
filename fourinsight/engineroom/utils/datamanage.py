@@ -195,14 +195,8 @@ class DrioDataSource(BaseDataSource):
         datapoints that are closer than the tolerance are merged so that they
         share a common index. The common index will be the first index of the
         neighboring datapoints.
-    convert_date : bool
-        If True (default), the index is converted to DatetimeIndex.
-        If False, index is returned as ascending integers. Will be passed on to
-        the ``drio_client._get`` method.
-    raise_empty : bool
-        If True, raise ValueError if no data exist in the provided
-        interval. Otherwise, return an empty pandas.Series (default). Will be passed
-        on to the ``drio_client.get`` method.
+    **get_kwargs : optional
+        Keyword arguments that will be passed on to the ``drio_client.get`` method.
 
     Notes
     -----
@@ -218,13 +212,11 @@ class DrioDataSource(BaseDataSource):
         labels,
         index_sync=False,
         tolerance=None,
-        convert_date=True,
-        raise_empty=False,
+        **get_kwargs,
     ):
         self._drio_client = drio_client
         self._labels = labels
-        self._convert_date = convert_date
-        self._raise_empty = raise_empty
+        self._get_kwargs = get_kwargs
         super().__init__(index_sync=index_sync, tolerance=tolerance)
 
     def _get(self, start, end):
@@ -250,8 +242,7 @@ class DrioDataSource(BaseDataSource):
                 self._labels[label],
                 start=start,
                 end=end,
-                convert_date=self._convert_date,
-                raise_empty=self._raise_empty,
+                **self._get_kwargs,
             )
         return data
 

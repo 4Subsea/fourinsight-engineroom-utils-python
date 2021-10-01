@@ -557,8 +557,7 @@ class Test_DrioDataSource:
         assert source._labels == labels
         assert source._index_sync is True
         assert source._tolerance == 1
-        assert source._convert_date is False
-        assert source._raise_empty is True
+        assert source._get_kwargs == {"convert_date": False, "raise_empty": True}
 
     def test__labels(self):
         labels = {
