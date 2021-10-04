@@ -2,10 +2,9 @@
 
 Make a 'simple' EngineRoom application
 ======================================
-
-This tutorial walks you through how to set up a simple EngineRoom Python application.
+This tutorial walks you through how to set up a simple `4Insight EngineRoom`_ Python application.
 It will show you how to add the necessary files and structure, how to make a zip-file
-of the application content, and how to upload it to EngineRoom.
+of the application content, and how to upload it to *EngineRoom*.
 
 A simple application
 --------------------
@@ -23,7 +22,7 @@ Create the following folder structure locally:
         ├── run.py
         └── requirements.txt
 
-`run.py` is the Python file that will be run by EngineRoom. Open this file and enter
+`run.py` is the Python file that will be run by *EngineRoom*. Open this file and enter
 the following content:
 
 .. code-block:: python
@@ -43,7 +42,7 @@ Open this file and enter the following content:
     pandas
 
 The `README.md` file should contain a description of the application and information
-on how to use it. This file is not required by EngineRoom, but it is considered
+on how to use it. This file is not required by *EngineRoom*, but it is considered
 good practice to include it in the project folder. Open the file and enter the following
 content:
 
@@ -57,7 +56,7 @@ content:
 Create a zip-file of the application content
 --------------------------------------------
 
-EngineRoom only requires two files to run a Python application, i.e., the `run.py`
+*EngineRoom* only requires two files to run a Python application, i.e., the `run.py`
 file and the `requirements.txt` file. For this simple application, these two files
 are sufficient. For more complex applications, it may be necessary to include other
 supporting files.
@@ -74,5 +73,7 @@ Make a zip-file of the content inside the `src` folder.
 Upload the application to EngineRoom
 ------------------------------------
 
-Go to `<https://4insight.io/#/engineroom>`_, and upload the zip-file to your EngineRoom
+Go to `<https://4insight.io/#/engineroom>`_, and upload the zip-file to your *EngineRoom*
 application.
+
+.. _4Insight EngineRoom: https://4insight.io/#/engineroom

@@ -14,7 +14,7 @@ from a source. A data source class must inherit from
 :class:`~fourinsight.engineroom.utils.datamanage.BaseDataSource`, and override the abstract
 method, :meth:`~fourinsight.engineroom.utils.datamanage.BaseDataSource._get()`, and the abstract property, :attr:`~fourinsight.engineroom.utils.datamanage.BaseDataSource.labels`.
 
-The :class:`~fourinsight.engineroom.utils.DrioDataSource` class handles data from the DataReservoir.io. It is
+The :class:`~fourinsight.engineroom.utils.DrioDataSource` class handles data from the *DataReservoir.io*. It is
 initialized with a :class:`datareservoirio.Client` object and a dictionary containing
 labels and timeseries IDs as key/value pairs.
 

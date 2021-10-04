@@ -19,7 +19,7 @@ The :class:`~fourinsight.engineroom.utils.LocalFileHandler` is used to store tex
 
     handler = LocalFileHandler(<file-path>)
 
-The :class:`~fourinsight.engineroom.utils.AzureBlobHandler` is used to store text content in *Azure Blob Storage*.
+The :class:`~fourinsight.engineroom.utils.AzureBlobHandler` is used to store text content in `Azure Blob Storage`_.
 
 .. code-block:: python
 
@@ -28,7 +28,7 @@ The :class:`~fourinsight.engineroom.utils.AzureBlobHandler` is used to store tex
 
     handler = AzureBlobHandler(<connection-string>, <container-name>, <blob-name>)
 
-The handlers behave like *streams*, and provide all the normal stream capabilities.
+The handlers behave like 'streams', and provide all the normal stream capabilities.
 
 .. code-block:: python
 
@@ -127,3 +127,5 @@ is expected to be raised if the source file can not be read.
             """
             self.seek(0)
             self._ftp.storbinary("STOR " + self._filename, self.buffer)
+
+.. _Azure Blob Storage: https://azure.microsoft.com/nb-no/services/storage/blobs/

@@ -8,12 +8,12 @@ An advanced EngineRoom application
 
 Here is an example on how you could utilize some of the :ref:`basic concepts<basic-concepts>`
 and utilities provided by :mod:`fourinsight.engineroom.utils` in your Python application.
-This example script will download two timeseries, 'A' and 'B', from the DataReservoir.io.
+This example script will download two timeseries, 'A' and 'B', from the *DataReservoir.io*.
 Another variable, 'C', is then calculated from signal 'A' and 'B'. The script will collect
-the 1-hour standard deviation of each variable, and store it in Azure Blob Storage.
+the 1-hour standard deviation of each variable, and store it in *Azure Blob Storage*.
 
 A :class:`~fourinsight.engineroom.utils.DrioDataSource` object is used to download the data group, 'A' and 'B',
-from the DataReservoir.io. The data is downloaded in 1-hour chunks using the :meth:`~fourinsight.engineroom.utils.DrioDataSource.iter()`
+from the *DataReservoir.io*. The data is downloaded in 1-hour chunks using the :meth:`~fourinsight.engineroom.utils.DrioDataSource.iter()`
 method and the :meth:`~fourinsight.engineroom.utils.iter_index.date_range()` convenience function.
 
 :class:`~fourinsight.engineroom.utils.PersistentJSON` is used to keep track of the state parameter, 'TimeOfLastIndex'.
@@ -22,7 +22,7 @@ script can continue where it left off last time it ran. The state is stored pers
 in a local file using the :class:`~fourinsight.engineroom.utils.LocalFileHandler`.
 
 The :class:`~fourinsight.engineroom.utils.ResultCollector` provides collecting and storing of results. Results
-are stored in an Azure Storage Blob using the :class:`~fourinsight.engineroom.utils.AzureBlobHandler`.
+are stored in *Azure Blob Storage* using the :class:`~fourinsight.engineroom.utils.AzureBlobHandler`.
 
 .. code-block:: python
 
@@ -98,15 +98,15 @@ are stored in an Azure Storage Blob using the :class:`~fourinsight.engineroom.ut
     state["TimeOfLastIndex"] = results.dataframe.index[-1].isoformat()
     state.push()
 
-This code could go into the `run.py` file of an EngineRoom application.
+This code could go into the `run.py` file of an `4Insight EngineRoom`_ application.
 See the :ref:`simple application example<simple-application>` for details on how
-to set up your first EngineRoom application.
+to set up your first *EngineRoom* application.
 
 Store secret parameters as environment variables
 ................................................
 
 Secret parameters, that you do not want to expose to others, can be stored as environmental
-variables in EngineRoom. In the example code above, three parameters, i.e., the
+variables in *EngineRoom*. In the example code above, three parameters, i.e., the
 'APP_CLIENT_ID', the 'APP_CLIENT_SECRET' and the 'APP_CONNECTION_STRING', are
 retrieved from the user's environmental variables.
 
@@ -118,7 +118,7 @@ retrieved from the user's environmental variables.
 Going forward
 -------------
 
-The only files that EngineRoom really needs to run a Python application, is the
+The only files that *EngineRoom* really needs to run a Python application, is the
 `run.py` file and the `requirements.txt` file. Going forward with more complex applications,
 you may want to include some extra files in your application. Here is an example of
 a more extensive folder structure of a more advanced application:
@@ -153,14 +153,14 @@ It is good practice to separate the application code and the configuration param
 This ensures overview and easy altering of the configuration. One way to store
 configuration parameters, is to keep them in json files and read these files in the
 application code. Another way of storing configuration parameters, is to define
-them as environmental variables in EngineRoom. Note that these are just two
+them as environmental variables in *EngineRoom*. Note that these are just two
 examples of how to store configuration, there may be other ways that better fit
 your purpose.
 
 Include private packages as WHL files
 .....................................
 Sometimes your application requires Python packages that are not available through
-PyPi. Such packages can be included in the application by pip-installable WHL files.
+`PyPI`_. Such packages can be included in the application by pip-installable WHL files.
 Remember to add these packages to the `requirements.txt` file:
 
 ::
@@ -170,9 +170,12 @@ Remember to add these packages to the `requirements.txt` file:
 
 Finally, be creative and use the utilities you find useful to set up your own Python application that creates insight!
 ......................................................................................................................
-Don't let these guidelines be a showstopper when you start setting up your own EngineRoom application.
+Don't let these guidelines be a showstopper when you start setting up your own *EngineRoom* application.
 The utilities provided by :mod:`fourinsight.engineroom.utils` are just meant to
 aid and speed-up the Python app development. If you don't find any of the utilities
-and basic concepts useful, don't bother using them. EngineRoom is able to execute
+and basic concepts useful, don't bother using them. *EngineRoom* is able to execute
 any type of Python code - as long as you provide a `run.py` file and a `requirements.txt`
 file.
+
+.. _PyPI: https://pypi.org/
+.. _4Insight EngineRoom: https://4insight.io/#/engineroom
