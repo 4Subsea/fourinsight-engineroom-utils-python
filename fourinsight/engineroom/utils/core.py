@@ -445,7 +445,7 @@ class ResultCollector:
 
     def truncate(self, before=None, after=None):
         """
-        Truncate results.
+        Truncate results by deleting rows before and after given index values.
 
         Parameters
         ----------
@@ -472,3 +472,5 @@ class ResultCollector:
         Reset index.
         """
         self._dataframe = self._dataframe.reset_index(drop=True)
+        self._indexing_mode = "auto"
+        self._ignore_index = True
