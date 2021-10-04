@@ -430,3 +430,19 @@ class ResultCollector:
     def dataframe(self):
         """Return a (deep) copy of the internal dataframe"""
         return self._dataframe.copy(deep=True)
+
+    def delete_rows(self, index):
+        """
+        Delete rows.
+
+        If 'indexing_mode' is 'auto', the index will also be reset.
+
+        Parameters
+        ----------
+        index : single label or list-like
+            Index labels to drop.
+        """
+        self._dataframe = self._dataframe.drop(index=index)
+
+        if self._indexing_mode == "auto":
+            self._dataframe.index = pd.Int64Index(range(len(self._dataframe.index)))
