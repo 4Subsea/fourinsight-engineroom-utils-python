@@ -4,6 +4,7 @@ from collections.abc import MutableMapping
 from io import BytesIO, TextIOWrapper
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 from azure.core.exceptions import ResourceNotFoundError
 from azure.storage.blob import BlobClient
@@ -446,3 +447,22 @@ class ResultCollector:
 
         if self._indexing_mode == "auto":
             self._dataframe.index = pd.Int64Index(range(len(self._dataframe.index)))
+
+    def truncate(self, before=None, after=None):
+        """
+        Truncate results.
+
+        If 'indexing_mode' is 'auto', the index will also be reset.
+
+        Parameters
+        ----------
+        before : int or datetime-like, optional
+            Delete results with index smaller than this value.
+        after : int or datetime-like, optional
+            Delete results with index greater than this value.
+        """
+        index_before = self._dataframe.index[(self._dataframe.index < before)]
+        index_after = self._dataframe.index[(self._dataframe.index > after)]
+        index_drop = np.concatenate([index_before, index_after])
+        if len(index_drop):
+            self.delete_rows(index_drop)
