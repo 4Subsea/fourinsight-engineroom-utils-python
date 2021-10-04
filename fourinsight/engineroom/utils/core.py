@@ -432,7 +432,7 @@ class ResultCollector:
         """Return a (deep) copy of the internal dataframe"""
         return self._dataframe.copy(deep=True)
 
-    def delete_rows(self, index, reset_index=True):
+    def delete_rows(self, index):
         """
         Delete rows.
 
@@ -440,15 +440,10 @@ class ResultCollector:
         ----------
         index : single label or list-like
             Index labels to drop.
-        reset_index : bool, optional
-            Reset the index values. Only relevant if 'indexing_mode' is set to 'auto'.
         """
         self._dataframe = self._dataframe.drop(index=index)
 
-        if reset_index and (self._indexing_mode == "auto"):
-            self._dataframe.index = pd.Int64Index(range(len(self._dataframe.index)))
-
-    def truncate(self, before=None, after=None, reset_index=True):
+    def truncate(self, before=None, after=None):
         """
         Truncate results.
 
@@ -458,8 +453,6 @@ class ResultCollector:
             Delete results with index smaller than this value.
         after : int or datetime-like, optional
             Delete results with index greater than this value.
-        reset_index : bool, optional
-            Reset the index values. Only relevant if 'indexing_mode' is set to 'auto'.
         """
         if before:
             index_before = self._dataframe.index[(self._dataframe.index < before)]
@@ -472,4 +465,10 @@ class ResultCollector:
 
         index_drop = np.concatenate([index_before, index_after])
         if len(index_drop):
-            self.delete_rows(index_drop, reset_index=reset_index)
+            self.delete_rows(index_drop)
+
+    def reset_index(self):
+        """
+        Reset index.
+        """
+        self._dataframe = self._dataframe.reset_index(drop=True)
