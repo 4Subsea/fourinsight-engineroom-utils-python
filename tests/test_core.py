@@ -702,7 +702,96 @@ class Test_ResultCollector:
                 "c": [1, 2, 4, 5],
                 "d": [None, None, None, None],
             },
-            index=pd.Int64Index([0, 1, 3, 4]),
+            index=pd.Int64Index([0, 1, 2, 3]),
+        ).astype({"a": "float64", "b": "string", "c": "Int64", "d": "float64"})
+
+        pd.testing.assert_frame_equal(df_out, df_expect)
+
+    def test_delete_rows_list_int(self):
+        headers = {"a": float, "b": str, "c": int, "d": float}
+        results = ResultCollector(headers, indexing_mode="auto")
+        results.new_row()
+        results.collect(a=1.0, b="1", c=1)
+        results.new_row()
+        results.collect(a=2.0, b="2", c=2)
+        results.new_row()
+        results.collect(a=3.0, b="3", c=3)
+        results.new_row()
+        results.collect(a=4.0, b="4", c=4)
+        results.new_row()
+        results.collect(a=5.0, b="5", c=5)
+
+        results.delete_rows([1, 2, 3])
+        df_out = results.dataframe
+        df_expect = pd.DataFrame(
+            data={
+                "a": [1.0, 5.0],
+                "b": ["1", "5"],
+                "c": [1, 5],
+                "d": [None, None],
+            },
+            index=pd.Int64Index([0, 1]),
+        ).astype({"a": "float64", "b": "string", "c": "Int64", "d": "float64"})
+
+        pd.testing.assert_frame_equal(df_out, df_expect)
+
+    def test_delete_rows_single_datetime(self):
+        headers = {"a": float, "b": str, "c": int, "d": float}
+        results = ResultCollector(headers, indexing_mode="timestamp")
+        results.new_row("2020-01-01 00:00")
+        results.collect(a=1.0, b="1", c=1)
+        results.new_row("2020-01-01 01:00")
+        results.collect(a=2.0, b="2", c=2)
+        results.new_row("2020-01-01 02:00")
+        results.collect(a=3.0, b="3", c=3)
+        results.new_row("2020-01-01 03:00")
+        results.collect(a=4.0, b="4", c=4)
+        results.new_row("2020-01-01 04:00")
+        results.collect(a=5.0, b="5", c=5)
+
+        results.delete_rows("2020-01-01 02:00")
+        df_out = results.dataframe
+        df_expect = pd.DataFrame(
+            data={
+                "a": [1.0, 2.0, 4.0, 5.0],
+                "b": ["1", "2", "4", "5"],
+                "c": [1, 2, 4, 5],
+                "d": [None, None, None, None],
+            },
+            index=pd.DatetimeIndex([
+                "2020-01-01 00:00",
+                "2020-01-01 01:00",
+                "2020-01-01 03:00",
+                "2020-01-01 04:00"
+            ], tz="utc"),
+        ).astype({"a": "float64", "b": "string", "c": "Int64", "d": "float64"})
+
+        pd.testing.assert_frame_equal(df_out, df_expect)
+
+    def test_delete_rows_list_datetime(self):
+        headers = {"a": float, "b": str, "c": int, "d": float}
+        results = ResultCollector(headers, indexing_mode="timestamp")
+        results.new_row("2020-01-01 00:00")
+        results.collect(a=1.0, b="1", c=1)
+        results.new_row("2020-01-01 01:00")
+        results.collect(a=2.0, b="2", c=2)
+        results.new_row("2020-01-01 02:00")
+        results.collect(a=3.0, b="3", c=3)
+        results.new_row("2020-01-01 03:00")
+        results.collect(a=4.0, b="4", c=4)
+        results.new_row("2020-01-01 04:00")
+        results.collect(a=5.0, b="5", c=5)
+
+        results.delete_rows(["2020-01-01 01:00", "2020-01-01 02:00", "2020-01-01 03:00"])
+        df_out = results.dataframe
+        df_expect = pd.DataFrame(
+            data={
+                "a": [1.0, 5.0],
+                "b": ["1", "5"],
+                "c": [1, 5],
+                "d": [None, None],
+            },
+            index=pd.DatetimeIndex(["2020-01-01 00:00", "2020-01-01 04:00"], tz="utc"),
         ).astype({"a": "float64", "b": "string", "c": "Int64", "d": "float64"})
 
         pd.testing.assert_frame_equal(df_out, df_expect)

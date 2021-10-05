@@ -443,6 +443,9 @@ class ResultCollector:
         """
         self._dataframe = self._dataframe.drop(index=index)
 
+        if self._indexing_mode == "auto":
+            self._dataframe = self._dataframe.reset_index(drop=True)
+
     def truncate(self, before=None, after=None):
         """
         Truncate results by deleting rows before and after given index values.
@@ -464,13 +467,4 @@ class ResultCollector:
             index_after = []
 
         index_drop = np.concatenate([index_before, index_after])
-        if len(index_drop):
-            self.delete_rows(index_drop)
-
-    def reset_index(self):
-        """
-        Reset index.
-        """
-        self._dataframe = self._dataframe.reset_index(drop=True)
-        self._indexing_mode = "auto"
-        self._ignore_index = True
+        self.delete_rows(index_drop)
