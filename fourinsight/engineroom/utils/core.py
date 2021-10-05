@@ -287,7 +287,7 @@ class ResultCollector:
         Default handler is :class:`NullHandler`, which does not provide any
         push or pull functionality.
     indexing_mode : str
-        Indexing mode. Should be 'auto' or 'timestamp'.
+        Indexing mode. Should be 'auto' (default) or 'timestamp'.
 
     Notes
     -----
@@ -436,6 +436,8 @@ class ResultCollector:
         """
         Delete rows.
 
+        The index will be reset if 'indexing_mode' is set to 'auto'.
+
         Parameters
         ----------
         index : single label or list-like
@@ -448,7 +450,9 @@ class ResultCollector:
 
     def truncate(self, before=None, after=None):
         """
-        Truncate results by deleting rows before and after given index values.
+        Truncate results by deleting rows before and/or after given index values.
+
+        The index will be reset if 'indexing_mode' is set to 'auto'.
 
         Parameters
         ----------
