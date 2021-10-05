@@ -968,13 +968,7 @@ class Test_ResultCollector:
                 "c": [2, 3, 4],
                 "d": [None, None, None],
             },
-            index=pd.Int64Index(
-                [
-                    0,
-                    1,
-                    2,
-                ]
-            ),
+            index=pd.Int64Index([0, 1, 2]),
         ).astype({"a": "float64", "b": "string", "c": "Int64", "d": "float64"})
 
         pd.testing.assert_frame_equal(df_out, df_expect)
@@ -1002,14 +996,7 @@ class Test_ResultCollector:
                 "c": [1, 2, 3, 4],
                 "d": [None, None, None, None],
             },
-            index=pd.Int64Index(
-                [
-                    0,
-                    1,
-                    2,
-                    3,
-                ]
-            ),
+            index=pd.Int64Index([0, 1, 2, 3]),
         ).astype({"a": "float64", "b": "string", "c": "Int64", "d": "float64"})
 
         pd.testing.assert_frame_equal(df_out, df_expect)
@@ -1037,14 +1024,7 @@ class Test_ResultCollector:
                 "c": [2, 3, 4, 5],
                 "d": [None, None, None, None],
             },
-            index=pd.Int64Index(
-                [
-                    0,
-                    1,
-                    2,
-                    3,
-                ]
-            ),
+            index=pd.Int64Index([0, 1, 2, 3]),
         ).astype({"a": "float64", "b": "string", "c": "Int64", "d": "float64"})
 
         pd.testing.assert_frame_equal(df_out, df_expect)
@@ -1072,15 +1052,7 @@ class Test_ResultCollector:
                 "c": [1, 2, 3, 4, 5],
                 "d": [None, None, None, None, None],
             },
-            index=pd.Int64Index(
-                [
-                    0,
-                    1,
-                    2,
-                    3,
-                    4,
-                ]
-            ),
+            index=pd.Int64Index([0, 1, 2, 3, 4]),
         ).astype({"a": "float64", "b": "string", "c": "Int64", "d": "float64"})
 
         pd.testing.assert_frame_equal(df_out, df_expect)
