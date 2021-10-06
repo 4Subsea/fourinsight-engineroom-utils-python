@@ -1,9 +1,9 @@
-### This PR is related to user story DST-XXX
+# This PR is related to user story DST-XXX
 
-The following changes has been done:
-Short description of the user story and what has been done.
+## Description
+Provide a short description about the work that has been done.
 
-I have checked the following:
+## Checklist
 - [] All COS are met.
 - [] CI tests pass (isort, black, tox).
 - [] All integration tests pass (if applicable).
