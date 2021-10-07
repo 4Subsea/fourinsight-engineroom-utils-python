@@ -60,11 +60,10 @@ to the source by a :meth:`~fourinsight.engineroom.utils.core.BaseHandler.push()`
 Custom handlers
 ---------------
 
-This example shows how you can set up a custom handler based on FTP. The handler
-must inherit from :class:`~fourinsight.engineroom.utils.core.BaseHandler`, and override
+The custom handler must inherit from :class:`~fourinsight.engineroom.utils.core.BaseHandler`, and override
 the two abstract methods, :meth:`~fourinsight.engineroom.utils.core.BaseHandler._push()` and :meth:`~fourinsight.engineroom.utils.core.BaseHandler._pull()`. It is recommended to also
 set the class variable, :attr:`~fourinsight.engineroom.utils.core.BaseHandler._SOURCE_NOT_FOUND_ERROR`, to the type of exception that
-is expected to be raised if the source file can not be read.
+is expected to be raised if the source file can not be read. The example below shows how you can set up a custom handler based on FTP.
 
 .. code-block:: python
 
