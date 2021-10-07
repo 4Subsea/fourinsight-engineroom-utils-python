@@ -278,7 +278,12 @@ class CompositeDataSource(BaseDataSource):
         self._index_sync = index_sync
         self._tolerance = tolerance
 
-        self._labels = self._verify_labels(self._sources)
+        labels = set([source.labels for source in self._sources if source])
+        if len(labels) == 1:
+            self._labels = list(labels)[0]
+        else:
+            raise ValueError("Source labels are not valid.")
+
         self._sources = np.where(
             np.equal(self._sources, None), NullDataSource(self._labels), self._sources
         )
@@ -320,6 +325,9 @@ class CompositeDataSource(BaseDataSource):
             for start_i, end_i, source_i in zip(start_list, end_list, source_list)
         ]
 
+        # if len(set([tuple(data.keys()) for data in data_list])) != 1:
+        #     raise ValueError("All data keys are not the same.")
+
         return self._concat_data(data_list)
 
     @staticmethod
@@ -329,21 +337,3 @@ class CompositeDataSource(BaseDataSource):
             for key, series in data_i.items():
                 data[key] = pd.concat([data[key], series])
         return data
-
-    @staticmethod
-    def _verify_labels(source_list):
-        """
-        Check that all sources have the same labels.
-
-        Returns
-        -------
-        list-like
-            Labels.
-        """
-        labels = set([source.labels for source in source_list if source is not None])
-        if len(labels) == 0:
-            return None
-        elif len(labels) == 1:
-            return list(labels)[0]
-        else:
-            raise ValueError("All source labels are not equal.")
