@@ -48,8 +48,12 @@ The handlers behave like 'streams', and provide all the normal stream capabiliti
 
 In addition, downloading and uploading of the text content is provided by a push/pull
 strategy; content is retrieved from the source by a :meth:`~fourinsight.engineroom.utils.core.BaseHandler.pull()` request, and uploaded
-to the source by a :meth:`~fourinsight.engineroom.utils.core.BaseHandler.push()`.
+to the source by a :meth:`~fourinsight.engineroom.utils.core.BaseHandler.push()`. E.g.:
 
+.. code-block:: python
+
+    # Write the content of the stream to the source
+    handler.push()
 
 .. _custom_handlers:
 
