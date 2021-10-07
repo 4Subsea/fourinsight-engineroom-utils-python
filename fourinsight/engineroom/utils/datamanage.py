@@ -258,6 +258,7 @@ class NullDataSource(BaseDataSource):
     """
     NullDataSource.
     """
+
     def __init__(self, labels=None):
         self._labels = labels if labels else ()
         self._index_sync = False
@@ -268,4 +269,81 @@ class NullDataSource(BaseDataSource):
         return tuple(self._labels)
 
     def _get(self, start, end):
-        return {label: pd.Series([], dtype="float64") for label in self._labels}
+        return {label: pd.Series([], dtype="object") for label in self._labels}
+
+
+class CompositeDataSource(BaseDataSource):
+    def __init__(self, index_source, index_sync=False, tolerance=None):
+        self._index_attached, self._sources = np.asarray(index_source).T
+        self._index_sync = index_sync
+        self._tolerance = tolerance
+
+        self._labels = self._verify_labels(self._sources)
+        self._sources = np.where(
+            np.equal(self._sources, None), NullDataSource(self._labels), self._sources
+        )
+
+        self._index_attached_universal = self._universal_index_converter(
+            self._index_attached
+        )
+
+    @staticmethod
+    def _universal_index_converter(index):
+        """
+        Convert index to universal type that is comparable.
+        """
+        return pd.to_datetime(index, utc=True)
+
+    @property
+    def labels(self):
+        return tuple(self._labels)
+
+    def _get(self, start, end):
+        start_universal = self._universal_index_converter(start)
+        end_universal = self._universal_index_converter(end)
+
+        attached_after_start = self._index_attached_universal > start_universal
+        attached_before_end = self._index_attached_universal < end_universal
+        attached_between_start_end = attached_after_start & attached_before_end
+
+        if sum(~attached_after_start) == 0:
+            first_source = NullDataSource(self._labels)
+        else:
+            first_source = self._sources[~attached_after_start][-1]
+
+        start_list = np.r_[[start], self._index_attached[attached_between_start_end]]
+        end_list = np.r_[self._index_attached[attached_between_start_end], [end]]
+        source_list = np.r_[first_source, self._sources[attached_between_start_end]]
+
+        data_list = [
+            source_i._get(start_i, end_i)
+            for start_i, end_i, source_i in zip(start_list, end_list, source_list)
+        ]
+
+        return self._concat_data(data_list)
+
+    @staticmethod
+    def _concat_data(data_list):
+        data = {key: pd.Series([], dtype="object") for key in data_list[0].keys()}
+        for data_i in data_list:
+            for key, series in data_i.items():
+                data[key] = pd.concat([data[key], series])
+        return data
+
+    @staticmethod
+    def _verify_labels(source_list):
+        """
+        Check that all sources have the same labels.
+
+        Returns
+        -------
+        list-like
+            Labels.
+        """
+        labels = set([source.labels for source in source_list if source is not None])
+        if len(labels) == 0:
+            return None
+        elif len(labels) == 1:
+            return list(labels)[0]
+        else:
+            raise ValueError("All source labels are not equal.")
