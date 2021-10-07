@@ -252,3 +252,20 @@ class DrioDataSource(BaseDataSource):
     def labels(self):
         """Data source labels."""
         return tuple(self._labels.keys())
+
+
+class NullDataSource(BaseDataSource):
+    """
+    NullDataSource.
+    """
+    def __init__(self, labels=None):
+        self._labels = labels if labels else ()
+        self._index_sync = False
+        self._tolerance = None
+
+    @property
+    def labels(self):
+        return tuple(self._labels)
+
+    def _get(self, start, end):
+        return {label: pd.Series([], dtype="float64") for label in self._labels}
