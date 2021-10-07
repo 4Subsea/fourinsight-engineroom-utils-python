@@ -102,18 +102,18 @@ This code could go into the `run.py` file of an `4Insight EngineRoom`_ applicati
 See the :ref:`simple application example<simple-application>` for details on how
 to set up your first *EngineRoom* application.
 
-Store secret parameters as environment variables
-................................................
+Store parameters and secrets as environment variables
+.....................................................
 
-Secret parameters, that you do not want to expose to others, can be stored as environmental
-variables in *EngineRoom*. In the example code above, three parameters, i.e., the
-'APP_CLIENT_ID', the 'APP_CLIENT_SECRET' and the 'APP_CONNECTION_STRING', are
-retrieved from the user's environmental variables.
+Sometimes it is useful to set certain parameters during runtime. Most important,
+secret parameters that you do not want to expose to others, can be stored as environmental
+variables in *EngineRoom*. In the example code above, three parameters, i.e.,
+'APP_CLIENT_ID', 'APP_CLIENT_SECRET' and 'APP_CONNECTION_STRING', are
+retrieved as environmental variables.
 
-.. tip::
-    Environmental variables can be used to store other configuration parameters as well,
-    even though they are not really secret. This way you can separate the configuration
-    of your application from the code.
+Environmental variables can be used to store other configuration parameters as well,
+even though they are not really secret. This way you can separate the configuration
+of your application from the code.
 
 Going forward
 -------------
@@ -160,22 +160,24 @@ your purpose.
 Include private packages as WHL files
 .....................................
 Sometimes your application requires Python packages that are not available through
-`PyPI`_. Such packages can be included in the application by pip-installable WHL files.
-Remember to add these packages to the `requirements.txt` file:
+`PyPI`_ or any other repository accesible with ``pip``. Such packages can be included
+in the application by pip-installable WHL files. Remember to add these packages to the
+`requirements.txt` file:
 
 ::
 
     -f ./packages
     private_package
 
-Finally, be creative and use the utilities you find useful to set up your own Python application that creates insight!
-......................................................................................................................
-Don't let these guidelines be a showstopper when you start setting up your own *EngineRoom* application.
-The utilities provided by :mod:`fourinsight.engineroom.utils` are just meant to
-aid and speed-up the Python app development. If you don't find any of the utilities
-and basic concepts useful, don't bother using them. *EngineRoom* is able to execute
-any type of Python code - as long as you provide a `run.py` file and a `requirements.txt`
-file.
+Finally, be creative and use the utilities that fits your needs!
+................................................................
+Don't let the above suggerstions and guidelines be a road block on your path to new insight!
+The utilities provided in :mod:`fourinsight.engineroom.utils` are just meant to
+speed-up and aid setting up your own *EngineRoom* application.
+
+If you don't find any of the utilities and basic concepts useful, don't bother using them.
+*EngineRoom* is able to execute any type of Python code - as long as you meet the minimum requirements;
+`run.py` and `requirements.txt` files.
 
 .. _PyPI: https://pypi.org/
 .. _4Insight EngineRoom: https://4insight.io/#/engineroom

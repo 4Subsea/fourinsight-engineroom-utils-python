@@ -14,9 +14,11 @@ from a source. A data source class must inherit from
 :class:`~fourinsight.engineroom.utils.datamanage.BaseDataSource`, and override the abstract
 method, :meth:`~fourinsight.engineroom.utils.datamanage.BaseDataSource._get()`, and the abstract property, :attr:`~fourinsight.engineroom.utils.datamanage.BaseDataSource.labels`.
 
-The :class:`~fourinsight.engineroom.utils.DrioDataSource` class handles data from the *DataReservoir.io*. It is
+:mod:`fourinsight.engineroom.utils` provides :class:`~fourinsight.engineroom.utils.DrioDataSource`, which handles data from the DataReservoir.io_. It is
 initialized with a :class:`datareservoirio.Client` object and a dictionary containing
 labels and timeseries IDs as key/value pairs.
+
+.. _DataReservoir.io: https://www.datareservoir.io/
 
 .. code-block:: python
 
@@ -86,9 +88,9 @@ end indexes are required as input.
 Iterator 'start' and 'end' indexes
 ..................................
 
-Convenience functions for generating iterator start and end indexes are available in the
-:mod:`~fourinsight.engineroom.utils.iter_index` module. For example, for timeseries data where the index is datetime-like,
-fixed-frequency start and end index pairs can be generated with :meth:`~fourinsight.engineroom.utils.iter_index.date_range()`.
+'Data source' objects can also iterate over a set of start-end sequences. Convenience functions for generating start and end 
+sequences are available in the :mod:`~fourinsight.engineroom.utils.iter_index` sub-module. For example, for timeseries data where
+the index is datetime-like, fixed-frequency start and end index pairs can be generated with :meth:`~fourinsight.engineroom.utils.iter_index.date_range()`.
 
 .. code-block:: python
 
