@@ -304,7 +304,7 @@ class CompositeDataSource(BaseDataSource):
         self._index_attached, self._sources = np.asarray(index_source).T
         self._index_attached_universal = self._universal_index(self._index_attached)
 
-        labels_set = set([source.labels for source in self._sources if source])
+        labels_set = set([sorted(source.labels) for source in self._sources if source])
         if len(labels_set) == 1:
             self._labels = list(labels_set)[0]
         else:
