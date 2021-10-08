@@ -63,9 +63,9 @@ class BaseDataSource(ABC):
         Parameters
         ----------
         start :
-            Start index of the data. Will be passed on to the ``_get`` method.
+            Start index of the data. Will be passed on to the :meth:`_get` method.
         end :
-            End index of the data. Will be passed on to the ``_get`` method.
+            End index of the data. Will be passed on to the :meth:`_get` method.
 
         Returns
         -------
@@ -156,6 +156,11 @@ class BaseDataSource(ABC):
             The index/label.
         data : pandas.DataFrame
             The source data.
+
+        See Also
+        --------
+        fourinsight.engineroom.utils.iter_index :
+            Convenience functions for generating 'start' and 'end' index lists.
         """
         start = np.asarray_chkfinite(start)
         end = np.asarray_chkfinite(end)

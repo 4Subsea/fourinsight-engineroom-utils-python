@@ -95,7 +95,7 @@ class NullHandler(BaseHandler):
     Goes nowhere, does nothing. This handler is intended for objects that
     requires a handler, but the push/pull functionality is not needed.
 
-    Will raise an exception if ``push()`` or ``pull()`` is called.
+    Will raise an exception if :meth:`push()` or :meth:`pull()` is called.
     """
 
     _ERROR_MSG = "The 'NullHandler' does not provide push/pull functionality."
