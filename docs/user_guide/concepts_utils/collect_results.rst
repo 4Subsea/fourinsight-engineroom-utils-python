@@ -26,6 +26,9 @@ The basic usage is illustrated with the examples below.
     # return the results as a 'pandas.DataFrame'
     df = results.dataframe
 
+It is also possible to delete previously collected results with
+:meth:`~fourinsight.engineroom.utils.ResultCollector.delete_rows()`
+and :meth:`~fourinsight.engineroom.utils.ResultCollector.truncate()`.
 
 If you are dealing with time-dependent results, and want to 'stamp' the results
 with a datetime value, this is facilitated by setting 'indexing_mode' to 'timestamp'
