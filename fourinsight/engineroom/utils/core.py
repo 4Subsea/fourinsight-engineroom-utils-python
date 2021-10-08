@@ -4,6 +4,7 @@ from collections.abc import MutableMapping
 from io import BytesIO, TextIOWrapper
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 from azure.core.exceptions import ResourceNotFoundError
 from azure.storage.blob import BlobClient
@@ -286,7 +287,7 @@ class ResultCollector:
         Default handler is :class:`NullHandler`, which does not provide any
         push or pull functionality.
     indexing_mode : str
-        Indexing mode. Should be 'auto' or 'timestamp'.
+        Indexing mode. Should be 'auto' (default) or 'timestamp'.
 
     Notes
     -----
@@ -430,3 +431,40 @@ class ResultCollector:
     def dataframe(self):
         """Return a (deep) copy of the internal dataframe"""
         return self._dataframe.copy(deep=True)
+
+    def delete_rows(self, index):
+        """
+        Delete rows.
+
+        The index will be reset if 'indexing_mode' is set to 'auto'.
+
+        Parameters
+        ----------
+        index : single label or list-like
+            Index labels to drop.
+        """
+        self._dataframe = self._dataframe.drop(index=index)
+
+        if self._indexing_mode == "auto":
+            self._dataframe = self._dataframe.reset_index(drop=True)
+
+    def truncate(self, before=None, after=None):
+        """
+        Truncate results by deleting rows before and/or after given index values.
+
+        The index will be reset if 'indexing_mode' is set to 'auto'.
+
+        Parameters
+        ----------
+        before : int or datetime-like, optional
+            Delete results with index smaller than this value.
+        after : int or datetime-like, optional
+            Delete results with index greater than this value.
+        """
+        index_drop = []
+        if before:
+            index_drop.extend(self._dataframe.index[(self._dataframe.index < before)])
+        if after:
+            index_drop.extend(self._dataframe.index[(self._dataframe.index > after)])
+        if index_drop:
+            self.delete_rows(index_drop)
