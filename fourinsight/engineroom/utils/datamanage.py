@@ -257,15 +257,20 @@ class DrioDataSource(BaseDataSource):
 class NullDataSource(BaseDataSource):
     """
     NullDataSource.
+
+    Parameters
+    ----------
+    labels : list-like
+        Labels.
     """
 
     def __init__(self, labels=None):
         self._labels = labels if labels else ()
-        self._index_sync = False
-        self._tolerance = None
+        super().__init__(index_sync=False)
 
     @property
     def labels(self):
+        """Data source labels."""
         return tuple(self._labels)
 
     def _get(self, start, end):
@@ -273,39 +278,51 @@ class NullDataSource(BaseDataSource):
 
 
 class CompositeDataSource(BaseDataSource):
-    def __init__(self, index_source, index_sync=False, tolerance=None):
-        self._index_attached, self._sources = np.asarray(index_source).T
-        self._index_sync = index_sync
-        self._tolerance = tolerance
+    """
+    Composite data source.
 
-        labels = set([source.labels for source in self._sources if source])
-        if len(labels) == 1:
-            self._labels = list(labels)[0]
+    Parameters
+    ----------
+    index_source : list-like
+        List of tuples as (index, source).
+    """
+
+    def __init__(self, index_source, index_sync=False, tolerance=None):
+        super().__init__(index_sync=index_sync, tolerance=tolerance)
+        self._index_attached, self._sources = np.asarray(index_source).T
+        self._index_attached_universal = self._universal_index(self._index_attached)
+
+        labels_set = set([source.labels for source in self._sources if source])
+        if len(labels_set) == 1:
+            self._labels = list(labels_set)[0]
         else:
             raise ValueError("Source labels are not valid.")
 
-        self._sources = np.where(
-            np.equal(self._sources, None), NullDataSource(self._labels), self._sources
+        self._sources = np.array(
+            [
+                source if source else NullDataSource(self._labels)
+                for source in self._sources
+            ]
         )
 
-        self._index_attached_universal = self._universal_index_converter(
-            self._index_attached
-        )
+        sorted_args = np.argsort(self._index_attached_universal)
+        self._sources = self._sources[sorted_args]
+        self._index_attached = self._index_attached[sorted_args]
+        self._index_attached_universal = self._index_attached_universal[sorted_args]
 
     @staticmethod
-    def _universal_index_converter(index):
-        """
-        Convert index to universal type that is comparable.
-        """
+    def _universal_index(index):
+        """Convert index to universal type."""
         return pd.to_datetime(index, utc=True)
 
     @property
     def labels(self):
+        """Data source labels."""
         return tuple(self._labels)
 
     def _get(self, start, end):
-        start_universal = self._universal_index_converter(start)
-        end_universal = self._universal_index_converter(end)
+        start_universal = self._universal_index(start)
+        end_universal = self._universal_index(end)
 
         attached_after_start = self._index_attached_universal > start_universal
         attached_before_end = self._index_attached_universal < end_universal
@@ -325,14 +342,14 @@ class CompositeDataSource(BaseDataSource):
             for start_i, end_i, source_i in zip(start_list, end_list, source_list)
         ]
 
-        # if len(set([tuple(data.keys()) for data in data_list])) != 1:
-        #     raise ValueError("All data keys are not the same.")
+        for data_i in data_list:
+            if set(self._labels) != set(data_i.keys()):
+                raise ValueError("Data keys not valid.")
 
         return self._concat_data(data_list)
 
-    @staticmethod
-    def _concat_data(data_list):
-        data = {key: pd.Series([], dtype="object") for key in data_list[0].keys()}
+    def _concat_data(self, data_list):
+        data = {key: pd.Series([], dtype="object") for key in self._labels}
         for data_i in data_list:
             for key, series in data_i.items():
                 data[key] = pd.concat([data[key], series])
