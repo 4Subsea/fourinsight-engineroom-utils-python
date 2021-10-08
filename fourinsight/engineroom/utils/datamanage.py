@@ -5,6 +5,17 @@ import numpy as np
 import pandas as pd
 
 
+def _universal_datetime_index(index):
+    """Convert datetime-like index to universal type."""
+    index = np.asarray_chkfinite(index).flatten()
+    return np.int64(pd.to_datetime(index, utc=True))
+
+
+def _universal_integer_index(index):
+    """Convert numeric index to universal type."""
+    return np.int64(np.asarray_chkfinite(index))
+
+
 class BaseDataSource(ABC):
     """
     Abstract class for data sources.
@@ -27,7 +38,8 @@ class BaseDataSource(ABC):
     should be an integer.
     """
 
-    def __init__(self, index_sync=False, tolerance=None):
+    def __init__(self, index_type, index_sync=False, tolerance=None):
+        self._index_type = index_type
         self._index_sync = index_sync
         self._tolerance = tolerance
 
@@ -182,6 +194,14 @@ class BaseDataSource(ABC):
             for index_i, start_i, end_i in zip(index, start, end)
         )
 
+    def _index_universal(self, index):
+        if callable(self._index_type):
+            return self._index_type(index)
+        elif self._index_type == "datetime":
+            return _universal_datetime_index(index)
+        elif self._index_type == "integer":
+            return _universal_integer_index(index)
+
 
 class DrioDataSource(BaseDataSource):
     """
@@ -215,6 +235,7 @@ class DrioDataSource(BaseDataSource):
         self,
         drio_client,
         labels,
+        index_type="datetime",
         index_sync=False,
         tolerance=None,
         **get_kwargs,
@@ -222,7 +243,7 @@ class DrioDataSource(BaseDataSource):
         self._drio_client = drio_client
         self._labels = labels
         self._get_kwargs = get_kwargs
-        super().__init__(index_sync=index_sync, tolerance=tolerance)
+        super().__init__(index_type, index_sync=index_sync, tolerance=tolerance)
 
     def _get(self, start, end):
         """
@@ -264,9 +285,9 @@ class NullDataSource(BaseDataSource):
         Labels.
     """
 
-    def __init__(self, labels=None):
+    def __init__(self, labels=None, index_type="datetime"):
         self._labels = labels if labels else ()
-        super().__init__(index_sync=False)
+        super().__init__(index_type, index_sync=False)
 
     @property
     def labels(self):
@@ -275,17 +296,6 @@ class NullDataSource(BaseDataSource):
 
     def _get(self, start, end):
         return {label: pd.Series([], dtype="object") for label in self._labels}
-
-
-def _universal_datetime_index(index):
-    """Convert datetime-like index to universal type."""
-    index = np.asarray_chkfinite(index).flatten()
-    return np.int64(pd.to_datetime(index, utc=True))
-
-
-def _universal_numeric_index(index):
-    """Convert numeric index to universal type."""
-    return np.float64(np.asarray_chkfinite(index))
 
 
 class CompositeDataSource(BaseDataSource):
@@ -298,13 +308,18 @@ class CompositeDataSource(BaseDataSource):
         List of tuples as (index, source).
     """
 
-    def __init__(self, index_source, index_type="datetime", index_sync=False, tolerance=None):
-        super().__init__(index_sync=index_sync, tolerance=tolerance)
-        self._index_type = index_type
+    def __init__(self, index_source, index_sync=False, tolerance=None):
         self._index_attached, self._sources = np.asarray(index_source).T
-        self._index_attached_universal = self._universal_index(self._index_attached)
 
-        labels_set = set([sorted(source.labels) for source in self._sources if source])
+        index_type_set = set([source._index_type for source in self._sources if source])
+        if len(index_type_set) == 1:
+            index_type = list(index_type_set)[0]
+        else:
+            raise ValueError("Source index_type is not valid.")
+
+        labels_set = set(
+            [tuple(sorted(source.labels)) for source in self._sources if source]
+        )
         if len(labels_set) == 1:
             self._labels = list(labels_set)[0]
         else:
@@ -312,24 +327,16 @@ class CompositeDataSource(BaseDataSource):
 
         self._sources = np.array(
             [
-                source if source else NullDataSource(self._labels)
+                source if source else NullDataSource(self._labels, index_type)
                 for source in self._sources
             ]
         )
 
-        sorted_args = np.argsort(self._index_attached_universal)
+        super().__init__(index_type, index_sync=index_sync, tolerance=tolerance)
+
+        sorted_args = np.argsort(self._index_universal(self._index_attached))
         self._sources = self._sources[sorted_args]
         self._index_attached = self._index_attached[sorted_args]
-        self._index_attached_universal = self._index_attached_universal[sorted_args]
-
-    def _universal_index(self, index):
-        """Convert index to universal type."""
-        if self._index_type == "datetime":
-            return _universal_datetime_index(index)
-        elif self._index_type == "numeric":
-            return _universal_numeric_index(index)
-        else:
-            raise ValueError("'index_type' is not valid. Sould be 'datetime' or 'numeric'.")
 
     @property
     def labels(self):
@@ -337,11 +344,12 @@ class CompositeDataSource(BaseDataSource):
         return tuple(self._labels)
 
     def _get(self, start, end):
-        start_universal = self._universal_index(start)
-        end_universal = self._universal_index(end)
-
-        attached_after_start = self._index_attached_universal > start_universal
-        attached_before_end = self._index_attached_universal < end_universal
+        attached_after_start = self._index_universal(
+            self._index_attached
+        ) > self._index_universal(start)
+        attached_before_end = self._index_universal(
+            self._index_attached
+        ) < self._index_universal(end)
         attached_between_start_end = attached_after_start & attached_before_end
 
         if sum(~attached_after_start) == 0:
@@ -361,4 +369,7 @@ class CompositeDataSource(BaseDataSource):
         return self._concat_data(data_list)
 
     def _concat_data(self, data_list):
-        return {key: pd.concat([data_i[key] for data_i in data_list]) for key in self._labels}
+        return {
+            key: pd.concat([data_i[key] for data_i in data_list])
+            for key in self._labels
+        }
