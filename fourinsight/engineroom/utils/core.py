@@ -461,14 +461,10 @@ class ResultCollector:
         after : int or datetime-like, optional
             Delete results with index greater than this value.
         """
+        index_drop = []
         if before:
-            index_before = self._dataframe.index[(self._dataframe.index < before)]
-        else:
-            index_before = []
+            index_drop.extend(self._dataframe.index[(self._dataframe.index < before)])
         if after:
-            index_after = self._dataframe.index[(self._dataframe.index > after)]
-        else:
-            index_after = []
-
-        index_drop = np.concatenate([index_before, index_after])
-        self.delete_rows(index_drop)
+            index_drop.extend(self._dataframe.index[(self._dataframe.index > after)])
+        if index_drop:
+            self.delete_rows(index_drop)
