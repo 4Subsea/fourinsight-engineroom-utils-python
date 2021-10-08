@@ -22,6 +22,8 @@ class BaseDataSource(ABC):
 
     Parameters
     ----------
+    index_type : str or callable
+        Index type.
     index_sync : bool, optional
         If the index should be synced. If True, a valid tolerance must be given.
     tolerance : int, float or pandas.Timedelta
@@ -195,6 +197,14 @@ class BaseDataSource(ABC):
         )
 
     def _index_universal(self, index):
+        """
+        Convert index to universal type.
+
+        Parameters
+        ----------
+        index : single value or array-like
+            Index value.
+        """
         if callable(self._index_type):
             return self._index_type(index)
         elif self._index_type == "datetime":
@@ -213,6 +223,8 @@ class DrioDataSource(BaseDataSource):
         DataReservoir.io client.
     lables : dict
         Labels and timeseries IDs as key/value pairs.
+    index_type : str or callable
+        Index type.
     index_sync : bool, optional
         If the index should be synced. If True, a valid tolerance must be given.
     tolerance : int, float or pandas.Timedelta
@@ -277,12 +289,14 @@ class DrioDataSource(BaseDataSource):
 
 class NullDataSource(BaseDataSource):
     """
-    NullDataSource.
+    This data source will return empty data.
 
     Parameters
     ----------
     labels : list-like
-        Labels.
+        Data labels.
+    index_type : str or callable
+        Index type.
     """
 
     def __init__(self, labels=None, index_type="datetime"):
