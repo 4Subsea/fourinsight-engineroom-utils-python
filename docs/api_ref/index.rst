@@ -11,5 +11,3 @@ functions and methods.
    result_collector
    data_source/index
    iter_index
-
-*--Auto-generated API documentation--*

@@ -50,7 +50,9 @@ napoleon_numpy_docstring = True
 # Intershpinx mapping
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
-    "datareservoirio": ("https://www.datareservoir.io/python/docs/latest", None)
+    "datareservoirio": ("https://www.datareservoir.io/python/docs/latest", None),
+    "pandas": ("http://pandas.pydata.org/pandas-docs/stable", None),
+    "numpy": ("https://numpy.org/doc/stable", None),
 }
 
 # Add any paths that contain templates here, relative to this directory.

@@ -1,24 +1,36 @@
 Data Source
 ===========
 
-Timeseries data (or other types of sequential data) are often most valueable when
-they are considered in groups. Insight is usually found by investigating the relationship
-between different state variables of a system. An example could be measurements from
-a motion sensor; to be able to calcuate the tilt angle of the sensor, you would need
-to access acceleration and gyro measurements from all three axis of the sensor. Another
-example could be parameterized wave spectrum data, where the spectrum is only fully
-described when you have all parameters available.
+Timeseries data (or other types of sequential data) are often considered in "groups", since
+many timeseries can share a common index and are likely to be used together.
 
-'Data source' objects provide an interface to retrieve groups of sequential data
-from a source. A data source class must inherit from
-:class:`~fourinsight.engineroom.utils.datamanage.BaseDataSource`, and override the abstract
-method, :meth:`~fourinsight.engineroom.utils.datamanage.BaseDataSource._get()`, and the abstract property, :attr:`~fourinsight.engineroom.utils.datamanage.BaseDataSource.labels`.
+.. note: A "group" can only have a single member, and still benefit from
+        the utilities described below.
 
-:mod:`fourinsight.engineroom.utils` provides :class:`~fourinsight.engineroom.utils.DrioDataSource`, which handles data from the DataReservoir.io_. It is
-initialized with a :class:`datareservoirio.Client` object and a dictionary containing
-labels and timeseries IDs as key/value pairs.
+'Data source' objects provide an interface to retrieve groups of sequential data that share a common index
+from a source. The primary purpose is to have a common interface for handling timeseries (or sequential) data
+regardless of the source.
+
+:mod:`fourinsight.engineroom.utils` comes with the following built-in data sources:
+
+:class:`~fourinsight.engineroom.utils.DrioDataSource`
+    Handles data from DataReservoir.io_.
 
 .. _DataReservoir.io: https://www.datareservoir.io/
+
+We aim to add other popular data sources as part of :mod:`fourinsight.engineroom.utils`.
+
+However, it is possible (and encouraged) to define custom data sources. A data source class must
+inherit from :class:`~fourinsight.engineroom.utils.datamanage.BaseDataSource`, and override the
+abstract method, :meth:`~fourinsight.engineroom.utils.datamanage.BaseDataSource._get()`,
+and the abstract property, :attr:`~fourinsight.engineroom.utils.datamanage.BaseDataSource.labels`.
+
+The following code examples are given with :class:`~fourinsight.engineroom.utils.DrioDataSource`, but
+all the functionality shown will be common for any data source class that inherits from :class:`~fourinsight.engineroom.utils.datamanage.BaseDataSource`.
+The only difference will be how the classes are instantiated. For intsance,
+:class:`~fourinsight.engineroom.utils.DrioDataSource` is initialized with a
+:class:`datareservoirio.Client` instance and a dictionary containing labels and timeseries
+IDs as key/value pairs.
 
 .. code-block:: python
 
@@ -38,7 +50,7 @@ labels and timeseries IDs as key/value pairs.
 
 The data index can be synced during download by setting the ``index_sync`` flag
 to ``True`` and providing a suitable ``tolerance`` limit. Neighboring datapoints are
-then merged together at a 'common' index. The common index will be the smallest
+then merged together at a 'common' index. The common index will be the first
 index of the neighboring datapoints. The tolerance describe the expected spacing
 between neighboring datapoints to merge.
 
@@ -73,8 +85,10 @@ The :meth:`~fourinsight.engineroom.utils.datamanage.BaseDataSource.get()` method
     # download data as a 'pandas.DataFrame'
     df = source.get("2020-01-01 00:00", "2020-01-02 00:00")
 
+Iterators
+---------
 The :meth:`~fourinsight.engineroom.utils.datamanage.BaseDataSource.iter()` method is used to iterate over 'chunks' of data. Lists of start and
-end indexes are required as input.
+end indecies are required as input.
 
 .. code-block:: python
 
@@ -85,12 +99,10 @@ end indexes are required as input.
         pass
 
 
-Iterator 'start' and 'end' indexes
-..................................
-
-'Data source' objects can also iterate over a set of start-end sequences. Convenience functions for generating start and end 
-sequences are available in the :mod:`~fourinsight.engineroom.utils.iter_index` sub-module. For example, for timeseries data where
-the index is datetime-like, fixed-frequency start and end index pairs can be generated with :meth:`~fourinsight.engineroom.utils.iter_index.date_range()`.
+Convenience functions for generating list of start and end indecies are available in the
+:mod:`~fourinsight.engineroom.utils.iter_index` sub-module. For example, for timeseries data where
+the index is datetime-like, fixed-frequency start and end index pairs can be generated with
+:meth:`~fourinsight.engineroom.utils.iter_index.date_range()`.
 
 .. code-block:: python
 

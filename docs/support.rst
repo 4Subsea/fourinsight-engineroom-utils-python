@@ -1,3 +1,5 @@
+.. _support:
+
 Support
 =======
 For bug/issue reports, please submit as issue on `GitHub`_. For questions and feedback contact
