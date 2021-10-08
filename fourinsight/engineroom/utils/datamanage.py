@@ -277,6 +277,17 @@ class NullDataSource(BaseDataSource):
         return {label: pd.Series([], dtype="object") for label in self._labels}
 
 
+def _universal_datetime_index(index):
+    """Convert datetime-like index to universal type."""
+    index = np.asarray_chkfinite(index).flatten()
+    return np.int64(pd.to_datetime(index, utc=True))
+
+
+def _universal_numeric_index(index):
+    """Convert numeric index to universal type."""
+    return np.float64(np.asarray_chkfinite(index))
+
+
 class CompositeDataSource(BaseDataSource):
     """
     Composite data source.
@@ -287,8 +298,9 @@ class CompositeDataSource(BaseDataSource):
         List of tuples as (index, source).
     """
 
-    def __init__(self, index_source, index_sync=False, tolerance=None):
+    def __init__(self, index_source, index_type="datetime", index_sync=False, tolerance=None):
         super().__init__(index_sync=index_sync, tolerance=tolerance)
+        self._index_type = index_type
         self._index_attached, self._sources = np.asarray(index_source).T
         self._index_attached_universal = self._universal_index(self._index_attached)
 
@@ -310,10 +322,14 @@ class CompositeDataSource(BaseDataSource):
         self._index_attached = self._index_attached[sorted_args]
         self._index_attached_universal = self._index_attached_universal[sorted_args]
 
-    @staticmethod
-    def _universal_index(index):
+    def _universal_index(self, index):
         """Convert index to universal type."""
-        return pd.to_datetime(index, utc=True)
+        if self._index_type == "datetime":
+            return _universal_datetime_index(index)
+        elif self._index_type == "numeric":
+            return _universal_numeric_index(index)
+        else:
+            raise ValueError("'index_type' is not valid. Sould be 'datetime' or 'numeric'.")
 
     @property
     def labels(self):
@@ -342,15 +358,7 @@ class CompositeDataSource(BaseDataSource):
             for start_i, end_i, source_i in zip(start_list, end_list, source_list)
         ]
 
-        for data_i in data_list:
-            if set(self._labels) != set(data_i.keys()):
-                raise ValueError("Data keys not valid.")
-
         return self._concat_data(data_list)
 
     def _concat_data(self, data_list):
-        data = {key: pd.Series([], dtype="object") for key in self._labels}
-        for data_i in data_list:
-            for key, series in data_i.items():
-                data[key] = pd.concat([data[key], series])
-        return data
+        return {key: pd.concat([data_i[key] for data_i in data_list]) for key in self._labels}
