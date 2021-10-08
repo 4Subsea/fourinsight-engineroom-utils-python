@@ -329,7 +329,7 @@ class CompositeDataSource(BaseDataSource):
         if len(index_type_set) == 1:
             index_type = list(index_type_set)[0]
         else:
-            raise ValueError("Source index_type is not valid.")
+            raise ValueError("The data sources does not share the same 'index_type'.")
 
         labels_set = set(
             [tuple(sorted(source.labels)) for source in self._sources if source]
@@ -337,7 +337,7 @@ class CompositeDataSource(BaseDataSource):
         if len(labels_set) == 1:
             self._labels = list(labels_set)[0]
         else:
-            raise ValueError("Source labels are not valid.")
+            raise ValueError("The data sources does not share the same 'labels'.")
 
         self._sources = np.array(
             [
@@ -358,6 +358,10 @@ class CompositeDataSource(BaseDataSource):
         return tuple(self._labels)
 
     def _get(self, start, end):
+
+        if not (start and end):
+            raise ValueError("'start' and 'end' can not be NoneType.")
+
         attached_after_start = self._index_universal(
             self._index_attached
         ) > self._index_universal(start)
