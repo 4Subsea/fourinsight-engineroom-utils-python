@@ -13,8 +13,7 @@
 import os
 import sys
 from datetime import date
-
-# from importlib import metadata
+from importlib import metadata
 
 sys.path.insert(0, os.path.abspath("../"))
 
@@ -22,13 +21,12 @@ sys.path.insert(0, os.path.abspath("../"))
 # -- Project information -----------------------------------------------------
 _TEMPLATE_VERSION = "1.0.0"
 
-project = "4Insight EngineRoom Utilites for Python"
+project = "fourinsight-engineroom-utils"
 copyright = f"{date.today().year}, 4Subsea"
 author = "4Subsea"
 
 # The full version, including alpha/beta/rc tags
-# version = metadata.version("fourinsight-engineroom-utils")
-version = "0.0.1"
+version = metadata.version(project)
 release = version
 
 
