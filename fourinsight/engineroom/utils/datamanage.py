@@ -304,7 +304,7 @@ class NullDataSource(BaseDataSource):
     """
 
     def __init__(self, labels=None, index_type="datetime"):
-        self._labels = labels if labels else ()
+        self._labels = tuple(labels) if labels else ()
         super().__init__(index_type, index_sync=False)
 
     @property
