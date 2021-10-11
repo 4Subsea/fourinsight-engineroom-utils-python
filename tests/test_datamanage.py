@@ -788,3 +788,138 @@ class Test_CompositeDataSource:
         ]
         source = CompositeDataSource(index_source, index_sync=False, tolerance=None)
         assert source.labels == ("A", "B", "C")
+
+    def test_get(self):
+        drio_client = Mock()
+        labels = {
+            "A": "8b1683bb-32a9-4e64-b122-6a0534eff592",
+            "B": "4bf4606b-b18e-408d-9d4d-3f1465ed23f2",
+            "C": "d40fcb53-cce8-4f1a-9772-c5640db29c18",
+        }
+        source1 = DrioDataSource(drio_client, labels, index_type="datetime")
+        source2 = NullDataSource(labels=labels.keys(), index_type="datetime")
+        source3 = DrioDataSource(drio_client, labels, index_type="datetime")
+
+        with patch.object(source1, "_get") as mock_get1:
+            with patch.object(source3, "_get") as mock_get3:
+                mock_idx1 = pd.DatetimeIndex(
+                    ["2020-01-01 00:00", "2020-01-01 00:01", "2020-01-01 00:02"],
+                    tz="utc",
+                )
+                mock_get1.return_value = {
+                    "A": pd.Series([1.0, 2.0, 3.0], index=mock_idx1),
+                    "B": pd.Series([1.0, 2.0, 3.0], index=mock_idx1),
+                    "C": pd.Series([1.0, 2.0, 3.0], index=mock_idx1),
+                }
+
+                mock_idx3 = pd.DatetimeIndex(
+                    ["2020-01-01 04:00", "2020-01-01 04:01", "2020-01-01 04:02"],
+                    tz="utc",
+                )
+                mock_get3.return_value = {
+                    "A": pd.Series([1.0, 2.0, 3.0], index=mock_idx3),
+                    "B": pd.Series([1.0, 2.0, 3.0], index=mock_idx3),
+                    "C": pd.Series([1.0, 2.0, 3.0], index=mock_idx3),
+                }
+
+                index_source = [
+                    ("2020-01-01 00:00", source1),
+                    ("2020-01-01 02:00", source2),
+                    ("2020-01-01 04:00", source3),
+                    ("2020-01-01 06:00", None),
+                ]
+                source = CompositeDataSource(
+                    index_source, index_sync=False, tolerance=None
+                )
+
+                data_out = source._get("2019-01-01 00:00", "2021-01-01 00:00")
+
+                idx_expect = pd.DatetimeIndex(
+                    [
+                        "2020-01-01 00:00",
+                        "2020-01-01 00:01",
+                        "2020-01-01 00:02",
+                        "2020-01-01 04:00",
+                        "2020-01-01 04:01",
+                        "2020-01-01 04:02",
+                    ],
+                    tz="utc",
+                )
+                data_expect = {
+                    "A": pd.Series([1.0, 2.0, 3.0, 1.0, 2.0, 3.0], index=idx_expect),
+                    "B": pd.Series([1.0, 2.0, 3.0, 1.0, 2.0, 3.0], index=idx_expect),
+                    "C": pd.Series([1.0, 2.0, 3.0, 1.0, 2.0, 3.0], index=idx_expect),
+                }
+
+                pd.testing.assert_frame_equal(
+                    pd.DataFrame(data_out), pd.DataFrame(data_expect)
+                )
+
+                mock_get1.assert_called_once_with(
+                    "2020-01-01 00:00", "2020-01-01 02:00"
+                )
+                mock_get3.assert_called_once_with(
+                    "2020-01-01 04:00", "2020-01-01 06:00"
+                )
+
+    @patch.object(NullDataSource, "_get")
+    def test_get_integer(self, mock_get):
+        mock_get.return_value = {
+            "A": pd.Series([], dtype="object"),
+            "B": pd.Series([], dtype="object"),
+            "C": pd.Series([], dtype="object"),
+        }
+        index_source = [
+            (10, NullDataSource(labels=["A", "B", "C"], index_type="integer")),
+            (20, NullDataSource(labels=["A", "B", "C"], index_type="integer")),
+            (30, NullDataSource(labels=["A", "B", "C"], index_type="integer")),
+            (40, NullDataSource(labels=["A", "B", "C"], index_type="integer")),
+        ]
+        source = CompositeDataSource(index_source)
+
+        data_out = source._get(0, 100)
+
+        data_expect = {
+            "A": pd.Series([], dtype="object"),
+            "B": pd.Series([], dtype="object"),
+            "C": pd.Series([], dtype="object"),
+        }
+
+        pd.testing.assert_frame_equal(pd.DataFrame(data_out), pd.DataFrame(data_expect))
+        mock_get.assert_has_calls(
+            [call(0, 10), call(10, 20), call(20, 30), call(30, 40), call(40, 100)]
+        )
+
+    def test__concat_data(self):
+        index_source = [
+            (10, NullDataSource(labels=["A", "B", "C"], index_type="integer")),
+            (20, NullDataSource(labels=["A", "B", "C"], index_type="integer")),
+        ]
+        source = CompositeDataSource(index_source)
+
+        data_list = [
+            {
+                "A": pd.Series([1.0, 2.0, 3.0], index=[0, 1, 2]),
+                "B": pd.Series([10.0, 20.0, 30.0], index=[0, 1, 2]),
+                "C": pd.Series([100.0, 200.0, 300.0], index=[0, 1, 2]),
+            },
+            {
+                "A": pd.Series([4.0, 5.0, 6.0], index=[3, 4, 5]),
+                "B": pd.Series([40.0, 50.0, 60.0], index=[3, 4, 5]),
+                "C": pd.Series([400.0, 500.0, 600.0], index=[3, 4, 5]),
+            },
+        ]
+
+        data_out = source._concat_data(data_list)
+
+        data_expect = {
+            "A": pd.Series([1.0, 2.0, 3.0, 4.0, 5.0, 6.0], index=[0, 1, 2, 3, 4, 5]),
+            "B": pd.Series(
+                [10.0, 20.0, 30.0, 40.0, 50.0, 60.0], index=[0, 1, 2, 3, 4, 5]
+            ),
+            "C": pd.Series(
+                [100.0, 200.0, 300.0, 400.0, 500.0, 600.0], index=[0, 1, 2, 3, 4, 5]
+            ),
+        }
+
+        pd.testing.assert_frame_equal(pd.DataFrame(data_out), pd.DataFrame(data_expect))
