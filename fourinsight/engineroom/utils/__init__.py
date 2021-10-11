@@ -6,6 +6,6 @@ from .core import (
     PersistentJSON,
     ResultCollector,
 )
-from .datamanage import DrioDataSource, NullDataSource
+from .datamanage import DrioDataSource, NullDataSource, CompositeDataSource
 
 __version__ = "0.0.1"
