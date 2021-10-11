@@ -8,7 +8,11 @@ import pandas as pd
 def _universal_datetime_index(index):
     """Convert datetime-like index to universal type."""
     index = np.asarray_chkfinite(index).flatten()
-    return np.int64(pd.to_datetime(index, utc=True))
+    index = np.int64(pd.to_datetime(index, utc=True).values)
+    if len(index) == 1:
+        return index[0]
+    else:
+        return index
 
 
 def _universal_integer_index(index):
