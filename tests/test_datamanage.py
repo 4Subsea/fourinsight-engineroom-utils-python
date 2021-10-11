@@ -20,17 +20,18 @@ class BaseDataSourceForTesting(BaseDataSource):
 
 class Test_BaseDataSource:
     def test__init__(self):
-        source = BaseDataSourceForTesting(index_sync=True, tolerance=1)
+        source = BaseDataSourceForTesting("datetime", index_sync=True, tolerance=1)
+        assert source._index_type == "datetime"
         assert source._index_sync is True
         assert source._tolerance == 1
 
     def test_labels(self):
-        source = BaseDataSourceForTesting()
+        source = BaseDataSourceForTesting("datetime")
         with pytest.raises(NotImplementedError):
             source.labels
 
     def test__get(self):
-        source = BaseDataSourceForTesting()
+        source = BaseDataSourceForTesting("datetime")
         with pytest.raises(NotImplementedError):
             source._get("2020-01-01", "2021-01-01")
 
@@ -327,7 +328,7 @@ class Test_BaseDataSource:
 
         mock_get.return_value = data
 
-        source = BaseDataSourceForTesting(index_sync=False)
+        source = BaseDataSourceForTesting("datetime", index_sync=False)
         df_out = source.get("<start-time>", "<end-time>")
 
         df_expect = pd.DataFrame(
@@ -397,7 +398,7 @@ class Test_BaseDataSource:
 
         mock_get.return_value = data
 
-        source = BaseDataSourceForTesting(index_sync=True, tolerance=0.2)
+        source = BaseDataSourceForTesting("datetime", index_sync=True, tolerance=0.2)
         df_out = source.get("<start-time>", "<end-time>")
 
         df_expect = pd.DataFrame(
@@ -415,7 +416,7 @@ class Test_BaseDataSource:
 
     @patch.object(BaseDataSourceForTesting, "_get")
     def test_get_raises_no_tolerance(self, mock_get):
-        source = BaseDataSourceForTesting(index_sync=True, tolerance=None)
+        source = BaseDataSourceForTesting("datetime", index_sync=True, tolerance=None)
 
         with pytest.raises(ValueError):
             source.get("<start-time>", "<end-time>")
@@ -451,7 +452,7 @@ class Test_BaseDataSource:
         mock_get.return_value = data
 
         source = BaseDataSourceForTesting(
-            index_sync=True, tolerance=pd.to_timedelta("2s")
+            "datetime", index_sync=True, tolerance=pd.to_timedelta("2s")
         )
         df_out = source.get("<start-time>", "<end-time>")
 
@@ -471,7 +472,7 @@ class Test_BaseDataSource:
     def test_iter_index_mode_start(self, mock_get):
         mock_get.side_effect = lambda start, end: (start, end)
 
-        source = BaseDataSourceForTesting()
+        source = BaseDataSourceForTesting("datetime")
 
         start = [1, 2, 3]
         end = [2, 3, 4]
@@ -486,7 +487,7 @@ class Test_BaseDataSource:
     def test_iter_index_mode_end(self, mock_get):
         mock_get.side_effect = lambda start, end: (start, end)
 
-        source = BaseDataSourceForTesting()
+        source = BaseDataSourceForTesting("datetime")
 
         start = [1, 2, 3]
         end = [2, 3, 4]
@@ -501,7 +502,7 @@ class Test_BaseDataSource:
     def test_iter_index_mode_mid(self, mock_get):
         mock_get.side_effect = lambda start, end: (start, end)
 
-        source = BaseDataSourceForTesting()
+        source = BaseDataSourceForTesting("datetime")
 
         start = [1, 2, 3]
         end = [2, 3, 4]
@@ -516,7 +517,7 @@ class Test_BaseDataSource:
     def test_iter_raises_length(self, mock_get):
         mock_get.side_effect = lambda start, end: (start, end)
 
-        source = BaseDataSourceForTesting()
+        source = BaseDataSourceForTesting("datetime")
 
         start = [1, 2, 3]
         end = [2, 3]
@@ -527,7 +528,7 @@ class Test_BaseDataSource:
     def test_iter_raises_index_mode(self, mock_get):
         mock_get.side_effect = lambda start, end: (start, end)
 
-        source = BaseDataSourceForTesting()
+        source = BaseDataSourceForTesting("datetime")
 
         start = [1, 2, 3]
         end = [2, 3, 4]
