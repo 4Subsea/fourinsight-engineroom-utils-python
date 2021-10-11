@@ -5,7 +5,11 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from fourinsight.engineroom.utils import DrioDataSource, NullDataSource
+from fourinsight.engineroom.utils import (
+    DrioDataSource,
+    NullDataSource,
+    CompositeDataSource,
+)
 from fourinsight.engineroom.utils.datamanage import BaseDataSource
 
 
@@ -689,3 +693,98 @@ class Test_NullDataSource:
         }
 
         pd.testing.assert_frame_equal(pd.DataFrame(data_out), pd.DataFrame(data_expect))
+
+
+class Test_CompositeDataSource:
+    def test__init__(self):
+        drio_client = Mock()
+        labels = {
+            "A": "8b1683bb-32a9-4e64-b122-6a0534eff592",
+            "B": "4bf4606b-b18e-408d-9d4d-3f1465ed23f2",
+            "C": "d40fcb53-cce8-4f1a-9772-c5640db29c18",
+        }
+        drio_source = DrioDataSource(drio_client, labels, index_type="datetime")
+        null_source = NullDataSource(labels=["C", "A", "B"], index_type="datetime")
+        index_source = [
+            ("2020-01-01 00:00", drio_source),
+            ("2020-01-01 02:00", null_source),
+            ("2020-01-01 04:00", drio_source),
+            ("2020-01-01 06:00", None),
+            ("1999-01-01 00:00", None),
+        ]
+        source = CompositeDataSource(index_source, index_sync=False, tolerance=None)
+
+        assert isinstance(source, BaseDataSource)
+        assert source._labels == ("A", "B", "C")
+        assert source._index_type == "datetime"
+        np.testing.assert_array_equal(
+            source._index_attached,
+            np.array(
+                [
+                    "1999-01-01 00:00",
+                    "2020-01-01 00:00",
+                    "2020-01-01 02:00",
+                    "2020-01-01 04:00",
+                    "2020-01-01 06:00",
+                ]
+            ),
+        )
+        assert isinstance(source._sources[0], NullDataSource)
+        assert isinstance(source._sources[1], DrioDataSource)
+        assert isinstance(source._sources[2], NullDataSource)
+        assert isinstance(source._sources[3], DrioDataSource)
+        assert isinstance(source._sources[4], NullDataSource)
+
+    def test__init__raises_labels(self):
+        drio_client = Mock()
+        labels = {
+            "A": "8b1683bb-32a9-4e64-b122-6a0534eff592",
+            "B": "4bf4606b-b18e-408d-9d4d-3f1465ed23f2",
+            "C": "d40fcb53-cce8-4f1a-9772-c5640db29c18",
+        }
+        drio_source = DrioDataSource(drio_client, labels, index_type="datetime")
+        null_source = NullDataSource(labels=["D", "A", "B"], index_type="datetime")
+        index_source = [
+            ("2020-01-01 00:00", drio_source),
+            ("2020-01-01 02:00", null_source),
+            ("2020-01-01 04:00", drio_source),
+            ("2020-01-01 06:00", None),
+        ]
+        with pytest.raises(ValueError):
+            CompositeDataSource(index_source, index_sync=False, tolerance=None)
+
+    def test__init__raises_index_type(self):
+        drio_client = Mock()
+        labels = {
+            "A": "8b1683bb-32a9-4e64-b122-6a0534eff592",
+            "B": "4bf4606b-b18e-408d-9d4d-3f1465ed23f2",
+            "C": "d40fcb53-cce8-4f1a-9772-c5640db29c18",
+        }
+        drio_source = DrioDataSource(drio_client, labels, index_type="datetime")
+        null_source = NullDataSource(labels=["C", "A", "B"], index_type="integer")
+        index_source = [
+            ("2020-01-01 00:00", drio_source),
+            ("2020-01-01 02:00", null_source),
+            ("2020-01-01 04:00", drio_source),
+            ("2020-01-01 06:00", None),
+        ]
+        with pytest.raises(ValueError):
+            CompositeDataSource(index_source, index_sync=False, tolerance=None)
+
+    def test_labels(self):
+        drio_client = Mock()
+        labels = {
+            "A": "8b1683bb-32a9-4e64-b122-6a0534eff592",
+            "B": "4bf4606b-b18e-408d-9d4d-3f1465ed23f2",
+            "C": "d40fcb53-cce8-4f1a-9772-c5640db29c18",
+        }
+        drio_source = DrioDataSource(drio_client, labels, index_type="datetime")
+        null_source = NullDataSource(labels=["C", "A", "B"], index_type="datetime")
+        index_source = [
+            ("2020-01-01 00:00", drio_source),
+            ("2020-01-01 02:00", null_source),
+            ("2020-01-01 04:00", drio_source),
+            ("2020-01-01 06:00", None),
+        ]
+        source = CompositeDataSource(index_source, index_sync=False, tolerance=None)
+        assert source.labels == ("A", "B", "C")
