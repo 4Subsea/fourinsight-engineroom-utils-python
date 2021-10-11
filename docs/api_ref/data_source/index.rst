@@ -6,3 +6,4 @@ Data Source
 
    base_data_source
    drio_data_source
+   composite_data_source

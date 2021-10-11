@@ -5,8 +5,22 @@ import numpy as np
 import pandas as pd
 
 
-def _universal_datetime_index(index):
-    """Convert datetime-like index to universal type."""
+def universal_datetime_index(index):
+    """
+    Convert datetime-like index to universal type.
+
+    Index is passed on to :func:`pandas.to_datetime` and then converted to integer
+    with :func:`numpy.int64`.
+
+    Parameters
+    ----------
+    index : single value or array-like
+        Datetime-like index.
+
+    Returns
+    int or array of int
+        Index converted to epoch.
+    """
     index = np.asarray_chkfinite(index).flatten()
     index = np.int64(pd.to_datetime(index, utc=True).values)
     if len(index) == 1:
@@ -15,8 +29,22 @@ def _universal_datetime_index(index):
         return index
 
 
-def _universal_integer_index(index):
-    """Convert numeric index to universal type."""
+def universal_integer_index(index):
+    """
+    Convert numeric index to universal type.
+
+    Index is passed on to :func:`numpy.int64`.
+
+    Parameters
+    ----------
+    index : single value or array-like
+        Integer-like index.
+
+    Returns
+    -------
+    int or array of int
+        Index converted to ``int`` type.
+    """
     return np.int64(np.asarray_chkfinite(index))
 
 
@@ -27,7 +55,7 @@ class BaseDataSource(ABC):
     Parameters
     ----------
     index_type : str or callable
-        Index type.
+        Index type (see Notes). Should be 'datetime', 'integer' or a callable.
     index_sync : bool, optional
         If the index should be synced. If True, a valid tolerance must be given.
     tolerance : int, float or pandas.Timedelta
@@ -38,10 +66,23 @@ class BaseDataSource(ABC):
 
     Notes
     -----
-    The tolerance must be of a type that is comparable to the data index. E.g.
-    if the data has a ``DatetimeIndex``, the tolerance should be of type
-    ``pandas.Timestamp``. And if the data has a ``Int64Index``, the tolerance
-    should be an integer.
+    - The `tolerance` must be of a type that is comparable to the data index. E.g.
+      if the data has a ``DatetimeIndex``, the tolerance should be of type
+      ``pandas.Timestamp``. And if the data has a ``Int64Index``, the tolerance
+      should be an integer.
+    - The `index_type` describes how to interpret the data index and convert it
+      to a universal type. By universal type, we mean a data type that is common
+      for all indexes related to the data.
+
+      If ``index_type='datetime'``, a datetime-like index is expected. Indices are
+      passed on to :func:`universal_datetime_index` to create a universal index type.
+
+      If ``index_type='integer'``, an integer-like index is expected. Indices are
+      passed on to :func:`universal_integer_index` to create a universal index type.
+
+      Custom index types are provided through giving a ``callable`` as the `index_type`.
+      The callable should then take a single value or array-like, and convert it
+      to a universal type.
     """
 
     def __init__(self, index_type, index_sync=False, tolerance=None):
@@ -212,9 +253,9 @@ class BaseDataSource(ABC):
         if callable(self._index_type):
             return self._index_type(index)
         elif self._index_type == "datetime":
-            return _universal_datetime_index(index)
+            return universal_datetime_index(index)
         elif self._index_type == "integer":
-            return _universal_integer_index(index)
+            return universal_integer_index(index)
 
 
 class DrioDataSource(BaseDataSource):
@@ -228,7 +269,7 @@ class DrioDataSource(BaseDataSource):
     lables : dict
         Labels and timeseries IDs as key/value pairs.
     index_type : str or callable
-        Index type.
+        Index type (see Notes). Should be 'datetime', 'integer' or a callable.
     index_sync : bool, optional
         If the index should be synced. If True, a valid tolerance must be given.
     tolerance : int, float or pandas.Timedelta
@@ -241,10 +282,24 @@ class DrioDataSource(BaseDataSource):
 
     Notes
     -----
-    The tolerance must be of a type that is comparable to the data index. E.g.
-    if the data has a ``DatetimeIndex``, the tolerance should be of type
-    ``pandas.Timestamp``. And if the data has a ``Int64Index``, the tolerance
-    should be an integer.
+    - The `tolerance` must be of a type that is comparable to the data index. E.g.
+      if the data has a ``DatetimeIndex``, the tolerance should be of type
+      ``pandas.Timestamp``. And if the data has a ``Int64Index``, the tolerance
+      should be an integer.
+    - The `index_type` describes how to interpret the data index and convert it
+      to a universal type. By universal type, we mean a data type that is common
+      for all indexes related to the data.
+
+      If ``index_type='datetime'``, a datetime-like index is expected. Indices are
+      passed on to ``pd.to_datetime`` and then converted to integer with ``np.int64``
+      to create a universal index type.
+
+      If ``index_type='integer'``, an integer-like index is expected. Indices are
+      passed on to ``np.int64`` to create a universal index.
+
+      Custom index types are provided through giving a ``callable`` as the `index_type`.
+      The callable should then take a single value or list-like, and convert it
+      to a universal type.
     """
 
     def __init__(
@@ -300,7 +355,7 @@ class NullDataSource(BaseDataSource):
     labels : list-like
         Data labels.
     index_type : str or callable
-        Index type.
+        Index type. Should be 'datetime', 'integer' or a callable.
     """
 
     def __init__(self, labels=None, index_type="datetime"):
@@ -347,9 +402,9 @@ class CompositeDataSource(BaseDataSource):
     Examples
     --------
     This example shows how to set up a composite of three data sources. During data
-    download, data is retrieved from source1 between '2020-01-01 00:00' and '2020-01-02 00:00',
-    from source2 between '2020-01-02 00:00' and '2020-01-03 00:00', and from source3
-    between '2020-01-03 00:00' and the 'end'.
+    download, data is retrieved from ``source1`` between '2020-01-01 00:00' and
+    '2020-01-02 00:00', from ``source2`` between '2020-01-02 00:00' and '2020-01-03 00:00',
+    and from ``source3`` between '2020-01-03 00:00' and the 'end'.
 
     >>> index_source = [
             ('2020-01-01 00:00', source1),
