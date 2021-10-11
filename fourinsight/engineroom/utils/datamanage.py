@@ -318,12 +318,46 @@ class NullDataSource(BaseDataSource):
 
 class CompositeDataSource(BaseDataSource):
     """
-    Composite data source.
+    A composite of data sources.
+
+    During download, the class will switch between different data sources based on
+    the index.
 
     Parameters
     ----------
     index_source : list-like
-        List of tuples as (index, source).
+        List of (index, source) tuples. The `index` value determines which index
+        a `source` is valid from. The source will replace the previous item in the
+        list from this index.
+    index_sync : bool, optional
+        If the index should be synced. If True, a valid tolerance must be given.
+    tolerance : int, float or pandas.Timedelta
+        Tolerance limit for syncing (see Notes). If ``index_sync`` is set to True,
+        datapoints that are closer than the tolerance are merged so that they
+        share a common index. The common index will be the first index of the
+        neighboring datapoints.
+
+    Notes
+    -----
+    The tolerance must be of a type that is comparable to the data index. E.g.
+    if the data has a ``DatetimeIndex``, the tolerance should be of type
+    ``pandas.Timestamp``. And if the data has a ``Int64Index``, the tolerance
+    should be an integer.
+
+    Examples
+    --------
+    This example shows how to set up a composite of three data sources. During data
+    download, data is retrieved from source1 between '2020-01-01 00:00' and '2020-01-02 00:00',
+    from source2 between '2020-01-02 00:00' and '2020-01-03 00:00', and from source3
+    between '2020-01-03 00:00' and the 'end'.
+
+    >>> index_source = [
+            ('2020-01-01 00:00', source1),
+            ('2020-01-02 00:00', source2),
+            ('2020-01-03 00:00', source3),
+        ]
+    >>> source = CompositeDataSource(index_source)
+    >>> data = source.get('2020-01-01 00:00', '2020-01-05 00:00')
     """
 
     def __init__(self, index_source, index_sync=False, tolerance=None):
@@ -391,6 +425,7 @@ class CompositeDataSource(BaseDataSource):
         return self._concat_data(data_list)
 
     def _concat_data(self, data_list):
+        """Concatenate list of data dicts."""
         return {
             key: pd.concat([data_i[key] for data_i in data_list])
             for key in self._labels
