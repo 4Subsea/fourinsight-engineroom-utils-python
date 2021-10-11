@@ -359,7 +359,7 @@ class CompositeDataSource(BaseDataSource):
 
     def _get(self, start, end):
 
-        if not (start and end):
+        if (start is None) or (end is None):
             raise ValueError("'start' and 'end' can not be NoneType.")
 
         attached_after_start = self._index_universal(
