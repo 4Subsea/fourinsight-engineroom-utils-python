@@ -6,9 +6,9 @@ import pandas as pd
 import pytest
 
 from fourinsight.engineroom.utils import (
+    CompositeDataSource,
     DrioDataSource,
     NullDataSource,
-    CompositeDataSource,
 )
 from fourinsight.engineroom.utils.datamanage import BaseDataSource
 
