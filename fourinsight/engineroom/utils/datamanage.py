@@ -376,9 +376,9 @@ class CompositeDataSource(BaseDataSource):
     Parameters
     ----------
     index_source : list-like
-        List of (index, source) tuples. The `index` value determines which index
-        a `source` is valid from. It will then be valid until the next item in the
-        list (see Example).
+        Sequence of (index, source) tuples. The `index` value determines which index
+        a `source` is valid from. The source will then be valid until the next item
+        in the sequence (see Example).
     index_sync : bool, optional
         If the index should be synced. If True, a valid tolerance must be given.
     tolerance : int, float or pandas.Timedelta

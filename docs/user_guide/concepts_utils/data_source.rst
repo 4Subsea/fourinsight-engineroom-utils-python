@@ -20,8 +20,8 @@ regardless of the source.
     Handles data from DataReservoir.io_.
 
 :class:`~fourinsight.engineroom.utils.CompositeDataSource`
-    A composite of data sources. Useful when you want to switch between different
-    sources for different time periods.
+    Handles data from a sequence of data sources. Useful when you want to switch
+    between different sources for different time periods.
 
 .. _DataReservoir.io: https://www.datareservoir.io/
 
