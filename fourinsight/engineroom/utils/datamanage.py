@@ -9,13 +9,10 @@ def universal_datetime_index(index):
     """
     Convert datetime-like index to universal type.
 
-    Index is passed on to :func:`pandas.to_datetime` and then converted to integer
-    with :func:`numpy.int64`.
-
     Parameters
     ----------
     index : single value or array-like
-        Datetime-like index.
+        Datetime-like index. Will be passed on to :func:`pandas.to_datetime`.
 
     Returns
     int or array of int
@@ -31,9 +28,7 @@ def universal_datetime_index(index):
 
 def universal_integer_index(index):
     """
-    Convert numeric index to universal type.
-
-    Index is passed on to :func:`numpy.int64`.
+    Convert integer-like index to universal type.
 
     Parameters
     ----------
@@ -348,7 +343,7 @@ class DrioDataSource(BaseDataSource):
 
 class NullDataSource(BaseDataSource):
     """
-    This data source will return empty data.
+    Will return empty data.
 
     Parameters
     ----------
@@ -382,8 +377,8 @@ class CompositeDataSource(BaseDataSource):
     ----------
     index_source : list-like
         List of (index, source) tuples. The `index` value determines which index
-        a `source` is valid from. The source will replace the previous item in the
-        list from this index.
+        a `source` is valid from. It will then be valid until the next item in the
+        list (see Example).
     index_sync : bool, optional
         If the index should be synced. If True, a valid tolerance must be given.
     tolerance : int, float or pandas.Timedelta
