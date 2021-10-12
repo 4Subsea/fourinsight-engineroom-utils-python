@@ -368,7 +368,7 @@ class NullDataSource(BaseDataSource):
 
 class CompositeDataSource(BaseDataSource):
     """
-    A composite of data sources.
+    Handles data from a sequence of data sources.
 
     During download, the class will switch between different data sources based on
     the index.
