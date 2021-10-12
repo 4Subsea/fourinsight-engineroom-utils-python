@@ -397,14 +397,14 @@ class CompositeDataSource(BaseDataSource):
     Examples
     --------
     This example shows how to set up a composite of three data sources. During data
-    download, data is retrieved from ``source1`` between '2020-01-01 00:00' and
-    '2020-01-02 00:00', from ``source2`` between '2020-01-02 00:00' and '2020-01-03 00:00',
-    and from ``source3`` between '2020-01-03 00:00' and the 'end'.
+    download, data is retrieved from ``source_a`` between '2020-01-01 00:00' and
+    '2020-01-02 00:00', from ``source_b`` between '2020-01-02 00:00' and '2020-01-03 00:00',
+    and from ``source_c`` between '2020-01-03 00:00' and the 'end'.
 
     >>> index_source = [
-            ('2020-01-01 00:00', source1),
-            ('2020-01-02 00:00', source2),
-            ('2020-01-03 00:00', source3),
+            ('2020-01-01 00:00', source_a),
+            ('2020-01-02 00:00', source_b),
+            ('2020-01-03 00:00', source_c),
         ]
     >>> source = CompositeDataSource(index_source)
     >>> data = source.get('2020-01-01 00:00', '2020-01-05 00:00')
