@@ -1,5 +1,7 @@
 import warnings
 from abc import ABC, abstractmethod, abstractproperty
+from pathlib import Path
+from hashlib import md5
 
 import numpy as np
 import pandas as pd
@@ -80,10 +82,24 @@ class BaseDataSource(ABC):
       to a universal type.
     """
 
-    def __init__(self, index_type, index_sync=False, tolerance=None):
+    def __init__(self, index_type, index_sync=False, tolerance=None, cache=None):
         self._index_type = index_type
         self._index_sync = index_sync
         self._tolerance = tolerance
+
+        self._fingerprint = self._md5()
+        self._cache = Path(cache) if cache else None
+        self._cache_index = self._cache / f"{self._fingerprint}.index" if self._cache else None
+
+        if self._cache:
+            if not self._cache.exists():
+                self._cache.mkdir()
+
+            if not self._cache_index.exists():
+                open(self._cache_index, mode="w").close()
+
+    def _md5(self):
+        return md5("TODO: Not implemented yet.".encode()).hexdigest()
 
     @abstractproperty
     def labels(self):
@@ -304,12 +320,13 @@ class DrioDataSource(BaseDataSource):
         index_type="datetime",
         index_sync=False,
         tolerance=None,
+        cache=None,
         **get_kwargs,
     ):
         self._drio_client = drio_client
         self._labels = labels
         self._get_kwargs = get_kwargs
-        super().__init__(index_type, index_sync=index_sync, tolerance=tolerance)
+        super().__init__(index_type, index_sync=index_sync, tolerance=tolerance, cache=cache)
 
     def _get(self, start, end):
         """
