@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod, abstractproperty
 from pathlib import Path
 from hashlib import md5
 
+import json
 import numpy as np
 import pandas as pd
 
@@ -47,43 +48,37 @@ import pandas as pd
 
 class BaseIndexConverter:
     @abstractmethod
-    def universal_index(self, index):
+    def to_universal_index(self, index):
         raise NotImplementedError()
 
     @abstractmethod
-    def universal_partition(self, partition):
+    def to_universal_delta(self, delta):
         raise NotImplementedError()
 
     @abstractproperty
     def reference(self):
         raise NotImplementedError()
 
-    def universal_chunk_iter(self, start, end, partition):
-        start = self.universal_index(start)
-        end = self.universal_index(end)
-        partition = self.universal_partition(partition)
-        ref = self.universal_index(self.reference)
-
-        start_part = ref + ((start - ref) // partition) * partition
-        end_part = ref + ((end - ref) // partition) * partition
-        if end_part <= end:
-            end_part += partition
-
-        index_chunks = np.arange(start_part, end_part, partition)
-        return zip(index_chunks[:-1], index_chunks[1:])
+    def _start_end_md5hash(self, start, end):
+        start_end_str = (
+            str(self.to_universal_index(start))
+            + str(self.to_universal_index(end))
+        )
+        return md5(start_end_str.encode()).hexdigest()
 
 
 class DatetimeIndexConverter(BaseIndexConverter):
-    def universal_index(self, index):
+
+    def to_universal_index(self, index):
         index = np.asarray_chkfinite(index).flatten()
-        index = pd.to_datetime(index, utc=True).values
+        index = pd.to_datetime(index, utc=True)#.values
         if len(index) == 1:
             return index[0]
         else:
             return index
 
-    def universal_partition(self, partition):
-        return pd.to_timedelta(partition)
+    def to_universal_delta(self, delta):
+        return pd.to_timedelta(delta)
 
     @property
     def reference(self):
@@ -91,16 +86,45 @@ class DatetimeIndexConverter(BaseIndexConverter):
 
 
 class IntegerIndexConverter(BaseIndexConverter):
-    def universal_index(self, index):
+    def to_universal_index(self, index):
         return np.int64(np.asarray_chkfinite(index))
 
     @abstractmethod
-    def universal_partition(self, partition):
-        return int(partition)
+    def to_universal_delta(self, delta):
+        return int(delta)
 
     @abstractproperty
     def reference(self):
         return 0
+
+
+class CacheHandler:
+
+    def __init__(self, cache_dir, fingerprint):
+        self._fingerprint = fingerprint
+        self._cache_dir = Path(cache_dir)
+        self._index_path = self._cache_dir / f"{self._fingerprint}.index"
+
+        if not self._index_path.exists():
+            if not self._cache_dir.exists():
+                self._cache_dir.mkdir()
+            with open(self._index_path, mode="w") as f:
+                json.dump([], f)
+
+        with open(self._index_path, mode="r") as f:
+            self._index = json.load(f)
+
+    def _is_cached(self, id_):
+        return id_ in self._index
+
+    def read(self, id_):
+        return pd.read_parquet(self._cache_dir / f"{id_}")
+
+    def write(self, id_, dataframe):
+        dataframe.to_parquet(self._cache_dir / f"{id_}", engine="pyarrow", compression=None)
+        self._index.append(id_)
+        with open(self._index_path, mode="w") as f:
+            json.dump(self._index, f)
 
 
 class BaseDataSource(ABC):
@@ -144,6 +168,8 @@ class BaseDataSource(ABC):
         self._index_type = index_type
         self._index_sync = index_sync
         self._tolerance = tolerance
+        self._cache = CacheHandler(cache, self._fingerprint) if cache else None
+        self._cache_size = pd.to_timedelta("3H") if cache else None
 
         if isinstance(self._index_type, BaseIndexConverter):
             self._index_converter = self._index_type
@@ -157,19 +183,10 @@ class BaseDataSource(ABC):
                 "Should be 'datetime', 'integer' or an instance of 'BaseIndexConverter'"
             )
 
-        self._fingerprint = self._md5()
-        self._cache = Path(cache) if cache else None
-        self._cache_index = self._cache / f"{self._fingerprint}.index" if self._cache else None
-
-        if self._cache:
-            if not self._cache.exists():
-                self._cache.mkdir()
-
-            if not self._cache_index.exists():
-                open(self._cache_index, mode="w").close()
-
-    def _md5(self):
-        return md5("TODO: Not implemented yet.".encode()).hexdigest()
+    @property
+    def _fingerprint(self):
+        fingerprint_str = "TODO"
+        return md5(fingerprint_str.encode()).hexdigest()
 
     @abstractproperty
     def labels(self):
@@ -197,6 +214,13 @@ class BaseDataSource(ABC):
         raise NotImplementedError()
 
     def get(self, start, end):
+
+        if not self._cache:
+            return self._source_get(start, end)
+        else:
+            return self._cache_source_get(start, end)
+
+    def _source_get(self, start, end):
         """
         Get data from source.
 
@@ -221,8 +245,43 @@ class BaseDataSource(ABC):
                 raise ValueError("No tolerance given.")
             return self._sync_data(data, self._tolerance)
 
-    def get_cached(self, start, end):
-        pass
+    @staticmethod
+    def _partition_start_end(start, end, partition, reference):
+        start_part = reference + ((start - reference) // partition) * partition
+        end_part = reference + ((end - reference) // partition) * partition
+        if end_part <= end:
+            end_part += partition
+
+        index_chunks = np.arange(start_part, end_part, partition)
+        return zip(index_chunks[:-1], index_chunks[1:])
+
+    def _cache_source_get(self, start, end):
+
+        partition = self._index_converter.to_universal_delta(self._cache_size)
+        start = self._index_converter.to_universal_index(start)
+        end = self._index_converter.to_universal_index(end)
+        reference = self._index_converter.to_universal_index(self._index_converter.reference)
+        chunks = self._partition_start_end(start, end, partition, reference)
+
+        df_list = []
+        for i, (start_i, end_i) in enumerate(chunks):
+            print(start_i, end_i)
+            chunk_id = self._index_converter._start_end_md5hash(start_i, end_i)
+
+            if self._cache._is_cached(chunk_id):
+                df_i = self._cache.read(chunk_id)
+            else:
+                df_i = self._source_get(start_i, end_i)
+                df_i.index = df_i.index.view("int64")
+                self._cache.write(chunk_id, df_i)
+            df_list.append(df_i)
+
+        dataframe = pd.concat(df_list, copy=False)
+        dataframe.index = dataframe.index.view("datetime64[ns, UTC]")
+
+        idx_keep = (dataframe.index >= start) & (dataframe.index < end)
+        return dataframe[idx_keep]
+
 
     @staticmethod
     def _sync_data(data, tolerance):
@@ -526,7 +585,7 @@ class CompositeDataSource(BaseDataSource):
 
         super().__init__(index_type, index_sync=index_sync, tolerance=tolerance)
 
-        sorted_args = np.argsort(self._index_converter.universal_index(self._index_attached))
+        sorted_args = np.argsort(self._index_converter.to_universal_index(self._index_attached))
         self._sources = self._sources[sorted_args]
         self._index_attached = self._index_attached[sorted_args]
 
@@ -540,12 +599,12 @@ class CompositeDataSource(BaseDataSource):
         if (start is None) or (end is None):
             raise ValueError("'start' and 'end' can not be NoneType.")
 
-        attached_after_start = self._index_converter.universal_index(
+        attached_after_start = self._index_converter.to_universal_index(
             self._index_attached
-        ) > self._index_converter.universal_index(start)
-        attached_before_end = self._index_converter.universal_index(
+        ) > self._index_converter.to_universal_index(start)
+        attached_before_end = self._index_converter.to_universal_index(
             self._index_attached
-        ) < self._index_converter.universal_index(end)
+        ) < self._index_converter.to_universal_index(end)
         attached_between_start_end = attached_after_start & attached_before_end
 
         if sum(~attached_after_start) == 0:
