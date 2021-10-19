@@ -379,7 +379,14 @@ class ResultCollector:
             )
         except ValueError:
             raise ValueError("Unable to cast 'results' to correct dtype")
-        self._dataframe.loc[current_index, list(results.keys())] = row_update.iloc[0]
+
+        # hotfix - pandas bug when setting string
+        # https://github.com/pandas-dev/pandas/issues/44103
+        if len(row_update.columns) == 1:
+            value_update = row_update.iloc[0].values[0]
+        else:
+            value_update = row_update.iloc[0]
+        self._dataframe.loc[current_index, list(results.keys())] = value_update
 
     def pull(self, raise_on_missing=True):
         """
