@@ -152,7 +152,10 @@ class BaseDataSource(ABC):
         elif self._index_type == "integer":
             self._index_converter = IntegerIndexConverter()
         else:
-            raise ValueError()
+            raise ValueError(
+                "The 'index_type' is not valid. "
+                "Should be 'datetime', 'integer' or an instance of 'BaseIndexConverter'"
+            )
 
         self._fingerprint = self._md5()
         self._cache = Path(cache) if cache else None
