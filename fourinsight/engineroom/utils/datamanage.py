@@ -82,8 +82,8 @@ class DatetimeIndexConverter(BaseIndexConverter):
         else:
             return index
 
-    def universal_partition(self, partition, unit=None):
-        return pd.to_timedelta(partition, unit=unit)
+    def universal_partition(self, partition):
+        return pd.to_timedelta(partition)
 
     @property
     def reference(self):
