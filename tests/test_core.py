@@ -495,9 +495,7 @@ class Test_ResultCollector:
 
         df_out = results._dataframe
         df_expect = pd.DataFrame(
-            data={
-                "a": [1.1]
-            },
+            data={"a": [1.1]},
             index=pd.Int64Index([0]),
         ).astype({"a": "float64"})
 
@@ -512,9 +510,7 @@ class Test_ResultCollector:
 
         df_out = results._dataframe
         df_expect = pd.DataFrame(
-            data={
-                "a": [1]
-            },
+            data={"a": [1]},
             index=pd.Int64Index([0]),
         ).astype({"a": "Int64"})
 
@@ -529,9 +525,7 @@ class Test_ResultCollector:
 
         df_out = results._dataframe
         df_expect = pd.DataFrame(
-            data={
-                "a": ["one"]
-            },
+            data={"a": ["one"]},
             index=pd.Int64Index([0]),
         ).astype({"a": "string"})
 
