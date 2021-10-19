@@ -45,6 +45,64 @@ def universal_integer_index(index):
     return np.int64(np.asarray_chkfinite(index))
 
 
+class BaseIndexConverter:
+    @abstractmethod
+    def universal_index(self, index):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def universal_partition(self, partition):
+        raise NotImplementedError()
+
+    @abstractproperty
+    def reference(self):
+        raise NotImplementedError()
+
+    def universal_chunk_iter(self, start, end, partition):
+        start = self.universal_index(start)
+        end = self.universal_index(end)
+        partition = self.universal_partition(partition)
+        ref = self.reference
+
+        start_part = ref + ((start - ref) // partition) * partition
+        end_part = ref + ((end - ref) // partition) * partition
+        if end_part <= end:
+            end_part += partition
+
+        index_chunks = np.arange(start_part, end_part, partition)
+        return zip(index_chunks[:-1], index_chunks[1:])
+
+
+class DatetimeIndexConverter(BaseIndexConverter):
+    def universal_index(self, index):
+        index = np.asarray_chkfinite(index).flatten()
+        index = pd.to_datetime(index, utc=True).values
+        if len(index) == 1:
+            return index[0]
+        else:
+            return index
+
+    def universal_partition(self, partition, unit=None):
+        return pd.to_timedelta(partition, unit=unit)
+
+    @property
+    def reference(self):
+        return self.universal_index(0)
+
+
+class IntegerIndexConverter(BaseIndexConverter):
+    def universal_index(self, index):
+        return np.int64(np.asarray_chkfinite(index))
+
+    @abstractmethod
+    def universal_partition(self, partition):
+        return int(partition)
+
+    @abstractproperty
+    def reference(self):
+        return 0
+
+
 class BaseDataSource(ABC):
     """
     Abstract class for data sources.
@@ -150,6 +208,9 @@ class BaseDataSource(ABC):
             if not self._tolerance:
                 raise ValueError("No tolerance given.")
             return self._sync_data(data, self._tolerance)
+
+    def get_cached(self, start, end):
+        pass
 
     @staticmethod
     def _sync_data(data, tolerance):
