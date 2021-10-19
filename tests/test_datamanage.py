@@ -539,44 +539,44 @@ class Test_BaseDataSource:
         with pytest.raises(ValueError):
             source.iter(start, end, index_mode="invalide-mode")
 
-    def test__index_universal_callable(self):
-        index_type = Mock()
-        source = BaseDataSourceForTesting(index_type)
+    # def test__index_universal_callable(self):
+    #     index_type = Mock()
+    #     source = BaseDataSourceForTesting(index_type)
 
-        assert source._index_universal("2020-01-01 00:00") == index_type.return_value
-        index_type.assert_called_once_with("2020-01-01 00:00")
+    #     assert source._index_universal("2020-01-01 00:00") == index_type.return_value
+    #     index_type.assert_called_once_with("2020-01-01 00:00")
 
-    def test__index_universal_datetime(self):
-        source = BaseDataSourceForTesting("datetime")
+    # def test__index_universal_datetime(self):
+    #     source = BaseDataSourceForTesting("datetime")
 
-        index_out = source._index_universal("2020-01-01 00:00")
-        index_expect = 1577836800000000000
-        assert index_out == index_expect
+    #     index_out = source._index_universal("2020-01-01 00:00")
+    #     index_expect = 1577836800000000000
+    #     assert index_out == index_expect
 
-    def test__index_universal_datetime_list(self):
-        source = BaseDataSourceForTesting("datetime")
+    # def test__index_universal_datetime_list(self):
+    #     source = BaseDataSourceForTesting("datetime")
 
-        index_out = source._index_universal(
-            ["2020-01-01 00:00", "2020-01-01 01:00", "2020-01-01 02:00"]
-        )
-        index_expect = np.array(
-            [1577836800000000000, 1577840400000000000, 1577844000000000000]
-        )
-        np.testing.assert_array_equal(index_out, index_expect)
+    #     index_out = source._index_universal(
+    #         ["2020-01-01 00:00", "2020-01-01 01:00", "2020-01-01 02:00"]
+    #     )
+    #     index_expect = np.array(
+    #         [1577836800000000000, 1577840400000000000, 1577844000000000000]
+    #     )
+    #     np.testing.assert_array_equal(index_out, index_expect)
 
-    def test__index_universal_integer(self):
-        source = BaseDataSourceForTesting("integer")
+    # def test__index_universal_integer(self):
+    #     source = BaseDataSourceForTesting("integer")
 
-        index_out = source._index_universal(1)
-        index_expect = 1
-        assert index_out == index_expect
+    #     index_out = source._index_universal(1)
+    #     index_expect = 1
+    #     assert index_out == index_expect
 
-    def test__index_universal_integer_list(self):
-        source = BaseDataSourceForTesting("integer")
+    # def test__index_universal_integer_list(self):
+    #     source = BaseDataSourceForTesting("integer")
 
-        index_out = source._index_universal([1, 2, 3])
-        index_expect = np.array([1, 2, 3])
-        np.testing.assert_array_equal(index_out, index_expect)
+    #     index_out = source._index_universal([1, 2, 3])
+    #     index_expect = np.array([1, 2, 3])
+    #     np.testing.assert_array_equal(index_out, index_expect)
 
 
 class Test_DrioDataSource:

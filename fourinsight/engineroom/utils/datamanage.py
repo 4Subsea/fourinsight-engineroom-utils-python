@@ -145,6 +145,15 @@ class BaseDataSource(ABC):
         self._index_sync = index_sync
         self._tolerance = tolerance
 
+        if isinstance(self._index_type, BaseIndexConverter):
+            self._index_converter = self._index_type
+        elif self._index_type == "datetime":
+            self._index_converter = DatetimeIndexConverter()
+        elif self._index_type == "integer":
+            self._index_converter = IntegerIndexConverter()
+        else:
+            raise ValueError()
+
         self._fingerprint = self._md5()
         self._cache = Path(cache) if cache else None
         self._cache_index = self._cache / f"{self._fingerprint}.index" if self._cache else None
@@ -313,21 +322,21 @@ class BaseDataSource(ABC):
             for index_i, start_i, end_i in zip(index, start, end)
         )
 
-    def _index_universal(self, index):
-        """
-        Convert index to universal type.
+    # def _index_universal(self, index):
+    #     """
+    #     Convert index to universal type.
 
-        Parameters
-        ----------
-        index : single value or array-like
-            Index value.
-        """
-        if callable(self._index_type):
-            return self._index_type(index)
-        elif self._index_type == "datetime":
-            return universal_datetime_index(index)
-        elif self._index_type == "integer":
-            return universal_integer_index(index)
+    #     Parameters
+    #     ----------
+    #     index : single value or array-like
+    #         Index value.
+    #     """
+    #     if callable(self._index_type):
+    #         return self._index_type(index)
+    #     elif self._index_type == "datetime":
+    #         return universal_datetime_index(index)
+    #     elif self._index_type == "integer":
+    #         return universal_integer_index(index)
 
 
 class DrioDataSource(BaseDataSource):
@@ -514,7 +523,7 @@ class CompositeDataSource(BaseDataSource):
 
         super().__init__(index_type, index_sync=index_sync, tolerance=tolerance)
 
-        sorted_args = np.argsort(self._index_universal(self._index_attached))
+        sorted_args = np.argsort(self._index_converter.universal_index(self._index_attached))
         self._sources = self._sources[sorted_args]
         self._index_attached = self._index_attached[sorted_args]
 
@@ -528,12 +537,12 @@ class CompositeDataSource(BaseDataSource):
         if (start is None) or (end is None):
             raise ValueError("'start' and 'end' can not be NoneType.")
 
-        attached_after_start = self._index_universal(
+        attached_after_start = self._index_converter.universal_index(
             self._index_attached
-        ) > self._index_universal(start)
-        attached_before_end = self._index_universal(
+        ) > self._index_converter.universal_index(start)
+        attached_before_end = self._index_converter.universal_index(
             self._index_attached
-        ) < self._index_universal(end)
+        ) < self._index_converter.universal_index(end)
         attached_between_start_end = attached_after_start & attached_before_end
 
         if sum(~attached_after_start) == 0:
