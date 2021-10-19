@@ -62,7 +62,7 @@ class BaseIndexConverter:
         start = self.universal_index(start)
         end = self.universal_index(end)
         partition = self.universal_partition(partition)
-        ref = self.reference
+        ref = self.universal_index(self.reference)
 
         start_part = ref + ((start - ref) // partition) * partition
         end_part = ref + ((end - ref) // partition) * partition
@@ -87,7 +87,7 @@ class DatetimeIndexConverter(BaseIndexConverter):
 
     @property
     def reference(self):
-        return self.universal_index(0)
+        return pd.to_datetime(0, utc=True)
 
 
 class IntegerIndexConverter(BaseIndexConverter):
