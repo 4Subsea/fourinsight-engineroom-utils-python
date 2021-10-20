@@ -274,13 +274,6 @@ class BaseDataSource(ABC):
 
     def _cache_source_get(self, start, end):
 
-        start = self._index_converter.to_native_index(start)
-        end = self._index_converter.to_native_index(end)
-
-        # partition_universal = self._index_converter.to_universal_delta(self._cache_size)
-        # start_universal = self._index_converter.to_universal_index(start)
-        # end_universal = self._index_converter.to_universal_index(end)
-        # reference_universal = self._index_converter.to_universal_index(self._index_converter.reference)
         chunks_universal = self._partition_start_end(
             self._index_converter.to_universal_index(start),
             self._index_converter.to_universal_index(end),
@@ -297,24 +290,19 @@ class BaseDataSource(ABC):
 
             if self._cache._is_cached(chunk_id):
                 df_i = self._cache.read(chunk_id)
-                df_i.index = self._index_converter.to_native_index(df_i.index)
-                df_list.append(df_i)
             else:
                 df_i = self._source_get(start_i, end_i)
-                df_list.append(df_i.copy(deep=True))
-                # df_i.index = df_i.index.view("int64")
                 df_i.index = self._index_converter.to_universal_index(df_i.index)
                 self._cache.write(chunk_id, df_i)
-            # df_list.append(df_i)
+            df_list.append(df_i)
 
         dataframe = pd.concat(df_list, copy=False)
-        # dataframe.index = self._index_converter.from_universal_index(dataframe.index)
-        # start = self._index_converter.from_universal_index(start)
-        # end = self._index_converter.from_universal_index(end)
-
-        # idx_keep = (dataframe.index >= start) & (dataframe.index < end)
-        # return dataframe[idx_keep]
-        return dataframe[start:end]
+        idx_keep = (
+            (dataframe.index >= self._index_converter.to_universal_index(start))
+            & (dataframe.index <= self._index_converter.to_universal_index(end))
+        )
+        dataframe.index = self._index_converter.to_native_index(dataframe.index)
+        return dataframe[idx_keep]
 
     @staticmethod
     def _sync_data(data, tolerance):
