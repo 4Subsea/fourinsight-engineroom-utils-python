@@ -67,12 +67,11 @@ class BaseIndexConverter:
     def reference(self):
         raise NotImplementedError()
 
-    def _start_end_md5hash(self, start, end):
-        start_end_str = (
-            str(self.to_universal_index(start))
-            + str(self.to_universal_index(end))
-        )
-        return md5(start_end_str.encode()).hexdigest()
+    def _start_end_md5hash(self, fingerprint, start, end):
+        start_universal = str(self.to_universal_index(start))
+        end_universal = str(self.to_universal_index(end))
+        fingerprint_start_end_str = fingerprint + str(start_universal) + str(end_universal)
+        return md5(fingerprint_start_end_str.encode()).hexdigest()
 
 
 class DatetimeIndexConverter(BaseIndexConverter):
@@ -102,10 +101,6 @@ class DatetimeIndexConverter(BaseIndexConverter):
     @property
     def reference(self):
         return pd.to_datetime(0, utc=True)
-
-    # @property
-    # def infinitesimal_delta(self):
-    #     return pd.to_datetime(1, unit="ns")
 
 
 class IntegerIndexConverter(BaseIndexConverter):
@@ -298,7 +293,9 @@ class BaseDataSource(ABC):
         for start_i, end_i in chunks_universal:
             start_i = self._index_converter.to_native_index(start_i)
             end_i = self._index_converter.to_native_index(end_i)
-            chunk_id = self._index_converter._start_end_md5hash(start_i, end_i)
+            chunk_id = self._index_converter._start_end_md5hash(
+                self._fingerprint, start_i, end_i
+            )
             print(start_i, end_i)
 
             if self._cache._is_cached(chunk_id):
