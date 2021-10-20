@@ -78,11 +78,26 @@ class DatetimeIndexConverter(BaseIndexConverter):
             return index
 
     def to_universal_delta(self, delta):
+        return pd.to_timedelta(delta).value
+
+    def to_native_index(self, index):
+        index = np.asarray_chkfinite(index).flatten()
+        index = pd.to_datetime(index, utc=True)
+        if len(index) == 1:
+            return index[0]
+        else:
+            return index
+
+    def to_native_delta(self, delta):
         return pd.to_timedelta(delta)
 
     @property
     def reference(self):
         return pd.to_datetime(0, utc=True)
+
+    # @property
+    # def infinitesimal_delta(self):
+    #     return pd.to_datetime(1, unit="ns")
 
 
 class IntegerIndexConverter(BaseIndexConverter):
@@ -259,30 +274,47 @@ class BaseDataSource(ABC):
 
     def _cache_source_get(self, start, end):
 
-        partition = self._index_converter.to_universal_delta(self._cache_size)
-        start = self._index_converter.to_universal_index(start)
-        end = self._index_converter.to_universal_index(end)
-        reference = self._index_converter.to_universal_index(self._index_converter.reference)
-        chunks = self._partition_start_end(start, end, partition, reference)
+        start = self._index_converter.to_native_index(start)
+        end = self._index_converter.to_native_index(end)
+
+        # partition_universal = self._index_converter.to_universal_delta(self._cache_size)
+        # start_universal = self._index_converter.to_universal_index(start)
+        # end_universal = self._index_converter.to_universal_index(end)
+        # reference_universal = self._index_converter.to_universal_index(self._index_converter.reference)
+        chunks_universal = self._partition_start_end(
+            self._index_converter.to_universal_index(start),
+            self._index_converter.to_universal_index(end),
+            self._index_converter.to_universal_delta(self._cache_size),
+            self._index_converter.to_universal_index(self._index_converter.reference)
+        )
 
         df_list = []
-        for i, (start_i, end_i) in enumerate(chunks):
-            print(start_i, end_i)
+        for i, (start_i, end_i) in enumerate(chunks_universal):
+            start_i = self._index_converter.to_native_index(start_i)
+            end_i = self._index_converter.to_native_index(end_i)
             chunk_id = self._index_converter._start_end_md5hash(start_i, end_i)
+            print(start_i, end_i)
 
             if self._cache._is_cached(chunk_id):
                 df_i = self._cache.read(chunk_id)
+                df_i.index = self._index_converter.to_native_index(df_i.index)
+                df_list.append(df_i)
             else:
                 df_i = self._source_get(start_i, end_i)
-                df_i.index = df_i.index.view("int64")
+                df_list.append(df_i.copy(deep=True))
+                # df_i.index = df_i.index.view("int64")
+                df_i.index = self._index_converter.to_universal_index(df_i.index)
                 self._cache.write(chunk_id, df_i)
-            df_list.append(df_i)
+            # df_list.append(df_i)
 
         dataframe = pd.concat(df_list, copy=False)
-        dataframe.index = dataframe.index.view("datetime64[ns, UTC]")
+        # dataframe.index = self._index_converter.from_universal_index(dataframe.index)
+        # start = self._index_converter.from_universal_index(start)
+        # end = self._index_converter.from_universal_index(end)
 
-        idx_keep = (dataframe.index >= start) & (dataframe.index < end)
-        return dataframe[idx_keep]
+        # idx_keep = (dataframe.index >= start) & (dataframe.index < end)
+        # return dataframe[idx_keep]
+        return dataframe[start:end]
 
     @staticmethod
     def _sync_data(data, tolerance):
