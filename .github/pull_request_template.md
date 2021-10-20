@@ -5,7 +5,6 @@ Provide a short description about the work that has been done.
 
 ## Checklist
 - [] All COS are met.
-- [] CI tests pass (isort, black, tox).
 - [] All integration tests pass (if applicable).
 - [] Release notes are updated (if applicable).
 - [] New functions, methods and classes are added to the documentation.
