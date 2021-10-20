@@ -309,13 +309,11 @@ class BaseDataSource(ABC):
                 self._cache.write(chunk_id, df_i)
             df_list.append(df_i)
 
-        dataframe = pd.concat(df_list, copy=False)
-        idx_keep = (
-            (dataframe.index >= self._index_converter.to_universal_index(start))
-            & (dataframe.index <= self._index_converter.to_universal_index(end))
-        )
+        start_universal = self._index_converter.to_universal_index(start)
+        end_universal = self._index_converter.to_universal_index(end)
+        dataframe = pd.concat(df_list, copy=False).loc[start_universal:end_universal]
         dataframe.index = self._index_converter.to_native_index(dataframe.index)
-        return dataframe[idx_keep]
+        return dataframe
 
     @staticmethod
     def _sync_data(data, tolerance):
