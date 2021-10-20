@@ -2,6 +2,18 @@ import warnings
 from abc import ABC, abstractmethod, abstractproperty
 from itertools import chain
 
+# 'pairwise' is introduced in Python 3.10.
+try:
+    from itertools import pairwise
+except ImportError:
+    from itertools import tee
+
+    def pairwise(iterable):
+        a, b = tee(iterable)
+        next(b, None)
+        return zip(a, b)
+
+
 import numpy as np
 import pandas as pd
 
@@ -460,21 +472,25 @@ class CompositeDataSource(BaseDataSource):
         start = self._index_universal(start)
         end = self._index_universal(end)
 
-        attached_after_start = self._index_attached > start
-        attached_before_end = self._index_attached < end
-        attached_between_start_end = attached_after_start & attached_before_end
+        index_list = list(self._index_attached)
+        sources_list = list(self._sources)
 
-        if any(attached_after_start):
-            first_source = NullDataSource(self._labels)
+        first_source = NullDataSource(self._labels)
+        while index_list[0] <= start:
+            index_list.pop(0)
+            first_source = sources_list.pop(0)
         else:
-            first_source = self._sources[~attached_after_start][-1]
+            index_list.insert(0, start)
+            sources_list.insert(0, first_source)
 
-        start_list = np.r_[start, self._index_attached[attached_between_start_end]]
-        end_list = np.r_[self._index_attached[attached_between_start_end], end]
-        source_list = np.r_[first_source, self._sources[attached_between_start_end]]
+        while index_list[-1] >= end:
+            index_list.pop()
+            sources_list.pop()
+        else:
+            index_list.append(end)
 
         data_list = [
             source_i.get(start_i, end_i)
-            for start_i, end_i, source_i in zip(start_list, end_list, source_list)
+            for (start_i, end_i), source_i in zip(pairwise(index_list), sources_list)
         ]
         return pd.concat(data_list)
