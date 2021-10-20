@@ -55,6 +55,14 @@ class BaseIndexConverter:
     def to_universal_delta(self, delta):
         raise NotImplementedError()
 
+    @abstractmethod
+    def to_native_index(self, index):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def to_native_delta(self, delta):
+        raise NotImplementedError()
+
     @abstractproperty
     def reference(self):
         raise NotImplementedError()
@@ -104,8 +112,13 @@ class IntegerIndexConverter(BaseIndexConverter):
     def to_universal_index(self, index):
         return np.int64(np.asarray_chkfinite(index))
 
-    @abstractmethod
     def to_universal_delta(self, delta):
+        return int(delta)
+
+    def to_native_index(self, index):
+        return np.int64(np.asarray_chkfinite(index))
+
+    def to_native_delta(self, delta):
         return int(delta)
 
     @abstractproperty
@@ -282,7 +295,7 @@ class BaseDataSource(ABC):
         )
 
         df_list = []
-        for i, (start_i, end_i) in enumerate(chunks_universal):
+        for start_i, end_i in chunks_universal:
             start_i = self._index_converter.to_native_index(start_i)
             end_i = self._index_converter.to_native_index(end_i)
             chunk_id = self._index_converter._start_end_md5hash(start_i, end_i)
