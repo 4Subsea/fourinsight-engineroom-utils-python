@@ -71,7 +71,7 @@ class DatetimeIndexConverter(BaseIndexConverter):
 
     def to_universal_index(self, index):
         index = np.asarray_chkfinite(index).flatten()
-        index = pd.to_datetime(index, utc=True)#.values
+        index = pd.to_datetime(index, utc=True).values.astype("int64")
         if len(index) == 1:
             return index[0]
         else:
@@ -249,8 +249,10 @@ class BaseDataSource(ABC):
     def _partition_start_end(start, end, partition, reference):
         start_part = reference + ((start - reference) // partition) * partition
         end_part = reference + ((end - reference) // partition) * partition
-        if end_part <= end:
+        if end_part == end:
             end_part += partition
+        elif end_part < end:
+            end_part += 2.0 * partition
 
         index_chunks = np.arange(start_part, end_part, partition)
         return zip(index_chunks[:-1], index_chunks[1:])
@@ -281,7 +283,6 @@ class BaseDataSource(ABC):
 
         idx_keep = (dataframe.index >= start) & (dataframe.index < end)
         return dataframe[idx_keep]
-
 
     @staticmethod
     def _sync_data(data, tolerance):
