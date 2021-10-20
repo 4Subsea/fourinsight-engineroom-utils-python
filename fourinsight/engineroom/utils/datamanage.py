@@ -379,20 +379,6 @@ class CompositeDataSource(BaseDataSource):
         Sequence of (index, source) tuples. The `index` value determines which index
         a `source` is valid from. The source will then be valid until the next item
         in the sequence (see Example).
-    index_sync : bool, optional
-        If the index should be synced. If True, a valid tolerance must be given.
-    tolerance : int, float or pandas.Timedelta
-        Tolerance limit for syncing (see Notes). If ``index_sync`` is set to True,
-        datapoints that are closer than the tolerance are merged so that they
-        share a common index. The common index will be the first index of the
-        neighboring datapoints.
-
-    Notes
-    -----
-    The tolerance must be of a type that is comparable to the data index. E.g.
-    if the data has a ``DatetimeIndex``, the tolerance should be of type
-    ``pandas.Timestamp``. And if the data has a ``Int64Index``, the tolerance
-    should be an integer.
 
     Examples
     --------
@@ -410,7 +396,7 @@ class CompositeDataSource(BaseDataSource):
     >>> data = source.get('2020-01-01 00:00', '2020-01-05 00:00')
     """
 
-    def __init__(self, index_source, index_sync=False, tolerance=None):
+    def __init__(self, index_source):
         self._index_attached, self._sources = np.asarray(index_source).T
 
         index_type_set = set([source._index_type for source in self._sources if source])
@@ -434,7 +420,7 @@ class CompositeDataSource(BaseDataSource):
             ]
         )
 
-        super().__init__(index_type, index_sync=index_sync, tolerance=tolerance)
+        super().__init__(index_type, index_sync=False)
 
         sorted_args = np.argsort(self._index_universal(self._index_attached))
         self._sources = self._sources[sorted_args]
@@ -445,7 +431,27 @@ class CompositeDataSource(BaseDataSource):
         """Data source labels."""
         return tuple(self._labels)
 
-    def _get(self, start, end):
+    def _get(self, *args, **kwargs):
+        return NotImplemented
+
+    def get(self, start, end):
+        """
+        Get data from source.
+
+        Parameters
+        ----------
+        start :
+            Start index of the data. Will be passed on to the :meth:`get` method
+            of each individual data source.
+        end :
+            End index of the data. Will be passed on to the :meth:`get` method
+            of each individual data source.
+
+        Returns
+        -------
+        pandas.DataFrame
+            Source data.
+        """
 
         if (start is None) or (end is None):
             raise ValueError("'start' and 'end' can not be NoneType.")
@@ -468,15 +474,7 @@ class CompositeDataSource(BaseDataSource):
         source_list = np.r_[first_source, self._sources[attached_between_start_end]]
 
         data_list = [
-            source_i._get(start_i, end_i)
+            source_i.get(start_i, end_i)
             for start_i, end_i, source_i in zip(start_list, end_list, source_list)
         ]
-
-        return self._concat_data(data_list)
-
-    def _concat_data(self, data_list):
-        """Concatenate list of data dicts."""
-        return {
-            key: pd.concat([data_i[key] for data_i in data_list])
-            for key in self._labels
-        }
+        return pd.concat(data_list)
