@@ -706,11 +706,11 @@ class Test_CompositeDataSource:
         drio_source = DrioDataSource(drio_client, labels, index_type="datetime")
         null_source = NullDataSource(labels=["C", "A", "B"], index_type="datetime")
         index_source = [
+            ("1999-01-01 00:00", None),
             ("2020-01-01 00:00", drio_source),
             ("2020-01-01 02:00", null_source),
             ("2020-01-01 04:00", drio_source),
             ("2020-01-01 06:00", None),
-            ("1999-01-01 00:00", None),
         ]
         source = CompositeDataSource(index_source)
 
@@ -719,21 +719,42 @@ class Test_CompositeDataSource:
         assert source._index_type == "datetime"
         np.testing.assert_array_equal(
             source._index_attached,
-            np.array(
+            pd.to_datetime(
                 [
                     "1999-01-01 00:00",
                     "2020-01-01 00:00",
                     "2020-01-01 02:00",
                     "2020-01-01 04:00",
                     "2020-01-01 06:00",
-                ]
-            ),
+                ],
+                utc=True
+            ).values.astype("int64"),
         )
         assert isinstance(source._sources[0], NullDataSource)
         assert isinstance(source._sources[1], DrioDataSource)
         assert isinstance(source._sources[2], NullDataSource)
         assert isinstance(source._sources[3], DrioDataSource)
         assert isinstance(source._sources[4], NullDataSource)
+
+    def test__init__raise_wrong_order(self):
+        drio_client = Mock()
+        labels = {
+            "A": "8b1683bb-32a9-4e64-b122-6a0534eff592",
+            "B": "4bf4606b-b18e-408d-9d4d-3f1465ed23f2",
+            "C": "d40fcb53-cce8-4f1a-9772-c5640db29c18",
+        }
+        drio_source = DrioDataSource(drio_client, labels, index_type="datetime")
+        null_source = NullDataSource(labels=["C", "A", "B"], index_type="datetime")
+        index_source = [
+            ("2020-01-01 00:00", drio_source),
+            ("2020-01-01 02:00", null_source),
+            ("1999-01-01 00:00", None),
+            ("2020-01-01 04:00", drio_source),
+            ("2020-01-01 06:00", None),
+        ]
+
+        with pytest.raises(ValueError):
+            CompositeDataSource(index_source)
 
     def test__init__raises_labels(self):
         drio_client = Mock()
@@ -854,8 +875,8 @@ class Test_CompositeDataSource:
 
             pd.testing.assert_frame_equal(data_out, pd.DataFrame(data_expect))
 
-            mock_get1.assert_called_once_with("2020-01-01 00:00", "2020-01-01 02:00")
-            mock_get3.assert_called_once_with("2020-01-01 04:00", "2020-01-01 06:00")
+            mock_get1.assert_called_once_with(*pd.to_datetime(["2020-01-01 00:00", "2020-01-01 02:00"], utc=True).values.astype("int64"))
+            mock_get3.assert_called_once_with(*pd.to_datetime(["2020-01-01 04:00", "2020-01-01 06:00"], utc=True).values.astype("int64"))
 
     @patch.object(NullDataSource, "_get")
     def test_get_integer(self, mock_get):

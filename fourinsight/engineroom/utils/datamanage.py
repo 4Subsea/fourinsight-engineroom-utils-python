@@ -1,5 +1,6 @@
 import warnings
 from abc import ABC, abstractmethod, abstractproperty
+from itertools import chain
 
 import numpy as np
 import pandas as pd
@@ -397,34 +398,34 @@ class CompositeDataSource(BaseDataSource):
     """
 
     def __init__(self, index_source):
-        self._index_attached, self._sources = np.asarray(index_source).T
+        index_source_flat = list(chain.from_iterable(index_source))
+        index = index_source_flat[::2]
+        sources = index_source_flat[1::2]
 
-        index_type_set = set([source._index_type for source in self._sources if source])
-        if len(index_type_set) == 1:
-            index_type = list(index_type_set)[0]
-        else:
+        index_type_set = set([source._index_type for source in sources if source])
+        if len(index_type_set) != 1:
             raise ValueError("The data sources does not share the same 'index_type'.")
+        index_type = index_type_set.pop()
 
-        labels_set = set(
-            [tuple(sorted(source.labels)) for source in self._sources if source]
-        )
-        if len(labels_set) == 1:
-            self._labels = list(labels_set)[0]
-        else:
+        labels_set = set([tuple(sorted(source.labels)) for source in sources if source])
+        if len(labels_set) != 1:
             raise ValueError("The data sources does not share the same 'labels'.")
+        self._labels = labels_set.pop()
 
         self._sources = np.array(
             [
                 source if source else NullDataSource(self._labels, index_type)
-                for source in self._sources
-            ]
+                for source in sources
+            ],
+            dtype=object,
         )
 
         super().__init__(index_type, index_sync=False)
-
-        sorted_args = np.argsort(self._index_universal(self._index_attached))
-        self._sources = self._sources[sorted_args]
-        self._index_attached = self._index_attached[sorted_args]
+        self._index_attached = self._index_universal(index)
+        if any(self._index_attached[:-1] >= self._index_attached[1:]):
+            raise ValueError(
+                "indecies in 'index_source' must be in strictly increasing order."
+            )
 
     @property
     def labels(self):
@@ -456,21 +457,20 @@ class CompositeDataSource(BaseDataSource):
         if (start is None) or (end is None):
             raise ValueError("'start' and 'end' can not be NoneType.")
 
-        attached_after_start = self._index_universal(
-            self._index_attached
-        ) > self._index_universal(start)
-        attached_before_end = self._index_universal(
-            self._index_attached
-        ) < self._index_universal(end)
+        start = self._index_universal(start)
+        end = self._index_universal(end)
+
+        attached_after_start = self._index_attached > start
+        attached_before_end = self._index_attached < end
         attached_between_start_end = attached_after_start & attached_before_end
 
-        if sum(~attached_after_start) == 0:
+        if any(attached_after_start):
             first_source = NullDataSource(self._labels)
         else:
             first_source = self._sources[~attached_after_start][-1]
 
-        start_list = np.r_[[start], self._index_attached[attached_between_start_end]]
-        end_list = np.r_[self._index_attached[attached_between_start_end], [end]]
+        start_list = np.r_[start, self._index_attached[attached_between_start_end]]
+        end_list = np.r_[self._index_attached[attached_between_start_end], end]
         source_list = np.r_[first_source, self._sources[attached_between_start_end]]
 
         data_list = [
