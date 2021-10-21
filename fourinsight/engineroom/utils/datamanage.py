@@ -182,13 +182,13 @@ class BaseDataSource(ABC):
     """
 
     def __init__(
-        self, index_type, index_sync=False, tolerance=None, cache=None, chunk_size=None
+        self, index_type, index_sync=False, tolerance=None, cache=None, cache_size=None
     ):
         self._index_type = index_type
         self._index_sync = index_sync
         self._tolerance = tolerance
         self._cache = Path(cache) if cache else None
-        self._cache_size = chunk_size if chunk_size else "3H"
+        self._cache_size = cache_size if cache_size else "3H"   # TODO: default values
         self._memory_cache = {}
 
         if self._cache and not self._cache.exists():
@@ -322,28 +322,6 @@ class BaseDataSource(ABC):
 
         self._memory_cache = memory_cache_update
         return pd.concat(df_list).loc[start:end]
-
-        #     if not refresh_cache and self._memory_cache.is_cached(chunk_id):
-        #         print("Get from memory cache")
-        #         df_i = self._memory_cache.read(chunk_id)
-        #     elif not refresh_cache and self._file_cache.is_cached(chunk_id):
-        #         print("Get from files cache")
-        #         df_i = self._file_cache.read(chunk_id)
-        #         self._memory_cache.write(chunk_id, df_i)
-        #     else:
-        #         print("Get from source")
-        #         df_i = self._source_get(start_i, end_i)
-        #         df_i.index = self._index_converter.to_universal_index(df_i.index)
-        #         df_i = df_i.loc[start_universal_i:end_universal_i]  # ensures no overlap
-        #         self._file_cache.write(chunk_id, df_i)
-        #         self._memory_cache.write(chunk_id, df_i)
-        #     df_list.append(df_i)
-
-        # start_universal = self._index_converter.to_universal_index(start)
-        # end_universal = self._index_converter.to_universal_index(end)
-        # dataframe = pd.concat(df_list, copy=False).loc[start_universal:end_universal]
-        # dataframe.index = self._index_converter.to_native_index(dataframe.index)
-        # return dataframe
 
     @staticmethod
     def _sync_data(data, tolerance):
@@ -515,7 +493,7 @@ class DrioDataSource(BaseDataSource):
         index_sync=False,
         tolerance=None,
         cache=None,
-        chunk_size=None,
+        cache_size=None,
         **get_kwargs,
     ):
         self._drio_client = drio_client
@@ -526,7 +504,7 @@ class DrioDataSource(BaseDataSource):
             index_sync=index_sync,
             tolerance=tolerance,
             cache=cache,
-            chunk_size=chunk_size,
+            cache_size=cache_size,
         )
 
     def _get(self, start, end):
