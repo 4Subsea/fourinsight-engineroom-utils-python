@@ -945,6 +945,7 @@ class Test_CompositeDataSource:
 
             index_source = [
                 ("2020-01-01 00:00", source1),
+                ("2021-01-01 00:00", None)
             ]
             source = CompositeDataSource(index_source)
 
