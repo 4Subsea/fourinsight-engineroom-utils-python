@@ -2,6 +2,8 @@ import warnings
 from abc import ABC, abstractmethod, abstractproperty
 from itertools import chain
 
+from hashlib import md5
+
 # 'pairwise' is introduced in Python 3.10.
 try:
     from itertools import pairwise
@@ -18,42 +20,128 @@ import numpy as np
 import pandas as pd
 
 
-def universal_datetime_index(index):
-    """
-    Convert datetime-like index to universal type.
+# def universal_datetime_index(index):
+#     """
+#     Convert datetime-like index to universal type.
 
-    Parameters
-    ----------
-    index : single value or array-like
-        Datetime-like index. Will be passed on to :func:`pandas.to_datetime`.
+#     Parameters
+#     ----------
+#     index : single value or array-like
+#         Datetime-like index. Will be passed on to :func:`pandas.to_datetime`.
 
-    Returns
-    int or array of int
-        Index converted to epoch.
-    """
-    index = np.asarray_chkfinite(index).flatten()
-    index = np.int64(pd.to_datetime(index, utc=True).values)
-    if len(index) == 1:
-        return index[0]
-    else:
-        return index
+#     Returns
+#     int or array of int
+#         Index converted to epoch.
+#     """
+#     index = np.asarray_chkfinite(index).flatten()
+#     index = np.int64(pd.to_datetime(index, utc=True).values)
+#     if len(index) == 1:
+#         return index[0]
+#     else:
+#         return index
 
 
-def universal_integer_index(index):
-    """
-    Convert integer-like index to universal type.
+# def universal_integer_index(index):
+#     """
+#     Convert integer-like index to universal type.
 
-    Parameters
-    ----------
-    index : single value or array-like
-        Integer-like index.
+#     Parameters
+#     ----------
+#     index : single value or array-like
+#         Integer-like index.
 
-    Returns
-    -------
-    int or array of int
-        Index converted to ``int`` type.
-    """
-    return np.int64(np.asarray_chkfinite(index))
+#     Returns
+#     -------
+#     int or array of int
+#         Index converted to ``int`` type.
+#     """
+#     return np.int64(np.asarray_chkfinite(index))
+
+
+class BaseIndexConverter:
+    @abstractmethod
+    def to_universal_index(self, index):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def to_universal_delta(self, delta):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def to_native_index(self, index):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def to_native_delta(self, delta):
+        raise NotImplementedError()
+
+    @abstractproperty
+    def reference(self):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def __repr__(self):
+        raise NotImplementedError()
+
+    def _start_end_md5hash(self, fingerprint, start, end):
+        start_universal = str(self.to_universal_index(start))
+        end_universal = str(self.to_universal_index(end))
+        fingerprint_start_end_str = (
+            fingerprint + str(start_universal) + str(end_universal)
+        )
+        return md5(fingerprint_start_end_str.encode()).hexdigest()
+
+
+class DatetimeIndexConverter(BaseIndexConverter):
+    def to_universal_index(self, index):
+        index = np.asarray_chkfinite(index).flatten()
+        index = pd.to_datetime(index, utc=True).values.astype("int64")
+        if len(index) == 1:
+            return index[0]
+        else:
+            return index
+
+    def to_universal_delta(self, delta):
+        return pd.to_timedelta(delta).value
+
+    def to_native_index(self, index):
+        index = np.asarray_chkfinite(index).flatten()
+        index = pd.to_datetime(index, utc=True)
+        if len(index) == 1:
+            return index[0]
+        else:
+            return index
+
+    def to_native_delta(self, delta):
+        return pd.to_timedelta(delta)
+
+    @property
+    def reference(self):
+        return pd.to_datetime(0, utc=True)
+
+    def __repr__(self):
+        return "DatatimeIndexConverter"
+
+
+class IntegerIndexConverter(BaseIndexConverter):
+    def to_universal_index(self, index):
+        return np.int64(np.asarray_chkfinite(index))
+
+    def to_universal_delta(self, delta):
+        return int(delta)
+
+    def to_native_index(self, index):
+        return np.int64(np.asarray_chkfinite(index))
+
+    def to_native_delta(self, delta):
+        return int(delta)
+
+    @abstractproperty
+    def reference(self):
+        return 0
+
+    def __repr__(self):
+        return "IntegerIndexConverter"
 
 
 class BaseDataSource(ABC):
