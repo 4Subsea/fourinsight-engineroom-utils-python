@@ -1,8 +1,7 @@
 import warnings
 from abc import ABC, abstractmethod, abstractproperty
-from itertools import chain
-
 from hashlib import md5
+from itertools import chain
 from pathlib import Path
 
 # 'pairwise' is introduced in Python 3.10.
@@ -84,7 +83,7 @@ class BaseIndexConverter:
     def __repr__(self):
         raise NotImplementedError()
 
-    def _start_end_md5hash(self, fingerprint, start, end):
+    def _md5hash(self, fingerprint, start, end):
         start_universal = str(self.to_universal_index(start))
         end_universal = str(self.to_universal_index(end))
         fingerprint_start_end_str = (
@@ -182,7 +181,9 @@ class BaseDataSource(ABC):
       to a universal type.
     """
 
-    def __init__(self, index_type, index_sync=False, tolerance=None, cache=None, chunk_size=None):
+    def __init__(
+        self, index_type, index_sync=False, tolerance=None, cache=None, chunk_size=None
+    ):
         self._index_type = index_type
         self._index_sync = index_sync
         self._tolerance = tolerance
@@ -299,12 +300,11 @@ class BaseDataSource(ABC):
         )
 
         df_list = []
+        memory_cache_update = {}
         for start_universal_i, end_universal_i in chunks_universal:
             start_i = self._index_converter.to_native_index(start_universal_i)
             end_i = self._index_converter.to_native_index(end_universal_i)
-            chunk_id = self._index_converter._start_end_md5hash(
-                self._fingerprint, start_i, end_i
-            )
+            chunk_id = self._index_converter._md5hash(self._fingerprint, start_i, end_i)
             print(start_i, end_i)
 
             if not refresh_cache and chunk_id in self._memory_cache.keys():
@@ -318,9 +318,10 @@ class BaseDataSource(ABC):
                 df_i = self._source_get(start_i, end_i)
                 self._cache_write(chunk_id, df_i)
             df_list.append(df_i.loc[start_i:end_i])
+            memory_cache_update[chunk_id] = df_i
 
+        self._memory_cache = memory_cache_update
         return pd.concat(df_list).loc[start:end]
-
 
         #     if not refresh_cache and self._memory_cache.is_cached(chunk_id):
         #         print("Get from memory cache")
@@ -520,7 +521,13 @@ class DrioDataSource(BaseDataSource):
         self._drio_client = drio_client
         self._labels = labels
         self._get_kwargs = get_kwargs
-        super().__init__(index_type, index_sync=index_sync, tolerance=tolerance, cache=cache, chunk_size=chunk_size)
+        super().__init__(
+            index_type,
+            index_sync=index_sync,
+            tolerance=tolerance,
+            cache=cache,
+            chunk_size=chunk_size,
+        )
 
     def _get(self, start, end):
         """
