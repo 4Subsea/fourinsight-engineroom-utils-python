@@ -493,6 +493,3 @@ class CompositeDataSource(BaseDataSource):
             for (start_i, end_i), source_i in zip(pairwise(index_list), sources_list)
         ]
         return pd.concat(data_list)
-
-
-# TODO: Test with one element. out side range.
