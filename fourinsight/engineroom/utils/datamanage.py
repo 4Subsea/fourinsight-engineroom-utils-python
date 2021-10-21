@@ -199,6 +199,13 @@ class BaseDataSource(ABC):
                 "Should be 'datetime', 'integer' or an instance of 'BaseIndexConverter'"
             )
 
+    @property
+    def _fingerprint(self):
+        fingerprint_str = (
+            str(self._index_type) + str(self._index_sync) + str(self._tolerance)
+        )
+        return md5(fingerprint_str.encode()).hexdigest()
+
     @abstractproperty
     def labels(self):
         """Data source labels."""
