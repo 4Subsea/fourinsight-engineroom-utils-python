@@ -2,6 +2,7 @@ import warnings
 from abc import ABC, abstractmethod, abstractproperty
 from pathlib import Path
 from hashlib import md5
+from collections import OrderedDict
 
 import json
 import numpy as np
@@ -70,12 +71,13 @@ class BaseIndexConverter:
     def _start_end_md5hash(self, fingerprint, start, end):
         start_universal = str(self.to_universal_index(start))
         end_universal = str(self.to_universal_index(end))
-        fingerprint_start_end_str = fingerprint + str(start_universal) + str(end_universal)
+        fingerprint_start_end_str = (
+            fingerprint + str(start_universal) + str(end_universal)
+        )
         return md5(fingerprint_start_end_str.encode()).hexdigest()
 
 
 class DatetimeIndexConverter(BaseIndexConverter):
-
     def to_universal_index(self, index):
         index = np.asarray_chkfinite(index).flatten()
         index = pd.to_datetime(index, utc=True).values.astype("int64")
@@ -121,8 +123,21 @@ class IntegerIndexConverter(BaseIndexConverter):
         return 0
 
 
-class CacheHandler:
+class BaseCacheHandler(ABC):
+    @abstractmethod
+    def is_cached(self, id_):
+        raise NotImplementedError()
 
+    @abstractmethod
+    def read(self, id_):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def write(self, id_, dataframe):
+        raise NotImplementedError()
+
+
+class FileCacheHandler(BaseCacheHandler):
     def __init__(self, cache_dir, fingerprint):
         self._fingerprint = fingerprint
         self._cache_dir = Path(cache_dir)
@@ -137,17 +152,36 @@ class CacheHandler:
         with open(self._index_path, mode="r") as f:
             self._index = json.load(f)
 
-    def _is_cached(self, id_):
+    def is_cached(self, id_):
         return id_ in self._index
 
     def read(self, id_):
         return pd.read_parquet(self._cache_dir / f"{id_}")
 
     def write(self, id_, dataframe):
-        dataframe.to_parquet(self._cache_dir / f"{id_}", engine="pyarrow", compression=None)
+        dataframe.to_parquet(
+            self._cache_dir / f"{id_}", engine="pyarrow", compression=None
+        )
         self._index.append(id_)
         with open(self._index_path, mode="w") as f:
             json.dump(self._index, f)
+
+
+class MemoryCacheHandler(BaseCacheHandler):
+    def __init__(self, size):
+        self._size = size
+        self._cache = OrderedDict()
+
+    def is_cached(self, id_):
+        return id_ in self._cache.keys()
+
+    def read(self, id_):
+        return self._cache[id_]
+
+    def write(self, id_, dataframe):
+        self._cache[id_] = dataframe
+        if len(self._cache) > self._size:
+            self._cache.popitem(last=False)
 
 
 class BaseDataSource(ABC):
@@ -187,12 +221,21 @@ class BaseDataSource(ABC):
       to a universal type.
     """
 
-    def __init__(self, index_type, index_sync=False, tolerance=None, cache=None):
+    def __init__(
+        self,
+        index_type,
+        index_sync=False,
+        tolerance=None,
+        cache=None,
+        chunk_size=None,
+        chunks_in_memory=10,
+    ):
         self._index_type = index_type
         self._index_sync = index_sync
         self._tolerance = tolerance
-        self._cache = CacheHandler(cache, self._fingerprint) if cache else None
-        self._cache_size = pd.to_timedelta("3H") if cache else None
+        self._cache_size = chunk_size if chunk_size else "3H"  # TODO: default values
+        self._file_cache = FileCacheHandler(cache, self._fingerprint) if cache else None
+        self._memory_cache = MemoryCacheHandler(chunks_in_memory) if cache else None
 
         if isinstance(self._index_type, BaseIndexConverter):
             self._index_converter = self._index_type
@@ -236,12 +279,12 @@ class BaseDataSource(ABC):
         """
         raise NotImplementedError()
 
-    def get(self, start, end):
+    def get(self, start, end, refresh_cache=False):
 
-        if not self._cache:
+        if not self._file_cache:
             return self._source_get(start, end)
         else:
-            return self._cache_source_get(start, end)
+            return self._cache_source_get(start, end, refresh_cache=refresh_cache)
 
     def _source_get(self, start, end):
         """
@@ -280,30 +323,39 @@ class BaseDataSource(ABC):
         index_chunks = np.arange(start_part, end_part, partition)
         return zip(index_chunks[:-1], index_chunks[1:])
 
-    def _cache_source_get(self, start, end):
+    def _cache_source_get(self, start, end, refresh_cache=False):
+        """Get data from cache. Fall back to source if not available in cache."""
 
         chunks_universal = self._partition_start_end(
             self._index_converter.to_universal_index(start),
             self._index_converter.to_universal_index(end),
             self._index_converter.to_universal_delta(self._cache_size),
-            self._index_converter.to_universal_index(self._index_converter.reference)
+            self._index_converter.to_universal_index(self._index_converter.reference),
         )
 
         df_list = []
-        for start_i, end_i in chunks_universal:
-            start_i = self._index_converter.to_native_index(start_i)
-            end_i = self._index_converter.to_native_index(end_i)
+        for start_universal_i, end_universal_i in chunks_universal:
+            start_i = self._index_converter.to_native_index(start_universal_i)
+            end_i = self._index_converter.to_native_index(end_universal_i)
             chunk_id = self._index_converter._start_end_md5hash(
                 self._fingerprint, start_i, end_i
             )
             print(start_i, end_i)
 
-            if self._cache._is_cached(chunk_id):
-                df_i = self._cache.read(chunk_id)
+            if not refresh_cache and self._memory_cache.is_cached(chunk_id):
+                print("Get from memory cache")
+                df_i = self._memory_cache.read(chunk_id)
+            elif not refresh_cache and self._file_cache.is_cached(chunk_id):
+                print("Get from files cache")
+                df_i = self._file_cache.read(chunk_id)
+                self._memory_cache.write(chunk_id, df_i)
             else:
+                print("Get from source")
                 df_i = self._source_get(start_i, end_i)
                 df_i.index = self._index_converter.to_universal_index(df_i.index)
-                self._cache.write(chunk_id, df_i)
+                df_i = df_i.loc[start_universal_i:end_universal_i]  # ensures no overlap
+                self._file_cache.write(chunk_id, df_i)
+                self._memory_cache.write(chunk_id, df_i)
             df_list.append(df_i)
 
         start_universal = self._index_converter.to_universal_index(start)
@@ -487,7 +539,9 @@ class DrioDataSource(BaseDataSource):
         self._drio_client = drio_client
         self._labels = labels
         self._get_kwargs = get_kwargs
-        super().__init__(index_type, index_sync=index_sync, tolerance=tolerance, cache=cache)
+        super().__init__(
+            index_type, index_sync=index_sync, tolerance=tolerance, cache=cache
+        )
 
     def _get(self, start, end):
         """
@@ -614,7 +668,9 @@ class CompositeDataSource(BaseDataSource):
 
         super().__init__(index_type, index_sync=index_sync, tolerance=tolerance)
 
-        sorted_args = np.argsort(self._index_converter.to_universal_index(self._index_attached))
+        sorted_args = np.argsort(
+            self._index_converter.to_universal_index(self._index_attached)
+        )
         self._sources = self._sources[sorted_args]
         self._index_attached = self._index_attached[sorted_args]
 
