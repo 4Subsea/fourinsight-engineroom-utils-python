@@ -150,7 +150,7 @@ class FileCacheHandler(BaseCacheHandler):
                 json.dump([], f)
 
         with open(self._index_path, mode="r") as f:
-            self._index = json.load(f)
+            self._index = set(json.load(f))
 
     def is_cached(self, id_):
         return id_ in self._index and (self._cache_dir / f"{id_}").exists()
@@ -162,10 +162,9 @@ class FileCacheHandler(BaseCacheHandler):
         dataframe.to_parquet(
             self._cache_dir / f"{id_}", engine="pyarrow", compression=None
         )
-        if id_ not in self._index:
-            self._index.append(id_)
-            with open(self._index_path, mode="w") as f:
-                json.dump(self._index, f)
+        self._index.add(id_)
+        with open(self._index_path, mode="w") as f:
+            json.dump(list(self._index), f)
 
 
 class MemoryCacheHandler(BaseCacheHandler):
