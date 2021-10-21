@@ -190,6 +190,9 @@ class BaseDataSource(ABC):
         self._cache_size = chunk_size if chunk_size else "3H"
         self._memory_cache = {}
 
+        if self._cache and not self._cache.exists():
+            self._cache.mkdir()
+
         if isinstance(self._index_type, BaseIndexConverter):
             self._index_converter = self._index_type
         elif self._index_type == "datetime":
@@ -277,15 +280,13 @@ class BaseDataSource(ABC):
         index_chunks = np.arange(start_part, end_part, partition)
         return zip(index_chunks[:-1], index_chunks[1:])
 
-    def _cache_read(self, chunk_id):
-        print(self._cache / chunk_id)
-        dataframe = pd.read_feather(self._cache / chunk_id)
-        return dataframe.set_index(chunk_id)
+    def _cache_read(self, id_):
+        return pd.read_feather(self._cache / id_).set_index(id_)
 
-    def _cache_write(self, chunk_id, dataframe):
-        dataframe.index.name = chunk_id
-        dataframe.reset_index()
-        dataframe.to_feather(self._cache / chunk_id)
+    def _cache_write(self, id_, dataframe):
+        dataframe.index.name = id_
+        dataframe = dataframe.reset_index()
+        dataframe.to_feather(self._cache / id_)
 
     def _cache_source_get(self, start, end, refresh_cache=False):
         """Get data from cache. Fall back to source if not available in cache."""
@@ -307,21 +308,18 @@ class BaseDataSource(ABC):
             print(start_i, end_i)
 
             if not refresh_cache and chunk_id in self._memory_cache.keys():
+                print("Get from memory")
                 df_i = self._memory_cache[chunk_id]
-                print("Got data from memory")
-            elif not refresh_cache:
-                try:
-                    df_i = self._cache_read(chunk_id)
-                    print("Got data from cache")
-                except FileNotFoundError:
-                    df_i = self._source_get(start_i, end_i)
-                    print("Got data from source (FileNotFound)")
+            elif not refresh_cache and (self._cache / chunk_id).exists():
+                print("Get from cache")
+                df_i = self._cache_read(chunk_id)
             else:
+                print("Get from source")
                 df_i = self._source_get(start_i, end_i)
-                print("Got data from source")
+                self._cache_write(chunk_id, df_i)
             df_list.append(df_i.loc[start_i:end_i])
 
-        return pd.concat(df_list)
+        return pd.concat(df_list).loc[start:end]
 
 
         #     if not refresh_cache and self._memory_cache.is_cached(chunk_id):
