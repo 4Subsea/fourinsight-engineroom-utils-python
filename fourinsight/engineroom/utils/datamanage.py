@@ -424,20 +424,19 @@ class CompositeDataSource(BaseDataSource):
             raise ValueError("The data sources does not share the same 'labels'.")
         self._labels = labels_set.pop()
 
-        self._sources = np.array(
-            [
-                source if source else NullDataSource(self._labels, index_type)
-                for source in sources
-            ],
-            dtype=object,
-        )
-
         super().__init__(index_type, index_sync=False)
-        self._index_attached = self._index_universal(index)
-        if any(self._index_attached[:-1] >= self._index_attached[1:]):
+
+        self._sources = [
+            source if source else NullDataSource(self._labels, index_type)
+            for source in sources
+        ]
+
+        index_universal = list(map(self._index_universal, index))
+        if index_universal != sorted(index_universal):
             raise ValueError(
                 "indecies in 'index_source' must be in strictly increasing order."
             )
+        self._index_attached = index_universal
 
     @property
     def labels(self):
@@ -472,18 +471,18 @@ class CompositeDataSource(BaseDataSource):
         start = self._index_universal(start)
         end = self._index_universal(end)
 
-        index_list = list(self._index_attached)
-        sources_list = list(self._sources)
+        index_list = self._index_attached.copy()
+        sources_list = self._sources.copy()
 
-        first_source = NullDataSource(self._labels)
-        while index_list[0] <= start:
+        first_source = None
+        while index_list and index_list[0] <= start:
             index_list.pop(0)
             first_source = sources_list.pop(0)
         else:
             index_list.insert(0, start)
-            sources_list.insert(0, first_source)
+            sources_list.insert(0, first_source or NullDataSource(self._labels))
 
-        while index_list[-1] >= end:
+        while index_list and index_list[-1] >= end:
             index_list.pop()
             sources_list.pop()
         else:
@@ -494,3 +493,6 @@ class CompositeDataSource(BaseDataSource):
             for (start_i, end_i), source_i in zip(pairwise(index_list), sources_list)
         ]
         return pd.concat(data_list)
+
+
+# TODO: Test with one element. out side range.
