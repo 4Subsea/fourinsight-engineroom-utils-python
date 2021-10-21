@@ -93,10 +93,11 @@ class BaseDataSource(ABC):
       to a universal type.
     """
 
-    def __init__(self, index_type, index_sync=False, tolerance=None):
+    def __init__(self, index_type, index_sync=False, tolerance=None, cache=None):
         self._index_type = index_type
         self._index_sync = index_sync
         self._tolerance = tolerance
+        self._cache = cache
 
     @abstractproperty
     def labels(self):
@@ -123,7 +124,13 @@ class BaseDataSource(ABC):
         """
         raise NotImplementedError()
 
-    def get(self, start, end):
+    def get(self, start, end, refresh_cache=False):
+        if not self._cache:
+            return self._source_get(start, end)
+        else:
+            return self._cache_source_get(start, end, refresh_cache=refresh_cache)
+
+    def _source_get(self, start, end):
         """
         Get data from source.
 
@@ -147,6 +154,9 @@ class BaseDataSource(ABC):
             if not self._tolerance:
                 raise ValueError("No tolerance given.")
             return self._sync_data(data, self._tolerance)
+
+    def _cache_source_get(self, start, end, refresh_cache=False):
+        pass
 
     @staticmethod
     def _sync_data(data, tolerance):
