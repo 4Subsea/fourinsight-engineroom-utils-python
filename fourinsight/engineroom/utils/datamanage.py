@@ -153,7 +153,7 @@ class FileCacheHandler(BaseCacheHandler):
             self._index = json.load(f)
 
     def is_cached(self, id_):
-        return id_ in self._index
+        return id_ in self._index and (self._cache_dir / f"{id_}").exists()
 
     def read(self, id_):
         return pd.read_parquet(self._cache_dir / f"{id_}")
