@@ -486,6 +486,51 @@ class Test_ResultCollector:
         with pytest.raises(ValueError):
             results.collect(a="hei")
 
+    def test_collect_single_float(self):
+        headers = {"a": float}
+        results = ResultCollector(headers, indexing_mode="auto")
+
+        results.new_row()
+        results.collect(a=1.1)
+
+        df_out = results._dataframe
+        df_expect = pd.DataFrame(
+            data={"a": [1.1]},
+            index=pd.Int64Index([0]),
+        ).astype({"a": "float64"})
+
+        pd.testing.assert_frame_equal(df_out, df_expect)
+
+    def test_collect_single_int(self):
+        headers = {"a": int}
+        results = ResultCollector(headers, indexing_mode="auto")
+
+        results.new_row()
+        results.collect(a=1)
+
+        df_out = results._dataframe
+        df_expect = pd.DataFrame(
+            data={"a": [1]},
+            index=pd.Int64Index([0]),
+        ).astype({"a": "Int64"})
+
+        pd.testing.assert_frame_equal(df_out, df_expect)
+
+    def test_collect_single_str(self):
+        headers = {"a": str}
+        results = ResultCollector(headers, indexing_mode="auto")
+
+        results.new_row()
+        results.collect(a="one")
+
+        df_out = results._dataframe
+        df_expect = pd.DataFrame(
+            data={"a": ["one"]},
+            index=pd.Int64Index([0]),
+        ).astype({"a": "string"})
+
+        pd.testing.assert_frame_equal(df_out, df_expect)
+
     def test_pull_auto(self):
         path = Path(__file__).parent / "testdata/results_auto.csv"
         handler = LocalFileHandler(path)
