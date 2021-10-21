@@ -727,7 +727,7 @@ class Test_CompositeDataSource:
                     "2020-01-01 04:00",
                     "2020-01-01 06:00",
                 ],
-                utc=True
+                utc=True,
             ).values.astype("int64"),
         )
         assert isinstance(source._sources[0], NullDataSource)
@@ -821,11 +821,11 @@ class Test_CompositeDataSource:
         source2 = NullDataSource(labels=labels.keys(), index_type="datetime")
         source3 = DrioDataSource(drio_client, labels, index_type="datetime")
 
-# multiline with statement with parantheses supported only in Python 3.9 or newer.
-# Refactor when possible.
-# fmt: off
-        with patch.object(source1, "_get") as mock_get1, patch.object(source3, "_get") as mock_get3:
-# fmt: on
+        # Ugly formatting by 'black'.
+        # Use 'with' statement with () when Python 3.9 becomes default for testing.
+        with patch.object(source1, "_get") as mock_get1, patch.object(
+            source3, "_get"
+        ) as mock_get3:
             mock_idx1 = pd.DatetimeIndex(
                 ["2020-01-01 00:00", "2020-01-01 00:01", "2020-01-01 00:02"],
                 tz="utc",
@@ -875,8 +875,16 @@ class Test_CompositeDataSource:
 
             pd.testing.assert_frame_equal(data_out, pd.DataFrame(data_expect))
 
-            mock_get1.assert_called_once_with(*pd.to_datetime(["2020-01-01 00:00", "2020-01-01 02:00"], utc=True).values.astype("int64"))
-            mock_get3.assert_called_once_with(*pd.to_datetime(["2020-01-01 04:00", "2020-01-01 06:00"], utc=True).values.astype("int64"))
+            mock_get1.assert_called_once_with(
+                *pd.to_datetime(
+                    ["2020-01-01 00:00", "2020-01-01 02:00"], utc=True
+                ).values.astype("int64")
+            )
+            mock_get3.assert_called_once_with(
+                *pd.to_datetime(
+                    ["2020-01-01 04:00", "2020-01-01 06:00"], utc=True
+                ).values.astype("int64")
+            )
 
     def test_get_single_source(self):
         drio_client = Mock()
@@ -921,7 +929,11 @@ class Test_CompositeDataSource:
 
             pd.testing.assert_frame_equal(data_out, pd.DataFrame(data_expect))
 
-            mock_get1.assert_called_once_with(*pd.to_datetime(["2020-01-01 00:00", "2021-01-01 00:00"], utc=True).values.astype("int64"))
+            mock_get1.assert_called_once_with(
+                *pd.to_datetime(
+                    ["2020-01-01 00:00", "2021-01-01 00:00"], utc=True
+                ).values.astype("int64")
+            )
 
     def test_get_out_of_range(self):
         drio_client = Mock()
@@ -943,10 +955,7 @@ class Test_CompositeDataSource:
                 "C": pd.Series([1.0, 2.0, 3.0], index=mock_idx1),
             }
 
-            index_source = [
-                ("2020-01-01 00:00", source1),
-                ("2021-01-01 00:00", None)
-            ]
+            index_source = [("2020-01-01 00:00", source1), ("2021-01-01 00:00", None)]
             source = CompositeDataSource(index_source)
 
             data_out_left = source.get("2018-01-01 00:00", "2019-01-01 00:00")
@@ -956,7 +965,7 @@ class Test_CompositeDataSource:
                 {
                     "A": pd.Series([], dtype="object"),
                     "B": pd.Series([], dtype="object"),
-                    "C": pd.Series([], dtype="object")
+                    "C": pd.Series([], dtype="object"),
                 }
             )
             pd.testing.assert_frame_equal(data_out_left, data_expect)
