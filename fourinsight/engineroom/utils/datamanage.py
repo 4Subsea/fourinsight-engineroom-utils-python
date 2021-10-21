@@ -67,6 +67,10 @@ class BaseIndexConverter:
     def reference(self):
         raise NotImplementedError()
 
+    @abstractmethod
+    def __repr__(self):
+        raise NotImplementedError()
+
     def _start_end_md5hash(self, fingerprint, start, end):
         start_universal = str(self.to_universal_index(start))
         end_universal = str(self.to_universal_index(end))
@@ -103,6 +107,9 @@ class DatetimeIndexConverter(BaseIndexConverter):
     def reference(self):
         return pd.to_datetime(0, utc=True)
 
+    def __repr__(self):
+        return "DatatimeIndexConverter"
+
 
 class IntegerIndexConverter(BaseIndexConverter):
     def to_universal_index(self, index):
@@ -120,6 +127,9 @@ class IntegerIndexConverter(BaseIndexConverter):
     @abstractproperty
     def reference(self):
         return 0
+
+    def __repr__(self):
+        return "IntegerIndexConverter"
 
 
 class BaseCacheHandler(ABC):
@@ -250,7 +260,9 @@ class BaseDataSource(ABC):
 
     @property
     def _fingerprint(self):
-        fingerprint_str = "TODO"
+        fingerprint_str = (
+            str(self._index_type) + str(self._index_sync) + str(self._tolerance)
+        )
         return md5(fingerprint_str.encode()).hexdigest()
 
     @abstractproperty
