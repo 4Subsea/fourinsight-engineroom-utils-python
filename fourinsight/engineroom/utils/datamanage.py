@@ -162,9 +162,10 @@ class FileCacheHandler(BaseCacheHandler):
         dataframe.to_parquet(
             self._cache_dir / f"{id_}", engine="pyarrow", compression=None
         )
-        self._index.append(id_)
-        with open(self._index_path, mode="w") as f:
-            json.dump(self._index, f)
+        if id_ not in self._index:
+            self._index.append(id_)
+            with open(self._index_path, mode="w") as f:
+                json.dump(self._index, f)
 
 
 class MemoryCacheHandler(BaseCacheHandler):
