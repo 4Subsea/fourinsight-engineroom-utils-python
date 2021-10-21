@@ -262,8 +262,58 @@ class BaseDataSource(ABC):
                 raise ValueError("No tolerance given.")
             return self._sync_data(data, self._tolerance)
 
+    @staticmethod
+    def _partition_start_end(start, end, partition, reference):
+        start_part = reference + ((start - reference) // partition) * partition
+        end_part = reference + ((end - reference) // partition) * partition
+        if end_part == end:
+            end_part += partition
+        elif end_part < end:
+            end_part += 2.0 * partition
+
+        index_chunks = np.arange(start_part, end_part, partition)
+        return zip(index_chunks[:-1], index_chunks[1:])
+
     def _cache_source_get(self, start, end, refresh_cache=False):
-        pass
+        """Get data from cache. Fall back to source if not available in cache."""
+
+        chunks_universal = self._partition_start_end(
+            self._index_converter.to_universal_index(start),
+            self._index_converter.to_universal_index(end),
+            self._index_converter.to_universal_delta(self._cache_size),
+            self._index_converter.to_universal_index(self._index_converter.reference),
+        )
+
+        df_list = []
+        for start_universal_i, end_universal_i in chunks_universal:
+            start_i = self._index_converter.to_native_index(start_universal_i)
+            end_i = self._index_converter.to_native_index(end_universal_i)
+            chunk_id = self._index_converter._start_end_md5hash(
+                self._fingerprint, start_i, end_i
+            )
+            print(start_i, end_i)
+
+            if not refresh_cache and self._memory_cache.is_cached(chunk_id):
+                print("Get from memory cache")
+                df_i = self._memory_cache.read(chunk_id)
+            elif not refresh_cache and self._file_cache.is_cached(chunk_id):
+                print("Get from files cache")
+                df_i = self._file_cache.read(chunk_id)
+                self._memory_cache.write(chunk_id, df_i)
+            else:
+                print("Get from source")
+                df_i = self._source_get(start_i, end_i)
+                df_i.index = self._index_converter.to_universal_index(df_i.index)
+                df_i = df_i.loc[start_universal_i:end_universal_i]  # ensures no overlap
+                self._file_cache.write(chunk_id, df_i)
+                self._memory_cache.write(chunk_id, df_i)
+            df_list.append(df_i)
+
+        start_universal = self._index_converter.to_universal_index(start)
+        end_universal = self._index_converter.to_universal_index(end)
+        dataframe = pd.concat(df_list, copy=False).loc[start_universal:end_universal]
+        dataframe.index = self._index_converter.to_native_index(dataframe.index)
+        return dataframe
 
     @staticmethod
     def _sync_data(data, tolerance):
