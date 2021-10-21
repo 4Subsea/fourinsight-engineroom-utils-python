@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod, abstractproperty
 from itertools import chain
 
 from hashlib import md5
+from pathlib import Path
 
 # 'pairwise' is introduced in Python 3.10.
 try:
@@ -181,11 +182,13 @@ class BaseDataSource(ABC):
       to a universal type.
     """
 
-    def __init__(self, index_type, index_sync=False, tolerance=None, cache=None):
+    def __init__(self, index_type, index_sync=False, tolerance=None, cache=None, chunk_size=None):
         self._index_type = index_type
         self._index_sync = index_sync
         self._tolerance = tolerance
-        self._cache = cache
+        self._cache = Path(cache) if cache else None
+        self._cache_size = chunk_size if chunk_size else "3H"
+        self._memory_cache = {}
 
         if isinstance(self._index_type, BaseIndexConverter):
             self._index_converter = self._index_type
@@ -274,6 +277,16 @@ class BaseDataSource(ABC):
         index_chunks = np.arange(start_part, end_part, partition)
         return zip(index_chunks[:-1], index_chunks[1:])
 
+    def _cache_read(self, chunk_id):
+        print(self._cache / chunk_id)
+        dataframe = pd.read_feather(self._cache / chunk_id)
+        return dataframe.set_index(chunk_id)
+
+    def _cache_write(self, chunk_id, dataframe):
+        dataframe.index.name = chunk_id
+        dataframe.reset_index()
+        dataframe.to_feather(self._cache / chunk_id)
+
     def _cache_source_get(self, start, end, refresh_cache=False):
         """Get data from cache. Fall back to source if not available in cache."""
 
@@ -293,27 +306,45 @@ class BaseDataSource(ABC):
             )
             print(start_i, end_i)
 
-            if not refresh_cache and self._memory_cache.is_cached(chunk_id):
-                print("Get from memory cache")
-                df_i = self._memory_cache.read(chunk_id)
-            elif not refresh_cache and self._file_cache.is_cached(chunk_id):
-                print("Get from files cache")
-                df_i = self._file_cache.read(chunk_id)
-                self._memory_cache.write(chunk_id, df_i)
+            if not refresh_cache and chunk_id in self._memory_cache.keys():
+                df_i = self._memory_cache[chunk_id]
+                print("Got data from memory")
+            elif not refresh_cache:
+                try:
+                    df_i = self._cache_read(chunk_id)
+                    print("Got data from cache")
+                except FileNotFoundError:
+                    df_i = self._source_get(start_i, end_i)
+                    print("Got data from source (FileNotFound)")
             else:
-                print("Get from source")
                 df_i = self._source_get(start_i, end_i)
-                df_i.index = self._index_converter.to_universal_index(df_i.index)
-                df_i = df_i.loc[start_universal_i:end_universal_i]  # ensures no overlap
-                self._file_cache.write(chunk_id, df_i)
-                self._memory_cache.write(chunk_id, df_i)
-            df_list.append(df_i)
+                print("Got data from source")
+            df_list.append(df_i.loc[start_i:end_i])
 
-        start_universal = self._index_converter.to_universal_index(start)
-        end_universal = self._index_converter.to_universal_index(end)
-        dataframe = pd.concat(df_list, copy=False).loc[start_universal:end_universal]
-        dataframe.index = self._index_converter.to_native_index(dataframe.index)
-        return dataframe
+        return pd.concat(df_list)
+
+
+        #     if not refresh_cache and self._memory_cache.is_cached(chunk_id):
+        #         print("Get from memory cache")
+        #         df_i = self._memory_cache.read(chunk_id)
+        #     elif not refresh_cache and self._file_cache.is_cached(chunk_id):
+        #         print("Get from files cache")
+        #         df_i = self._file_cache.read(chunk_id)
+        #         self._memory_cache.write(chunk_id, df_i)
+        #     else:
+        #         print("Get from source")
+        #         df_i = self._source_get(start_i, end_i)
+        #         df_i.index = self._index_converter.to_universal_index(df_i.index)
+        #         df_i = df_i.loc[start_universal_i:end_universal_i]  # ensures no overlap
+        #         self._file_cache.write(chunk_id, df_i)
+        #         self._memory_cache.write(chunk_id, df_i)
+        #     df_list.append(df_i)
+
+        # start_universal = self._index_converter.to_universal_index(start)
+        # end_universal = self._index_converter.to_universal_index(end)
+        # dataframe = pd.concat(df_list, copy=False).loc[start_universal:end_universal]
+        # dataframe.index = self._index_converter.to_native_index(dataframe.index)
+        # return dataframe
 
     @staticmethod
     def _sync_data(data, tolerance):
@@ -484,12 +515,14 @@ class DrioDataSource(BaseDataSource):
         index_type="datetime",
         index_sync=False,
         tolerance=None,
+        cache=None,
+        chunk_size=None,
         **get_kwargs,
     ):
         self._drio_client = drio_client
         self._labels = labels
         self._get_kwargs = get_kwargs
-        super().__init__(index_type, index_sync=index_sync, tolerance=tolerance)
+        super().__init__(index_type, index_sync=index_sync, tolerance=tolerance, cache=cache, chunk_size=chunk_size)
 
     def _get(self, start, end):
         """
