@@ -534,13 +534,20 @@ class DrioDataSource(BaseDataSource):
         index_sync=False,
         tolerance=None,
         cache=None,
+        chunk_size=None,
+        chunks_in_memory=10,
         **get_kwargs,
     ):
         self._drio_client = drio_client
         self._labels = labels
         self._get_kwargs = get_kwargs
         super().__init__(
-            index_type, index_sync=index_sync, tolerance=tolerance, cache=cache
+            index_type,
+            index_sync=index_sync,
+            tolerance=tolerance,
+            cache=cache,
+            chunk_size=chunk_size,
+            chunks_in_memory=chunks_in_memory,
         )
 
     def _get(self, start, end):
