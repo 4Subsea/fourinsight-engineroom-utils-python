@@ -4,6 +4,7 @@ from .core import (
     LocalFileHandler,
     NullHandler,
     PersistentDict,
+    PersistentJSON,
     ResultCollector,
 )
 from .datamanage import DrioDataSource
