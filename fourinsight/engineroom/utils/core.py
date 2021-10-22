@@ -273,6 +273,7 @@ class PersistentJSON(PersistentDict):
     DEPRECATED, use :class:`PersistentDict` instead. Will stop working
     after 2021-12-31.
     """
+
     def __init__(self, *args, **kwargs):
         import datetime
         import warnings
@@ -280,13 +281,13 @@ class PersistentJSON(PersistentDict):
         warnings.warn(
             "DEPRECATED, use :class:`PersistentDict` instead. Will stop working"
             "after 2021-12-31.",
-            DeprecationWarning
-            )
+            DeprecationWarning,
+        )
         if datetime.date.today() > datetime.date(2021, 12, 31):
             raise DeprecationWarning(
                 "DEPRECATED, use :class:`PersistentDict` instead. Will stop working"
                 "after 2021-12-31."
-                )
+            )
         super().__init__(*args, **kwargs)
 
 
