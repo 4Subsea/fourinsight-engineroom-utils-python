@@ -272,7 +272,9 @@ class BaseDataSource(ABC):
         return (self._cache / id_).exists()
 
     def _cache_read(self, id_):
-        return pd.read_feather(self._cache / id_).set_index(id_)
+        dataframe = pd.read_feather(self._cache / id_).set_index(id_)
+        dataframe.index.name = None
+        return dataframe
 
     def _cache_write(self, id_, dataframe):
         dataframe.index.name = id_
