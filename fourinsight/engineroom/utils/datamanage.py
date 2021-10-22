@@ -271,6 +271,9 @@ class BaseDataSource(ABC):
         index_chunks = np.arange(start_part, end_part, partition)
         return zip(index_chunks[:-1], index_chunks[1:])
 
+    def _is_cached(self, id_):
+        return (self._cache / id_).exists()
+
     def _cache_read(self, id_):
         return pd.read_feather(self._cache / id_).set_index(id_)
 
@@ -300,7 +303,7 @@ class BaseDataSource(ABC):
             if not refresh_cache and chunk_id in self._memory_cache.keys():
                 print("Get from memory")
                 df_i = self._memory_cache[chunk_id]
-            elif not refresh_cache and (self._cache / chunk_id).exists():
+            elif not refresh_cache and self._is_cached(chunk_id):
                 print("Get from cache")
                 df_i = self._cache_read(chunk_id)
             else:
