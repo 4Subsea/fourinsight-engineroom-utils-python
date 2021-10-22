@@ -112,7 +112,7 @@ class DatetimeIndexConverter(BaseIndexConverter):
         return pd.to_datetime(0, utc=True)
 
     def __repr__(self):
-        return "DatatimeIndexConverter"
+        return "DatetimeIndexConverter"
 
 
 class IntegerIndexConverter(BaseIndexConverter):
@@ -174,33 +174,30 @@ class BaseDataSource(ABC):
     """
 
     def __init__(
-        self, index_type, index_sync=False, tolerance=None, cache=None, cache_size=None
+        self, index_converter, index_sync=False, tolerance=None, cache=None, cache_size=None
     ):
-        self._index_type = index_type
+        self._index_converter = index_converter
         self._index_sync = index_sync
         self._tolerance = tolerance
         self._cache = Path(cache) if cache else None
-        self._cache_size = cache_size if cache_size else "3H"  # TODO: default values
+        self._cache_size = cache_size
         self._memory_cache = {}
+
+        if self._cache and self._cache_size is None:
+            raise ValueError("No 'cache_size' provided.")
+
+        if not isinstance(self._index_converter, BaseIndexConverter):
+            raise ValueError(
+                "'index_converter' should be of type 'BaseIndexConverter'. "
+                f"'{type(self._index_converter)}' given."
+            )
 
         if self._cache and not self._cache.exists():
             self._cache.mkdir()
 
-        if isinstance(self._index_type, BaseIndexConverter):
-            self._index_converter = self._index_type
-        elif self._index_type == "datetime":
-            self._index_converter = DatetimeIndexConverter()
-        elif self._index_type == "integer":
-            self._index_converter = IntegerIndexConverter()
-        else:
-            raise ValueError(
-                "The 'index_type' is not valid. "
-                "Should be 'datetime', 'integer' or an instance of 'BaseIndexConverter'"
-            )
-
     @property
     def _fingerprint(self):
-        fingerprint_str = f"{self._index_type}_{self._index_sync}_{self._tolerance}"
+        fingerprint_str = f"{self._index_converter}_{self._index_sync}_{self._tolerance}"
         return md5(fingerprint_str.encode()).hexdigest()
 
     @abstractproperty
@@ -300,6 +297,7 @@ class BaseDataSource(ABC):
             ).hexdigest()
 
             print(start_universal_i, end_universal_i)
+            print(pd.to_datetime(start_universal_i), pd.to_datetime(end_universal_i))
             if not refresh_cache and chunk_id in self._memory_cache.keys():
                 print("Get from memory")
                 df_i = self._memory_cache[chunk_id]
@@ -311,7 +309,7 @@ class BaseDataSource(ABC):
                 start_i = self._index_converter.to_native_index(start_universal_i)
                 end_i = self._index_converter.to_native_index(end_universal_i)
                 df_i = self._source_get(start_i, end_i)
-                df_i = df_i[start_i:end_i]  # slice to ensure no chunk overlap
+                df_i = df_i.loc[start_i:end_i]  # slice to ensure no chunk overlap
                 self._cache_write(chunk_id, df_i)
             df_list.append(df_i)
             memory_cache_update[chunk_id] = df_i
@@ -495,8 +493,18 @@ class DrioDataSource(BaseDataSource):
         self._drio_client = drio_client
         self._labels = labels
         self._get_kwargs = get_kwargs
+
+        if index_type == "datetime":
+            index_converter = DatetimeIndexConverter()
+            cache_size = index_converter.to_universal_delta(cache_size or "3H")
+        elif index_type == "integer":
+            index_converter = IntegerIndexConverter()
+            cache_size = index_converter.to_universal_delta(cache_size or 1e13)
+        else:
+            raise ValueError("'index_type' should be 'datetime' or 'integer'.")
+
         super().__init__(
-            index_type,
+            index_converter,
             index_sync=index_sync,
             tolerance=tolerance,
             cache=cache,
