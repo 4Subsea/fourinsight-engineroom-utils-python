@@ -267,6 +267,29 @@ class PersistentDict(MutableMapping):
         self._handler.push()
 
 
+# TODO: Remove after 2021-12-31
+class PersistentJSON(PersistentDict):
+    """
+    DEPRECATED, use :class:`PersistentDict` instead. Will stop working
+    after 2021-12-31.
+    """
+    def __init__(self, *args, **kwargs):
+        import datetime
+        import warnings
+
+        warnings.warn(
+            "DEPRECATED, use :class:`PersistentDict` instead. Will stop working"
+            "after 2021-12-31.",
+            DeprecationWarning
+            )
+        if datetime.date.today() > datetime.date(2021, 12, 31):
+            raise DeprecationWarning(
+                "DEPRECATED, use :class:`PersistentDict` instead. Will stop working"
+                "after 2021-12-31."
+                )
+        super().__init__(*args, **kwargs)
+
+
 class ResultCollector:
     """
     Collect and store indexed results.
