@@ -496,10 +496,10 @@ class DrioDataSource(BaseDataSource):
 
         if index_type == "datetime":
             index_converter = DatetimeIndexConverter()
-            cache_size = index_converter.to_universal_delta(cache_size or "3H")
+            cache_size = index_converter.to_universal_delta(cache_size or "24H")
         elif index_type == "integer":
             index_converter = IntegerIndexConverter()
-            cache_size = index_converter.to_universal_delta(cache_size or 1e13)
+            cache_size = index_converter.to_universal_delta(cache_size or 8.64e13)
         else:
             raise ValueError("'index_type' should be 'datetime' or 'integer'.")
 
