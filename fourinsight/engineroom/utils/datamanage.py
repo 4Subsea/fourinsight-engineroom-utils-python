@@ -174,7 +174,12 @@ class BaseDataSource(ABC):
     """
 
     def __init__(
-        self, index_converter, index_sync=False, tolerance=None, cache=None, cache_size=None
+        self,
+        index_converter,
+        index_sync=False,
+        tolerance=None,
+        cache=None,
+        cache_size=None,
     ):
         self._index_converter = index_converter
         self._index_sync = index_sync
@@ -195,9 +200,11 @@ class BaseDataSource(ABC):
         if self._cache and not self._cache.exists():
             self._cache.mkdir()
 
-    @property
+    @abstractproperty
     def _fingerprint(self):
-        fingerprint_str = f"{self._index_converter}_{self._index_sync}_{self._tolerance}"
+        fingerprint_str = (
+            f"{self._index_converter}_{self._index_sync}_{self._tolerance}"
+        )
         return md5(fingerprint_str.encode()).hexdigest()
 
     @abstractproperty
@@ -512,6 +519,14 @@ class DrioDataSource(BaseDataSource):
             cache=cache,
             cache_size=cache_size,
         )
+
+    @property
+    def _fingerprint(self):
+        fingerprint_str = (
+            f"{self._labels}_{self._get_kwargs}"
+            f"{self._index_converter}_{self._index_sync}_{self._tolerance}"
+        )
+        return md5(fingerprint_str.encode()).hexdigest()
 
     def _get(self, start, end):
         """
