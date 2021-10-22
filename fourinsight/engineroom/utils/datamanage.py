@@ -323,6 +323,8 @@ class BaseDataSource(ABC):
             df_list.append(df_i)
             memory_cache_update[chunk_id] = df_i
 
+        start = self._index_converter.to_native_index(start)  # needed to make slicig work
+        end = self._index_converter.to_native_index(end)  # needed to make slicig work
         self._memory_cache = memory_cache_update
         return pd.concat(df_list).loc[start:end]
 
@@ -379,7 +381,7 @@ class BaseDataSource(ABC):
 
         return df_synced
 
-    def iter(self, start, end, index_mode="start"):
+    def iter(self, start, end, index_mode="start", refresh_cache=False):
         """
         Iterate over source data as (index, data) pairs.
 
@@ -423,7 +425,7 @@ class BaseDataSource(ABC):
             raise ValueError("'index_mode' must be 'start', 'end' or 'mid'.")
 
         return (
-            (index_i, self.get(start_i, end_i))
+            (index_i, self.get(start_i, end_i, refresh_cache=refresh_cache))
             for index_i, start_i, end_i in zip(index, start, end)
         )
 
