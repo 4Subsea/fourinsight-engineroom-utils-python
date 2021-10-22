@@ -193,12 +193,12 @@ class AzureBlobHandler(BaseHandler):
         self._blob_client.upload_blob(self.getvalue(), overwrite=True)
 
 
-class PersistentJSON(MutableMapping):
+class PersistentDict(MutableMapping):
     """
-    Persistent JSON.
+    Persistent :func:``dict``.
 
-    Push/pull a JSON object stored persistently in a "remote" location.
-    This class is usefull when loading configurations or keeping persistent
+    Push/pull a :func:``dict`` stored persistently in a "remote" location as
+    JSON. This class is usefull when loading configurations or keeping persistent
     state.
 
     The class behaves exactly like a ``dict`` but only accepts values that are

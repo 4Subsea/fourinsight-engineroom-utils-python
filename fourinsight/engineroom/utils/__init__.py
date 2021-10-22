@@ -3,7 +3,7 @@ from .core import (
     AzureBlobHandler,
     LocalFileHandler,
     NullHandler,
-    PersistentJSON,
+    PersistentDict,
     ResultCollector,
 )
 from .datamanage import DrioDataSource
