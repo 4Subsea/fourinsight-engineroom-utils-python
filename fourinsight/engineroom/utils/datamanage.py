@@ -83,14 +83,6 @@ class BaseIndexConverter:
     def __repr__(self):
         raise NotImplementedError()
 
-    def _md5hash(self, fingerprint, start, end):
-        start_universal = str(self.to_universal_index(start))
-        end_universal = str(self.to_universal_index(end))
-        fingerprint_start_end_str = (
-            fingerprint + str(start_universal) + str(end_universal)
-        )
-        return md5(fingerprint_start_end_str.encode()).hexdigest()
-
 
 class DatetimeIndexConverter(BaseIndexConverter):
     def to_universal_index(self, index):
@@ -188,7 +180,7 @@ class BaseDataSource(ABC):
         self._index_sync = index_sync
         self._tolerance = tolerance
         self._cache = Path(cache) if cache else None
-        self._cache_size = cache_size if cache_size else "3H"   # TODO: default values
+        self._cache_size = cache_size if cache_size else "3H"  # TODO: default values
         self._memory_cache = {}
 
         if self._cache and not self._cache.exists():
@@ -289,6 +281,11 @@ class BaseDataSource(ABC):
         dataframe = dataframe.reset_index()
         dataframe.to_feather(self._cache / id_)
 
+    def _start_end_md5hash(self, fingerprint, start, end):
+        start = self._index_converter.to_universal_index(start)
+        end = self._index_converter.to_universal_index(end)
+        return md5((fingerprint + str(start) + str(end)).encode()).hexdigest()
+
     def _cache_source_get(self, start, end, refresh_cache=False):
         """Get data from cache. Fall back to source if not available in cache."""
 
@@ -304,7 +301,7 @@ class BaseDataSource(ABC):
         for start_universal_i, end_universal_i in chunks_universal:
             start_i = self._index_converter.to_native_index(start_universal_i)
             end_i = self._index_converter.to_native_index(end_universal_i)
-            chunk_id = self._index_converter._md5hash(self._fingerprint, start_i, end_i)
+            chunk_id = self._start_end_md5hash(self._fingerprint, start_i, end_i)
             print(start_i, end_i)
 
             if not refresh_cache and chunk_id in self._memory_cache.keys():
