@@ -5,4 +5,6 @@ Data Source
    :maxdepth: 1
 
    base_data_source
+   null_data_source
    drio_data_source
+   composite_data_source

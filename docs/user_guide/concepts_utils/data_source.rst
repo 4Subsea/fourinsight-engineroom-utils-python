@@ -13,8 +13,16 @@ regardless of the source.
 
 :mod:`fourinsight.engineroom.utils` comes with the following built-in data sources:
 
+:class:`~fourinsight.engineroom.utils.NullDataSource`
+    Returns empty data.
+
 :class:`~fourinsight.engineroom.utils.DrioDataSource`
     Handles data from DataReservoir.io_.
+
+:class:`~fourinsight.engineroom.utils.CompositeDataSource`
+    Handles data from multiple data sources but appears as a single data source. Useful when it is
+    necessary to switch between different sources for different index intervals. For instance,
+    seamlessly switch between data sources based on time periods.
 
 .. _DataReservoir.io: https://www.datareservoir.io/
 
