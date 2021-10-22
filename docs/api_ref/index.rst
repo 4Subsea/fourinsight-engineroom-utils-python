@@ -7,7 +7,7 @@ functions and methods.
    :maxdepth: 1
 
    handlers/index
-   persistent_json
+   persistent_dict
    result_collector
    data_source/index
    iter_index

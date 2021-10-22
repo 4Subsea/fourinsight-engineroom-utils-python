@@ -13,7 +13,7 @@ A :class:`~fourinsight.engineroom.utils.DrioDataSource` object is used to downlo
 from the *DataReservoir.io*. The data is downloaded in 1-hour chunks using the :meth:`~fourinsight.engineroom.utils.DrioDataSource.iter()`
 method and the :meth:`~fourinsight.engineroom.utils.iter_index.date_range()` convenience function.
 
-:class:`~fourinsight.engineroom.utils.PersistentJSON` is used to keep track of the state parameter, 'TimeOfLastIndex'.
+:class:`~fourinsight.engineroom.utils.PersistentDict` is used to keep track of the state parameter, 'TimeOfLastIndex'.
 This state parameter tells the script which results it has already collected, so that the
 script can continue where it left off last time it ran. The state is stored persistently
 in a local file using the :class:`~fourinsight.engineroom.utils.LocalFileHandler`.
@@ -32,7 +32,7 @@ are stored in *Azure Blob Storage* using the :class:`~fourinsight.engineroom.uti
     from datareservoirio.authenticate import ClientAuthenticator
     from fourinsight.engineroom.utils import (
         DrioDataSource,
-        PersistentJSON,
+        PersistentDict,
         ResultCollector,
         LocalFileHandler,
         AzureBlobHandler,
@@ -52,7 +52,7 @@ are stored in *Azure Blob Storage* using the :class:`~fourinsight.engineroom.uti
 
     # Get the application state
     state_handler = LocalFileHandler("state.json")
-    state = PersistentJSON(state_handler)
+    state = PersistentDict(state_handler)
     state.pull(raise_on_missing=False)
 
     # Initialize a ResultCollector

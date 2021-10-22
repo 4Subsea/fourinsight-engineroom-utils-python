@@ -244,7 +244,7 @@ class Test_AzureBlobHandler:
         )
 
 
-class Test_PersistentJSON:
+class Test_PersistentDict:
     def test__init__(self, local_file_handler_empty):
         handler = local_file_handler_empty
         persistent_dict = PersistentDict(handler)
