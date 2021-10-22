@@ -200,9 +200,7 @@ class BaseDataSource(ABC):
 
     @property
     def _fingerprint(self):
-        fingerprint_str = (
-            str(self._index_type) + str(self._index_sync) + str(self._tolerance)
-        )
+        fingerprint_str = f"{self._index_type}_{self._index_sync}_{self._tolerance}"
         return md5(fingerprint_str.encode()).hexdigest()
 
     @abstractproperty
@@ -281,11 +279,6 @@ class BaseDataSource(ABC):
         dataframe = dataframe.reset_index()
         dataframe.to_feather(self._cache / id_)
 
-    def _start_end_md5hash(self, fingerprint, start, end):
-        start = self._index_converter.to_universal_index(start)
-        end = self._index_converter.to_universal_index(end)
-        return md5((fingerprint + str(start) + str(end)).encode()).hexdigest()
-
     def _cache_source_get(self, start, end, refresh_cache=False):
         """Get data from cache. Fall back to source if not available in cache."""
 
@@ -299,11 +292,11 @@ class BaseDataSource(ABC):
         df_list = []
         memory_cache_update = {}
         for start_universal_i, end_universal_i in chunks_universal:
-            start_i = self._index_converter.to_native_index(start_universal_i)
-            end_i = self._index_converter.to_native_index(end_universal_i)
-            chunk_id = self._start_end_md5hash(self._fingerprint, start_i, end_i)
-            print(start_i, end_i)
+            chunk_id = md5(
+                f"{self._fingerprint}_{start_universal_i}_{end_universal_i}".encode()
+            ).hexdigest()
 
+            print(start_universal_i, end_universal_i)
             if not refresh_cache and chunk_id in self._memory_cache.keys():
                 print("Get from memory")
                 df_i = self._memory_cache[chunk_id]
@@ -312,9 +305,12 @@ class BaseDataSource(ABC):
                 df_i = self._cache_read(chunk_id)
             else:
                 print("Get from source")
+                start_i = self._index_converter.to_native_index(start_universal_i)
+                end_i = self._index_converter.to_native_index(end_universal_i)
                 df_i = self._source_get(start_i, end_i)
+                df_i = df_i[start_i:end_i]  # slice to ensure no chunk overlap
                 self._cache_write(chunk_id, df_i)
-            df_list.append(df_i.loc[start_i:end_i])
+            df_list.append(df_i)
             memory_cache_update[chunk_id] = df_i
 
         self._memory_cache = memory_cache_update
