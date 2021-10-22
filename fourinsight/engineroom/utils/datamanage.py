@@ -411,15 +411,16 @@ class CompositeDataSource(BaseDataSource):
 
     def __init__(self, index_source):
         index_source_flat = list(chain.from_iterable(index_source))
-        index = index_source_flat[::2]
-        sources = index_source_flat[1::2]
+        self._sources = index_source_flat[1::2]
 
-        index_type_set = set([source._index_type for source in sources if source])
+        index_type_set = set([source._index_type for source in self._sources if source])
         if len(index_type_set) != 1:
             raise ValueError("The data sources does not share the same 'index_type'.")
         index_type = index_type_set.pop()
 
-        labels_set = set([tuple(sorted(source.labels)) for source in sources if source])
+        labels_set = set(
+            [tuple(sorted(source.labels)) for source in self._sources if source]
+        )
         if len(labels_set) != 1:
             raise ValueError("The data sources does not share the same 'labels'.")
         self._labels = labels_set.pop()
@@ -428,15 +429,16 @@ class CompositeDataSource(BaseDataSource):
 
         self._sources = [
             source if source else NullDataSource(self._labels, index_type)
-            for source in sources
+            for source in self._sources
         ]
 
-        index_universal = list(map(self._index_universal, index))
-        if index_universal != sorted(index_universal):
+        self._index = {
+            index: self._index_universal(index) for index in index_source_flat[::2]
+        }
+        if list(self._index.values()) != sorted(self._index.values()):
             raise ValueError(
                 "indecies in 'index_source' must be in strictly increasing order."
             )
-        self._index_attached = index_universal
 
     @property
     def labels(self):
@@ -468,21 +470,25 @@ class CompositeDataSource(BaseDataSource):
         if (start is None) or (end is None):
             raise ValueError("'start' and 'end' can not be NoneType.")
 
-        start = self._index_universal(start)
-        end = self._index_universal(end)
+        start_uni = self._index_universal(start)
+        end_uni = self._index_universal(end)
 
-        index_list = self._index_attached.copy()
+        index_list = list(self._index.keys())
+        index_uni_list = list(self._index.values())
+        # shallow copy, source objects are not copied.
         sources_list = self._sources.copy()
 
         first_source = None
-        while index_list and index_list[0] <= start:
+        while index_uni_list and index_uni_list[0] <= start_uni:
+            index_uni_list.pop(0)
             index_list.pop(0)
             first_source = sources_list.pop(0)
         else:
             index_list.insert(0, start)
             sources_list.insert(0, first_source or NullDataSource(self._labels))
 
-        while index_list and index_list[-1] >= end:
+        while index_uni_list and index_uni_list[-1] >= end_uni:
+            index_uni_list.pop()
             index_list.pop()
             sources_list.pop()
         else:
