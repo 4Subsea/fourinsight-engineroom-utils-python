@@ -31,42 +31,55 @@ The :class:`~fourinsight.engineroom.utils.AzureBlobHandler` is used to store tex
 The handlers behave like 'streams', and provide all the normal stream capabilities. Downloading and uploading is done  by a push/pull
 strategy; content is retrieved from the source by a :meth:`~fourinsight.engineroom.utils.core.BaseHandler.pull()` request, and uploaded
 to the source by a :meth:`~fourinsight.engineroom.utils.core.BaseHandler.push()`. Correspondingly reading and writing to the handler is
-done using :meth:`~io.TextIOWrapper.read()` and :meth:`~io.TextIOWrapper.write()`. 
+done using :meth:`~io.TextIOWrapper.read()` and :meth:`~io.TextIOWrapper.write()`.
 
-**Example on downloading and reading:**
+For reading from handlers:
 
 .. code-block:: python
 
-    # Download stream
+    # Pull stream
     handler.pull()
-    
-    # Seek to beginning of file
-    handler.seek(0)
 
-    # Read stream content as text
+    # Read stream content
+    handler.seek(0)
     handler.read()
 
-    # or load stream content as 'pandas.DataFrame' 
-    df = pd.read_csv(handler, index_col=0)
+and writing to handlers:
 
-.. important::
-    When reading the handler content, always do ``handler.seek(0)`` first, to go to the beginning of the file. Then you can choose to either
-    read the file as text using the build in handler method :meth:`~io.TextIOWrapper.read` or using e.g. 
-    pandas :meth:`~pandas.read_csv`
-
-
-**Example on writing and uploading:**
-    
 .. code-block:: python
 
     # Write text content to stream
     handler.write("Hello, World!")
-    
+
+    # Push stream content
+    handler.push()
+
+More interestingly, handler can also be used with :func:`pandas.read_csv()`:
+
+.. code-block:: python
+
+    # Pull stream w/ CSV content
+    handler.pull()
+
+    # Load stream content as 'pandas.DataFrame'
+    handler.seek(0)
+    df = pd.read_csv(handler, index_col=0)
+
+and :meth:`pandas.DataFrame.to_csv()`:
+
+.. code-block:: python
+
+    df = pd.DataFrame({"Hello": [1, 2], "World!": [3, 4]})
+
     # Write 'pandas.DataFrame' to stream
     df.to_csv(handler)
-    
-    # Upload content of handler
+
+    # Push stream content
     handler.push()
+
+.. important::
+    Remember to perform ``seek(0)`` to go to the beginning of the stream before reading.
+
 
 .. _custom_handlers:
 
