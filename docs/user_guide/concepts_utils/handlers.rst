@@ -28,32 +28,58 @@ The :class:`~fourinsight.engineroom.utils.AzureBlobHandler` is used to store tex
 
     handler = AzureBlobHandler(<connection-string>, <container-name>, <blob-name>)
 
-The handlers behave like 'streams', and provide all the normal stream capabilities.
+The handlers behave like 'streams', and provide all the normal stream capabilities. Downloading and uploading is done  by a push/pull
+strategy; content is retrieved from the source by a :meth:`~fourinsight.engineroom.utils.core.BaseHandler.pull()` request, and uploaded
+to the source by a :meth:`~fourinsight.engineroom.utils.core.BaseHandler.push()`. Correspondingly reading and writing to the handler is
+done using :meth:`~io.TextIOWrapper.read()` and :meth:`~io.TextIOWrapper.write()`.
+
+For reading from handlers:
+
+.. code-block:: python
+
+    # Pull stream
+    handler.pull()
+
+    # Read stream content
+    handler.seek(0)
+    handler.read()
+
+and writing to handlers:
 
 .. code-block:: python
 
     # Write text content to stream
     handler.write("Hello, World!")
 
-    # Read stream content
-    handler.read()
+    # Push stream content
+    handler.push()
+
+More interestingly, handler can also be used with :func:`pandas.read_csv()`:
+
+.. code-block:: python
+
+    # Pull stream w/ CSV content
+    handler.pull()
+
+    # Load stream content as 'pandas.DataFrame'
+    handler.seek(0)
+    df = pd.read_csv(handler, index_col=0)
+
+and :meth:`pandas.DataFrame.to_csv()`:
+
+.. code-block:: python
+
+    df = pd.DataFrame({"Hello": [1, 2], "World!": [3, 4]})
 
     # Write 'pandas.DataFrame' to stream
     df.to_csv(handler)
 
-    # Load 'pandas.DataFrame' from stream
-    df = pd.read_csv(handler, index_col=0)
-
-    # etc...
-
-In addition, downloading and uploading of the text content is provided by a push/pull
-strategy; content is retrieved from the source by a :meth:`~fourinsight.engineroom.utils.core.BaseHandler.pull()` request, and uploaded
-to the source by a :meth:`~fourinsight.engineroom.utils.core.BaseHandler.push()`. E.g.:
-
-.. code-block:: python
-
-    # Write the content of the stream to the source
+    # Push stream content
     handler.push()
+
+.. important::
+    Remember to perform ``seek(0)`` to go to the beginning of the stream before reading.
+
 
 .. _custom_handlers:
 
