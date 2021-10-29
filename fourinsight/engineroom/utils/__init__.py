@@ -3,6 +3,7 @@ from .core import (
     AzureBlobHandler,
     LocalFileHandler,
     NullHandler,
+    PersistentDict,
     PersistentJSON,
     ResultCollector,
 )

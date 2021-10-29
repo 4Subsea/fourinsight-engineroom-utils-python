@@ -12,7 +12,7 @@ from fourinsight.engineroom.utils import (
     AzureBlobHandler,
     LocalFileHandler,
     NullHandler,
-    PersistentJSON,
+    PersistentDict,
     ResultCollector,
 )
 from fourinsight.engineroom.utils.core import BaseHandler
@@ -31,8 +31,8 @@ def local_file_handler_w_content():
 
 
 @pytest.fixture
-def persistent_json(local_file_handler_empty):
-    return PersistentJSON(local_file_handler_empty)
+def persistent_dict(local_file_handler_empty):
+    return PersistentDict(local_file_handler_empty)
 
 
 @pytest.fixture
@@ -244,102 +244,102 @@ class Test_AzureBlobHandler:
         )
 
 
-class Test_PersistentJSON:
+class Test_PersistentDict:
     def test__init__(self, local_file_handler_empty):
         handler = local_file_handler_empty
-        persistent_json = PersistentJSON(handler)
-        assert persistent_json._PersistentJSON__dict == {}
-        assert persistent_json._handler == handler
+        persistent_dict = PersistentDict(handler)
+        assert persistent_dict._PersistentDict__dict == {}
+        assert persistent_dict._handler == handler
 
     def test__init__raises(self):
         with pytest.raises(TypeError):
-            PersistentJSON("A")
+            PersistentDict("A")
 
     def test__init__default(self):
-        persistent_json = PersistentJSON()
-        assert persistent_json._PersistentJSON__dict == {}
-        assert isinstance(persistent_json._handler, NullHandler)
+        persistent_dict = PersistentDict()
+        assert persistent_dict._PersistentDict__dict == {}
+        assert isinstance(persistent_dict._handler, NullHandler)
 
-    def test__repr__(self, persistent_json):
-        assert str(persistent_json) == "{}"
-        persistent_json.update({"a": 1.0, "b": "test"})
-        assert str(persistent_json) == "{'a': 1.0, 'b': 'test'}"
+    def test__repr__(self, persistent_dict):
+        assert str(persistent_dict) == "{}"
+        persistent_dict.update({"a": 1.0, "b": "test"})
+        assert str(persistent_dict) == "{'a': 1.0, 'b': 'test'}"
 
-    def test__delitem__(self, persistent_json):
-        persistent_json.update({"a": 1.0, "b": "test"})
-        del persistent_json["a"]
-        persistent_json._PersistentJSON__dict == {"b": "test"}
+    def test__delitem__(self, persistent_dict):
+        persistent_dict.update({"a": 1.0, "b": "test"})
+        del persistent_dict["a"]
+        persistent_dict._PersistentDict__dict == {"b": "test"}
 
-    def test__getitem__(self, persistent_json):
-        persistent_json.update({"a": 1.0, "b": "test"})
-        assert persistent_json["a"] == 1.0
-        assert persistent_json["b"] == "test"
+    def test__getitem__(self, persistent_dict):
+        persistent_dict.update({"a": 1.0, "b": "test"})
+        assert persistent_dict["a"] == 1.0
+        assert persistent_dict["b"] == "test"
 
         with pytest.raises(KeyError):
-            persistent_json["non-existing-key"]
+            persistent_dict["non-existing-key"]
 
-    def test__setitem__(self, persistent_json):
-        persistent_json["a"] = "some value"
-        persistent_json["b"] = "some other value"
+    def test__setitem__(self, persistent_dict):
+        persistent_dict["a"] = "some value"
+        persistent_dict["b"] = "some other value"
 
-        assert persistent_json["a"] == "some value"
-        assert persistent_json["b"] == "some other value"
+        assert persistent_dict["a"] == "some value"
+        assert persistent_dict["b"] == "some other value"
 
-    def test__setitem_jsonencode(self, persistent_json):
-        with patch.object(persistent_json, "_jsonencoder") as mock_jsonencoder:
+    def test__setitem_jsonencode(self, persistent_dict):
+        with patch.object(persistent_dict, "_jsonencoder") as mock_jsonencoder:
 
-            persistent_json["a"] = 1
+            persistent_dict["a"] = 1
             mock_jsonencoder.assert_called_once_with(1)
 
-    def test__setitem___datetime_raises(self, persistent_json):
+    def test__setitem___datetime_raises(self, persistent_dict):
         with pytest.raises(TypeError):
-            persistent_json["timestamp"] = pd.to_datetime("2020-01-01 00:00")
+            persistent_dict["timestamp"] = pd.to_datetime("2020-01-01 00:00")
 
-    def test__len__(self, persistent_json):
-        assert len(persistent_json) == 0
-        persistent_json.update({"a": 1, "b": None})
-        assert len(persistent_json) == 2
+    def test__len__(self, persistent_dict):
+        assert len(persistent_dict) == 0
+        persistent_dict.update({"a": 1, "b": None})
+        assert len(persistent_dict) == 2
 
-    def test_update(self, persistent_json):
-        assert persistent_json._PersistentJSON__dict == {}
-        persistent_json.update({"a": 1.0, "b": "test"})
-        assert persistent_json._PersistentJSON__dict == {"a": 1.0, "b": "test"}
+    def test_update(self, persistent_dict):
+        assert persistent_dict._PersistentDict__dict == {}
+        persistent_dict.update({"a": 1.0, "b": "test"})
+        assert persistent_dict._PersistentDict__dict == {"a": 1.0, "b": "test"}
 
     def test_pull(self, local_file_handler_w_content):
         handler = local_file_handler_w_content
-        persistent_json = PersistentJSON(handler)
-        persistent_json.pull()
+        persistent_dict = PersistentDict(handler)
+        persistent_dict.pull()
 
-        content_out = persistent_json._PersistentJSON__dict
+        content_out = persistent_dict._PersistentDict__dict
         content_expected = {"this": 1, "is": "hei", "a": None, "test": 1.2}
 
         assert content_out == content_expected
 
     def test_pull_non_existing(self):
         handler = LocalFileHandler("./non_existing.json")
-        persistent_json = PersistentJSON(handler)
-        persistent_json.pull(raise_on_missing=False)
+        persistent_dict = PersistentDict(handler)
+        persistent_dict.pull(raise_on_missing=False)
 
-        content_out = persistent_json._PersistentJSON__dict
+        content_out = persistent_dict._PersistentDict__dict
         content_expected = {}
 
         assert content_out == content_expected
 
     def test_pull_non_existing_raises(self):
         handler = LocalFileHandler("./non_existing.json")
-        persistent_json = PersistentJSON(handler)
+        persistent_dict = PersistentDict(handler)
 
         with pytest.raises(FileNotFoundError):
-            persistent_json.pull(raise_on_missing=True)
+            persistent_dict.pull(raise_on_missing=True)
 
     def test_push(self, tmp_path):
         handler = LocalFileHandler(tmp_path / "test.json")
-        persistent_json = PersistentJSON(handler)
+        persistent_dict = PersistentDict(handler)
 
         content = {"this": 1, "is": "hei", "a": None, "test": 1.2}
 
-        persistent_json.update(content)
-        persistent_json.push()
+        persistent_dict.update(content)
+        persistent_dict.push()
 
         with open(tmp_path / "test.json", mode="r") as f:
             content_out = json.load(f)
@@ -348,9 +348,9 @@ class Test_PersistentJSON:
 
     def test_push_empty(self, tmp_path):
         handler = LocalFileHandler(tmp_path / "test.json")
-        persistent_json = PersistentJSON(handler)
+        persistent_dict = PersistentDict(handler)
 
-        persistent_json.push()
+        persistent_dict.push()
 
         with open(tmp_path / "test.json", mode="r") as f:
             content_out = json.load(f)

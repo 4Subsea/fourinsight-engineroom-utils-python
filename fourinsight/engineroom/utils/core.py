@@ -4,7 +4,6 @@ from collections.abc import MutableMapping
 from io import BytesIO, TextIOWrapper
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 from azure.core.exceptions import ResourceNotFoundError
 from azure.storage.blob import BlobClient
@@ -193,12 +192,12 @@ class AzureBlobHandler(BaseHandler):
         self._blob_client.upload_blob(self.getvalue(), overwrite=True)
 
 
-class PersistentJSON(MutableMapping):
+class PersistentDict(MutableMapping):
     """
-    Persistent JSON.
+    Persistent :func:``dict``.
 
-    Push/pull a JSON object stored persistently in a "remote" location.
-    This class is usefull when loading configurations or keeping persistent
+    Push/pull a :func:``dict`` stored persistently in a "remote" location as
+    JSON. This class is usefull when loading configurations or keeping persistent
     state.
 
     The class behaves exactly like a ``dict`` but only accepts values that are
@@ -266,6 +265,30 @@ class PersistentJSON(MutableMapping):
         self._handler.truncate()
         json.dump(self.__dict, self._handler, indent=4)
         self._handler.push()
+
+
+# TODO: Remove after 2021-12-31
+class PersistentJSON(PersistentDict):
+    """
+    DEPRECATED, use :class:`PersistentDict` instead. Will stop working
+    after 2021-12-31.
+    """
+
+    def __init__(self, *args, **kwargs):
+        import datetime
+        import warnings
+
+        warnings.warn(
+            "DEPRECATED, use :class:`PersistentDict` instead. Will stop working"
+            "after 2021-12-31.",
+            DeprecationWarning,
+        )
+        if datetime.date.today() > datetime.date(2021, 12, 31):
+            raise DeprecationWarning(
+                "DEPRECATED, use :class:`PersistentDict` instead. Will stop working"
+                "after 2021-12-31."
+            )
+        super().__init__(*args, **kwargs)
 
 
 class ResultCollector:
