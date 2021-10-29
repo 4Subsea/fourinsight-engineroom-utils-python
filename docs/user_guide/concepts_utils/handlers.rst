@@ -30,7 +30,10 @@ The :class:`~fourinsight.engineroom.utils.AzureBlobHandler` is used to store tex
 
 The handlers behave like 'streams', and provide all the normal stream capabilities. Downloading and uploading is done  by a push/pull
 strategy; content is retrieved from the source by a :meth:`~fourinsight.engineroom.utils.core.BaseHandler.pull()` request, and uploaded
-to the source by a :meth:`~fourinsight.engineroom.utils.core.BaseHandler.push()`. Example on downloading and reading:
+to the source by a :meth:`~fourinsight.engineroom.utils.core.BaseHandler.push()`. Correspondingly reading and writing to the handler is
+done using :meth:`~io.TextIOWrapper.read()` and :meth:`~io.TextIOWrapper.write()`. 
+
+**Example on downloading and reading:**
 
 .. code-block:: python
 
@@ -40,14 +43,19 @@ to the source by a :meth:`~fourinsight.engineroom.utils.core.BaseHandler.push()`
     # Seek to beginning of file
     handler.seek(0)
 
-    # Read stream content
+    # Read stream content as text
     handler.read()
 
-    # Load 'pandas.DataFrame' from stream
+    # or load stream content as 'pandas.DataFrame' 
     df = pd.read_csv(handler, index_col=0)
 
+.. important::
+    When reading the handler content, always do ``handler.seek(0)`` first, to go to the beginning of the file. Then you can choose to either
+    read the file as text using the build in handler method :meth:`~io.TextIOWrapper.read` or using e.g. 
+    pandas :meth:`~pandas.read_csv`
 
-And correspondingly how to write and upload:
+
+**Example on writing and uploading:**
     
 .. code-block:: python
 
