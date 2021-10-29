@@ -28,31 +28,36 @@ The :class:`~fourinsight.engineroom.utils.AzureBlobHandler` is used to store tex
 
     handler = AzureBlobHandler(<connection-string>, <container-name>, <blob-name>)
 
-The handlers behave like 'streams', and provide all the normal stream capabilities.
+The handlers behave like 'streams', and provide all the normal stream capabilities. Downloading and uploading is done  by a push/pull
+strategy; content is retrieved from the source by a :meth:`~fourinsight.engineroom.utils.core.BaseHandler.pull()` request, and uploaded
+to the source by a :meth:`~fourinsight.engineroom.utils.core.BaseHandler.push()`. Example on downloading and reading:
 
 .. code-block:: python
 
-    # Write text content to stream
-    handler.write("Hello, World!")
+    # Download stream
+    handler.pull()
+    
+    # Seek to beginning of file
+    handler.seek(0)
 
     # Read stream content
     handler.read()
 
-    # Write 'pandas.DataFrame' to stream
-    df.to_csv(handler)
-
     # Load 'pandas.DataFrame' from stream
     df = pd.read_csv(handler, index_col=0)
 
-    # etc...
 
-In addition, downloading and uploading of the text content is provided by a push/pull
-strategy; content is retrieved from the source by a :meth:`~fourinsight.engineroom.utils.core.BaseHandler.pull()` request, and uploaded
-to the source by a :meth:`~fourinsight.engineroom.utils.core.BaseHandler.push()`. E.g.:
-
+And correspondingly how to write and upload:
+    
 .. code-block:: python
 
-    # Write the content of the stream to the source
+    # Write text content to stream
+    handler.write("Hello, World!")
+    
+    # Write 'pandas.DataFrame' to stream
+    df.to_csv(handler)
+    
+    # Upload content of handler
     handler.push()
 
 .. _custom_handlers:
