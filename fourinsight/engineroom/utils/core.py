@@ -281,10 +281,10 @@ class PersistentJSON(PersistentDict):
         warnings.warn(
             "DEPRECATED, use :class:`PersistentDict` instead. Will stop working"
             "after 2021-12-31.",
-            DeprecationWarning,
+            FutureWarning,
         )
         if datetime.date.today() > datetime.date(2021, 12, 31):
-            raise DeprecationWarning(
+            raise FutureWarning(
                 "DEPRECATED, use :class:`PersistentDict` instead. Will stop working"
                 "after 2021-12-31."
             )
