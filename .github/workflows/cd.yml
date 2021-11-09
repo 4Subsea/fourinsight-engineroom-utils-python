@@ -59,7 +59,7 @@ jobs:
           user: __token__
           password: ${{ secrets.PYPI_PROD_API_KEY }}
 
-      - name: Upload documentation to QA blob storage
+      - name: Upload documentation to TEST blob storage
         if: ${{ startswith(github.ref, 'refs/tags/v') && endsWith(github.ref, '-test') }}
         uses: azure/CLI@v1
         env:
