@@ -543,7 +543,9 @@ class Test_ResultCollector:
         }
         df_in = pd.DataFrame(data=data)
         results.collect_batch(df_in)
-        df_expect = df_in.astype({"a": "float64", "b": "string", "c": "float64", "d": "Int64"})
+        df_expect = df_in.astype(
+            {"a": "float64", "b": "string", "c": "float64", "d": "Int64"}
+        )
 
         df_out = results._dataframe
         pd.testing.assert_frame_equal(df_out, df_expect)
@@ -561,7 +563,9 @@ class Test_ResultCollector:
         index = pd.date_range(start="2021-11-01", end="2021-11-02", periods=3)
         df_in = pd.DataFrame(data=data, index=index)
         results.collect_batch(df_in)
-        df_expect = df_in.astype({"a": "float64", "b": "string", "c": "float64", "d": "Int64"})
+        df_expect = df_in.astype(
+            {"a": "float64", "b": "string", "c": "float64", "d": "Int64"}
+        )
 
         df_out = results._dataframe
         pd.testing.assert_frame_equal(df_out, df_expect)
@@ -639,7 +643,9 @@ class Test_ResultCollector:
         }
         df_in = pd.DataFrame(data=data)
         results.collect_batch(df_in)
-        df_expect = df_in.astype({"a": "float64", "b": "string", "c": "float64", "d": "Int64"})
+        df_expect = df_in.astype(
+            {"a": "float64", "b": "string", "c": "float64", "d": "Int64"}
+        )
 
         df_out = results._dataframe
         pd.testing.assert_frame_equal(df_out, df_expect)
@@ -648,9 +654,7 @@ class Test_ResultCollector:
         headers = {"a": float}
         results = ResultCollector(headers, indexing_mode="auto")
 
-        data = {
-            "a": [1.2]
-        }
+        data = {"a": [1.2]}
         df_in = pd.DataFrame(data=data)
         results.collect_batch(df_in)
         df_expect = df_in.astype({"a": "float64"})
@@ -662,9 +666,7 @@ class Test_ResultCollector:
         headers = {"a": str}
         results = ResultCollector(headers, indexing_mode="auto")
 
-        data = {
-            "a": ["string"]
-        }
+        data = {"a": ["string"]}
         df_in = pd.DataFrame(data=data)
         results.collect_batch(df_in)
         df_expect = df_in.astype({"a": "string"})
@@ -676,9 +678,7 @@ class Test_ResultCollector:
         headers = {"a": int}
         results = ResultCollector(headers, indexing_mode="auto")
 
-        data = {
-            "a": [3]
-        }
+        data = {"a": [3]}
         df_in = pd.DataFrame(data=data)
         results.collect_batch(df_in)
         df_expect = df_in.astype({"a": "Int64"})

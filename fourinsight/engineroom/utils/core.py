@@ -427,7 +427,8 @@ class ResultCollector:
             )
         elif self._indexing_mode == "timestamp" and index != "datetime64":
             raise ValueError(
-                "'indexing_mode' is set to 'timestamp'. " "Results must have datetime index"
+                "'indexing_mode' is set to 'timestamp'. "
+                "Results must have datetime index"
             )
 
         if not set(self._headers.keys()).issuperset(results.columns):
@@ -445,7 +446,10 @@ class ResultCollector:
             raise ValueError("Unable to cast 'results' to correct dtype")
 
         self._dataframe = self._dataframe.append(
-            df_update, verify_integrity=True, ignore_index=self._ignore_index, sort=False
+            df_update,
+            verify_integrity=True,
+            ignore_index=self._ignore_index,
+            sort=False,
         )
 
     def pull(self, raise_on_missing=True):
