@@ -67,14 +67,6 @@ class BaseIndexConverter:
     def to_universal_delta(self, delta):
         raise NotImplementedError()
 
-    # @abstractmethod
-    # def to_native_index(self, index):
-    #     raise NotImplementedError()
-
-    # @abstractmethod
-    # def to_native_delta(self, delta):
-    #     raise NotImplementedError()
-
     @abstractproperty
     def reference(self):
         raise NotImplementedError()
@@ -92,17 +84,6 @@ class DatetimeIndexConverter(BaseIndexConverter):
     def to_universal_delta(self, delta):
         return pd.to_timedelta(delta)
 
-    # def to_native_index(self, index):
-    #     index = np.asarray_chkfinite(index).flatten()
-    #     index = pd.to_datetime(index, utc=True)
-    #     if len(index) == 1:
-    #         return index[0]
-    #     else:
-    #         return index
-
-    # def to_native_delta(self, delta):
-    #     return pd.to_timedelta(delta)
-
     @property
     def reference(self):
         return pd.to_datetime(0, utc=True)
@@ -117,12 +98,6 @@ class IntegerIndexConverter(BaseIndexConverter):
 
     def to_universal_delta(self, delta):
         return int(delta)
-
-    # def to_native_index(self, index):
-    #     return np.int64(np.asarray_chkfinite(index))
-
-    # def to_native_delta(self, delta):
-    #     return int(delta)
 
     @abstractproperty
     def reference(self):
@@ -304,7 +279,6 @@ class BaseDataSource(ABC):
             ).hexdigest()
 
             print(start_universal_i, end_universal_i)
-            # print(pd.to_datetime(start_universal_i), pd.to_datetime(end_universal_i))
             if not refresh_cache and chunk_id in self._memory_cache.keys():
                 print("Get from memory")
                 df_i = self._memory_cache[chunk_id]
@@ -313,10 +287,6 @@ class BaseDataSource(ABC):
                 df_i = self._cache_read(chunk_id)
             else:
                 print("Get from source")
-                # start_i = self._index_converter.to_native_index(start_universal_i)
-                # end_i = self._index_converter.to_native_index(end_universal_i)
-                # start_universal_i = self._index_converter.to_universal_index(start_universal_i)
-                # end_universal_i = self._index_converter.to_universal_index(end_universal_i)
                 df_i = self._source_get(start_universal_i, end_universal_i)
                 df_i = df_i.loc[start_universal_i:end_universal_i]  # slice to ensure no chunk overlap
                 self._cache_write(chunk_id, df_i)
