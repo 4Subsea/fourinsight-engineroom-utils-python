@@ -572,7 +572,7 @@ class NullDataSource(BaseDataSource):
 
     def __init__(self, index_converter, labels=None):
         self._labels = tuple(labels) if labels else ()
-        super().__init__(index_converter, index_sync=False)
+        super().__init__(index_converter, index_sync=False, cache=None)
 
     @property
     def labels(self):
