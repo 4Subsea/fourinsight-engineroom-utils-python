@@ -82,6 +82,16 @@ class BaseIndexConverter:
     def __repr__(self):
         raise NotImplementedError()
 
+    @classmethod
+    def __eq__(cls, other):
+        return isinstance(other, cls)
+
+    def __ne__(self, other):
+        return (not self.__eq__(other))
+
+    def __hash__(self):
+        return hash(self.__repr__())
+
 
 class DatetimeIndexConverter(BaseIndexConverter):
     def to_universal_index(self, index):
