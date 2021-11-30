@@ -61,14 +61,17 @@ def universal_integer_index(index):
 class BaseIndexConverter:
     @abstractmethod
     def to_universal_index(self, index):
+        """Convert index to universal type"""
         raise NotImplementedError()
 
     @abstractmethod
     def to_universal_delta(self, delta):
+        """Convert index partition to universal type"""
         raise NotImplementedError()
 
     @abstractproperty
     def reference(self):
+        """Index reference"""
         raise NotImplementedError()
 
     @abstractmethod
@@ -78,14 +81,16 @@ class BaseIndexConverter:
 
 class DatetimeIndexConverter(BaseIndexConverter):
     def to_universal_index(self, index):
-        # index = np.asarray_chkfinite(index).flatten()
+        """Convert index to universal type"""
         return pd.to_datetime(index, utc=True)
 
     def to_universal_delta(self, delta):
+        """Convert index partition to universal type"""
         return pd.to_timedelta(delta)
 
     @property
     def reference(self):
+        """Index reference"""
         return pd.to_datetime(0, utc=True)
 
     def __repr__(self):
@@ -94,13 +99,16 @@ class DatetimeIndexConverter(BaseIndexConverter):
 
 class IntegerIndexConverter(BaseIndexConverter):
     def to_universal_index(self, index):
+        """Convert index to universal type"""
         return np.int64(np.asarray_chkfinite(index))
 
     def to_universal_delta(self, delta):
+        """Convert index partition to universal type"""
         return int(delta)
 
     @abstractproperty
     def reference(self):
+        """Index reference"""
         return 0
 
     def __repr__(self):
