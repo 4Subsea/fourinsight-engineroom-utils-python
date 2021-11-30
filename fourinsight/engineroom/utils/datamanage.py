@@ -642,7 +642,8 @@ class CompositeDataSource(BaseDataSource):
         ]
 
         self._index = {
-            index: self._index_converter.to_universal_index(index) for index in index_source_flat[::2]
+            index: self._index_converter.to_universal_index(index)
+            for index in index_source_flat[::2]
         }
         if list(self._index.values()) != sorted(self._index.values()):
             raise ValueError(
