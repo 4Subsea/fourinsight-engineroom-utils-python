@@ -20,42 +20,42 @@ import numpy as np
 import pandas as pd
 
 
-def universal_datetime_index(index):
-    """
-    Convert datetime-like index to universal type.
+# def universal_datetime_index(index):
+#     """
+#     Convert datetime-like index to universal type.
 
-    Parameters
-    ----------
-    index : single value or array-like
-        Datetime-like index. Will be passed on to :func:`pandas.to_datetime`.
+#     Parameters
+#     ----------
+#     index : single value or array-like
+#         Datetime-like index. Will be passed on to :func:`pandas.to_datetime`.
 
-    Returns
-    int or array of int
-        Index converted to epoch.
-    """
-    index = np.asarray_chkfinite(index).flatten()
-    index = np.int64(pd.to_datetime(index, utc=True).values)
-    if len(index) == 1:
-        return index[0]
-    else:
-        return index
+#     Returns
+#     int or array of int
+#         Index converted to epoch.
+#     """
+#     index = np.asarray_chkfinite(index).flatten()
+#     index = np.int64(pd.to_datetime(index, utc=True).values)
+#     if len(index) == 1:
+#         return index[0]
+#     else:
+#         return index
 
 
-def universal_integer_index(index):
-    """
-    Convert integer-like index to universal type.
+# def universal_integer_index(index):
+#     """
+#     Convert integer-like index to universal type.
 
-    Parameters
-    ----------
-    index : single value or array-like
-        Integer-like index.
+#     Parameters
+#     ----------
+#     index : single value or array-like
+#         Integer-like index.
 
-    Returns
-    -------
-    int or array of int
-        Index converted to ``int`` type.
-    """
-    return np.int64(np.asarray_chkfinite(index))
+#     Returns
+#     -------
+#     int or array of int
+#         Index converted to ``int`` type.
+#     """
+#     return np.int64(np.asarray_chkfinite(index))
 
 
 class BaseIndexConverter:
@@ -425,21 +425,21 @@ class BaseDataSource(ABC):
             for index_i, start_i, end_i in zip(index, start, end)
         )
 
-    def _index_universal(self, index):
-        """
-        Convert index to universal type.
+    # def _index_universal(self, index):
+    #     """
+    #     Convert index to universal type.
 
-        Parameters
-        ----------
-        index : single value or array-like
-            Index value.
-        """
-        if callable(self._index_type):
-            return self._index_type(index)
-        elif self._index_type == "datetime":
-            return universal_datetime_index(index)
-        elif self._index_type == "integer":
-            return universal_integer_index(index)
+    #     Parameters
+    #     ----------
+    #     index : single value or array-like
+    #         Index value.
+    #     """
+    #     if callable(self._index_type):
+    #         return self._index_type(index)
+    #     elif self._index_type == "datetime":
+    #         return universal_datetime_index(index)
+    #     elif self._index_type == "integer":
+    #         return universal_integer_index(index)
 
 
 class DrioDataSource(BaseDataSource):
