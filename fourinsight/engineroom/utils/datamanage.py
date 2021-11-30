@@ -568,14 +568,17 @@ class NullDataSource(BaseDataSource):
         Index type. Should be 'datetime', 'integer' or a callable.
     """
 
-    def __init__(self, labels=None, index_type="datetime"):
+    def __init__(self, index_converter, labels=None):
         self._labels = tuple(labels) if labels else ()
-        super().__init__(index_type, index_sync=False)
+        super().__init__(index_converter, index_sync=False)
 
     @property
     def labels(self):
         """Data source labels."""
         return tuple(self._labels)
+
+    def _fingerprint(self):
+        return self._md5hash(self._index_converter, self._labels)
 
     def _get(self, start, end):
         return {label: pd.Series([], dtype="object") for label in self._labels}
