@@ -485,10 +485,10 @@ class DrioDataSource(BaseDataSource):
 
         if index_type == "datetime":
             index_converter = DatetimeIndexConverter()
-            cache_size = index_converter.to_universal_delta(cache_size or "24H")
+            cache_size = cache_size or "24H"
         elif index_type == "integer":
             index_converter = IntegerIndexConverter()
-            cache_size = index_converter.to_universal_delta(cache_size or 8.64e13)
+            cache_size = cache_size or 8.64e13
         else:
             raise ValueError("'index_type' should be 'datetime' or 'integer'.")
 
@@ -509,11 +509,6 @@ class DrioDataSource(BaseDataSource):
             self._index_sync,
             self._tolerance,
         )
-        # fingerprint_str = (
-        #     f"{self._labels}_{self._get_kwargs}"
-        #     f"{self._index_converter}_{self._index_sync}_{self._tolerance}"
-        # )
-        # return md5(fingerprint_str.encode()).hexdigest()
 
     def _get(self, start, end):
         """
