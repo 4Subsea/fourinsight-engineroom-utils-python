@@ -252,7 +252,7 @@ class BaseDataSource(ABC):
             end_part += 2.0 * partition
 
         num_partitions = (end_part - start_part) // partition
-        index_chunks = start_part + partition * np.arange(0, num_partitions, 1)
+        index_chunks = start_part + partition * np.arange(0, num_partitions, 1, dtype="int64")
         return zip(index_chunks[:-1], index_chunks[1:])
 
     def _is_cached(self, id_):
