@@ -87,7 +87,7 @@ class BaseIndexConverter:
         return isinstance(other, cls)
 
     def __ne__(self, other):
-        return (not self.__eq__(other))
+        return not self.__eq__(other)
 
     def __hash__(self):
         return hash(self.__repr__())
@@ -266,7 +266,9 @@ class BaseDataSource(ABC):
             end_part += 2.0 * partition
 
         num_partitions = (end_part - start_part) // partition
-        index_chunks = start_part + partition * np.arange(0, num_partitions, 1, dtype="int64")
+        index_chunks = start_part + partition * np.arange(
+            0, num_partitions, 1, dtype="int64"
+        )
         return zip(index_chunks[:-1], index_chunks[1:])
 
     def _is_cached(self, id_):
@@ -310,7 +312,7 @@ class BaseDataSource(ABC):
                 print("Get from source")
                 df_i = self._source_get(
                     self._index_converter.to_native_index(start_universal_i),
-                    self._index_converter.to_native_index(end_universal_i)
+                    self._index_converter.to_native_index(end_universal_i),
                 )
                 df_i = df_i.loc[start_universal_i:end_universal_i]
                 self._cache_write(chunk_id, df_i.copy(deep=True))
@@ -618,10 +620,12 @@ class CompositeDataSource(BaseDataSource):
         index_source_flat = list(chain.from_iterable(index_source))
         self._sources = index_source_flat[1::2]
 
-        index_type_set = set([source._index_type for source in self._sources if source])
-        if len(index_type_set) != 1:
+        index_conv_set = set(
+            [source._index_converter for source in self._sources if source]
+        )
+        if len(index_conv_set) != 1:
             raise ValueError("The data sources does not share the same 'index_type'.")
-        index_type = index_type_set.pop()
+        index_converter = index_conv_set.pop()
 
         labels_set = set(
             [tuple(sorted(source.labels)) for source in self._sources if source]
@@ -630,20 +634,24 @@ class CompositeDataSource(BaseDataSource):
             raise ValueError("The data sources does not share the same 'labels'.")
         self._labels = labels_set.pop()
 
-        super().__init__(index_type, index_sync=False)
+        super().__init__(index_converter, index_sync=False, cache=None)
 
         self._sources = [
-            source if source else NullDataSource(self._labels, index_type)
+            source if source else NullDataSource(index_converter, self._labels)
             for source in self._sources
         ]
 
         self._index = {
-            index: self._index_universal(index) for index in index_source_flat[::2]
+            index: self._index_converter.to_universal_index(index) for index in index_source_flat[::2]
         }
         if list(self._index.values()) != sorted(self._index.values()):
             raise ValueError(
                 "indecies in 'index_source' must be in strictly increasing order."
             )
+
+    def _fingerprint(self):
+        fingerprint_list = [source._fingerprint for source in self._sources]
+        return self._md5hash(*fingerprint_list)
 
     @property
     def labels(self):
@@ -653,7 +661,7 @@ class CompositeDataSource(BaseDataSource):
     def _get(self, *args, **kwargs):
         return NotImplemented
 
-    def get(self, start, end):
+    def get(self, start, end, refresh_cache=False):
         """
         Get data from source.
 
@@ -675,8 +683,8 @@ class CompositeDataSource(BaseDataSource):
         if (start is None) or (end is None):
             raise ValueError("'start' and 'end' can not be NoneType.")
 
-        start_uni = self._index_universal(start)
-        end_uni = self._index_universal(end)
+        start_uni = self._index_converter.to_universal_index(start)
+        end_uni = self._index_converter.to_universal_index(end)
 
         index_list = list(self._index.keys())
         index_uni_list = list(self._index.values())
@@ -690,7 +698,9 @@ class CompositeDataSource(BaseDataSource):
             first_source = sources_list.pop(0)
         else:
             index_list.insert(0, start)
-            sources_list.insert(0, first_source or NullDataSource(self._labels))
+            sources_list.insert(
+                0, first_source or NullDataSource(self._index_converter, self._labels)
+            )
 
         while index_uni_list and index_uni_list[-1] >= end_uni:
             index_uni_list.pop()
@@ -700,7 +710,7 @@ class CompositeDataSource(BaseDataSource):
             index_list.append(end)
 
         data_list = [
-            source_i.get(start_i, end_i)
+            source_i.get(start_i, end_i, refresh_cache=refresh_cache)
             for (start_i, end_i), source_i in zip(pairwise(index_list), sources_list)
         ]
         return pd.concat(data_list)
