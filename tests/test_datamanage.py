@@ -1,16 +1,22 @@
 import types
+from pathlib import Path
 from unittest.mock import Base, Mock, call, patch
 
 import numpy as np
 import pandas as pd
 import pytest
+from hashlib import md5
 
 from fourinsight.engineroom.utils import (
     CompositeDataSource,
     DrioDataSource,
     NullDataSource,
 )
-from fourinsight.engineroom.utils.datamanage import BaseDataSource
+from fourinsight.engineroom.utils.datamanage import (
+    BaseDataSource,
+    DatetimeIndexConverter,
+    IntegerIndexConverter,
+)
 
 
 class BaseDataSourceForTesting(BaseDataSource):
@@ -18,24 +24,75 @@ class BaseDataSourceForTesting(BaseDataSource):
     def labels(self):
         super().labels
 
+    @property
+    def _fingerprint(self):
+        super()._fingerprint
+
     def _get(self, start, end):
         super()._get(start, end)
 
 
 class Test_BaseDataSource:
     def test__init__(self):
-        source = BaseDataSourceForTesting("datetime", index_sync=True, tolerance=1)
-        assert source._index_type == "datetime"
+        source = BaseDataSourceForTesting(
+            DatetimeIndexConverter(),
+        )
+        assert isinstance(source._index_converter, DatetimeIndexConverter)
+        assert source._index_sync is False
+        assert source._tolerance is None
+        assert source._cache is None
+        assert source._cache_size is None
+        assert source._memory_cache == {}
+
+    def test__init__cache(self, tmp_path):
+        cache_dir = tmp_path / ".cache"
+        source = BaseDataSourceForTesting(
+            IntegerIndexConverter(),
+            index_sync=True,
+            tolerance=1,
+            cache=cache_dir,
+            cache_size=1,
+        )
+        assert isinstance(source._index_converter, IntegerIndexConverter)
         assert source._index_sync is True
         assert source._tolerance == 1
+        assert source._cache == Path(cache_dir)
+        assert source._cache_size == 1
+        assert source._memory_cache == {}
+        assert cache_dir.exists()
+
+    def test__init__raises_converter(self):
+        with pytest.raises(ValueError):
+            BaseDataSourceForTesting(Mock())
+
+    def test__init__raises_cache_size(self, tmp_path):
+        cache_dir = tmp_path / ".cache"
+        with pytest.raises(ValueError):
+            BaseDataSourceForTesting(
+                IntegerIndexConverter(), cache=cache_dir, cache_size=None
+            )
+
+    def test__md5hash(self):
+        source = BaseDataSourceForTesting(
+            DatetimeIndexConverter(),
+        )
+
+        out = source._md5hash("test", 1, 2.0)
+        expect = md5("test_1_2.0".encode()).hexdigest()
+        assert out == expect
+
+    def test__fingerprint(self):
+        source = BaseDataSourceForTesting(DatetimeIndexConverter())
+        with pytest.raises(NotImplementedError):
+            source._fingerprint
 
     def test_labels(self):
-        source = BaseDataSourceForTesting("datetime")
+        source = BaseDataSourceForTesting(DatetimeIndexConverter())
         with pytest.raises(NotImplementedError):
             source.labels
 
     def test__get(self):
-        source = BaseDataSourceForTesting("datetime")
+        source = BaseDataSourceForTesting(DatetimeIndexConverter())
         with pytest.raises(NotImplementedError):
             source._get("2020-01-01", "2021-01-01")
 
@@ -332,7 +389,7 @@ class Test_BaseDataSource:
 
         mock_get.return_value = data
 
-        source = BaseDataSourceForTesting("datetime", index_sync=False)
+        source = BaseDataSourceForTesting(DatetimeIndexConverter(), index_sync=False)
         df_out = source.get("<start-time>", "<end-time>")
 
         df_expect = pd.DataFrame(
@@ -402,7 +459,7 @@ class Test_BaseDataSource:
 
         mock_get.return_value = data
 
-        source = BaseDataSourceForTesting("datetime", index_sync=True, tolerance=0.2)
+        source = BaseDataSourceForTesting(DatetimeIndexConverter(), index_sync=True, tolerance=0.2)
         df_out = source.get("<start-time>", "<end-time>")
 
         df_expect = pd.DataFrame(
@@ -420,7 +477,7 @@ class Test_BaseDataSource:
 
     @patch.object(BaseDataSourceForTesting, "_get")
     def test_get_raises_no_tolerance(self, mock_get):
-        source = BaseDataSourceForTesting("datetime", index_sync=True, tolerance=None)
+        source = BaseDataSourceForTesting(DatetimeIndexConverter(), index_sync=True, tolerance=None)
 
         with pytest.raises(ValueError):
             source.get("<start-time>", "<end-time>")
@@ -456,7 +513,7 @@ class Test_BaseDataSource:
         mock_get.return_value = data
 
         source = BaseDataSourceForTesting(
-            "datetime", index_sync=True, tolerance=pd.to_timedelta("2s")
+            DatetimeIndexConverter(), index_sync=True, tolerance=pd.to_timedelta("2s")
         )
         df_out = source.get("<start-time>", "<end-time>")
 
@@ -474,9 +531,9 @@ class Test_BaseDataSource:
 
     @patch.object(BaseDataSourceForTesting, "get")
     def test_iter_index_mode_start(self, mock_get):
-        mock_get.side_effect = lambda start, end: (start, end)
+        mock_get.side_effect = lambda start, end, **kwargs: (start, end)
 
-        source = BaseDataSourceForTesting("datetime")
+        source = BaseDataSourceForTesting(DatetimeIndexConverter())
 
         start = [1, 2, 3]
         end = [2, 3, 4]
@@ -489,9 +546,9 @@ class Test_BaseDataSource:
 
     @patch.object(BaseDataSourceForTesting, "get")
     def test_iter_index_mode_end(self, mock_get):
-        mock_get.side_effect = lambda start, end: (start, end)
+        mock_get.side_effect = lambda start, end, **kwargs: (start, end)
 
-        source = BaseDataSourceForTesting("datetime")
+        source = BaseDataSourceForTesting(DatetimeIndexConverter())
 
         start = [1, 2, 3]
         end = [2, 3, 4]
@@ -504,9 +561,9 @@ class Test_BaseDataSource:
 
     @patch.object(BaseDataSourceForTesting, "get")
     def test_iter_index_mode_mid(self, mock_get):
-        mock_get.side_effect = lambda start, end: (start, end)
+        mock_get.side_effect = lambda start, end, **kwargs: (start, end)
 
-        source = BaseDataSourceForTesting("datetime")
+        source = BaseDataSourceForTesting(DatetimeIndexConverter())
 
         start = [1, 2, 3]
         end = [2, 3, 4]
@@ -519,9 +576,9 @@ class Test_BaseDataSource:
 
     @patch.object(BaseDataSourceForTesting, "get")
     def test_iter_raises_length(self, mock_get):
-        mock_get.side_effect = lambda start, end: (start, end)
+        mock_get.side_effect = lambda start, end, **kwargs: (start, end)
 
-        source = BaseDataSourceForTesting("datetime")
+        source = BaseDataSourceForTesting(DatetimeIndexConverter())
 
         start = [1, 2, 3]
         end = [2, 3]
@@ -530,53 +587,53 @@ class Test_BaseDataSource:
 
     @patch.object(BaseDataSourceForTesting, "get")
     def test_iter_raises_index_mode(self, mock_get):
-        mock_get.side_effect = lambda start, end: (start, end)
+        mock_get.side_effect = lambda start, end, **kwargs: (start, end)
 
-        source = BaseDataSourceForTesting("datetime")
+        source = BaseDataSourceForTesting(DatetimeIndexConverter())
 
         start = [1, 2, 3]
         end = [2, 3, 4]
         with pytest.raises(ValueError):
             source.iter(start, end, index_mode="invalide-mode")
 
-    def test__index_universal_callable(self):
-        index_type = Mock()
-        source = BaseDataSourceForTesting(index_type)
+    # def test__index_universal_callable(self):
+    #     index_type = Mock()
+    #     source = BaseDataSourceForTesting(index_type)
 
-        assert source._index_universal("2020-01-01 00:00") == index_type.return_value
-        index_type.assert_called_once_with("2020-01-01 00:00")
+    #     assert source._index_universal("2020-01-01 00:00") == index_type.return_value
+    #     index_type.assert_called_once_with("2020-01-01 00:00")
 
-    def test__index_universal_datetime(self):
-        source = BaseDataSourceForTesting("datetime")
+    # def test__index_universal_datetime(self):
+    #     source = BaseDataSourceForTesting("datetime")
 
-        index_out = source._index_universal("2020-01-01 00:00")
-        index_expect = 1577836800000000000
-        assert index_out == index_expect
+    #     index_out = source._index_universal("2020-01-01 00:00")
+    #     index_expect = 1577836800000000000
+    #     assert index_out == index_expect
 
-    def test__index_universal_datetime_list(self):
-        source = BaseDataSourceForTesting("datetime")
+    # def test__index_universal_datetime_list(self):
+    #     source = BaseDataSourceForTesting("datetime")
 
-        index_out = source._index_universal(
-            ["2020-01-01 00:00", "2020-01-01 01:00", "2020-01-01 02:00"]
-        )
-        index_expect = np.array(
-            [1577836800000000000, 1577840400000000000, 1577844000000000000]
-        )
-        np.testing.assert_array_equal(index_out, index_expect)
+    #     index_out = source._index_universal(
+    #         ["2020-01-01 00:00", "2020-01-01 01:00", "2020-01-01 02:00"]
+    #     )
+    #     index_expect = np.array(
+    #         [1577836800000000000, 1577840400000000000, 1577844000000000000]
+    #     )
+    #     np.testing.assert_array_equal(index_out, index_expect)
 
-    def test__index_universal_integer(self):
-        source = BaseDataSourceForTesting("integer")
+    # def test__index_universal_integer(self):
+    #     source = BaseDataSourceForTesting("integer")
 
-        index_out = source._index_universal(1)
-        index_expect = 1
-        assert index_out == index_expect
+    #     index_out = source._index_universal(1)
+    #     index_expect = 1
+    #     assert index_out == index_expect
 
-    def test__index_universal_integer_list(self):
-        source = BaseDataSourceForTesting("integer")
+    # def test__index_universal_integer_list(self):
+    #     source = BaseDataSourceForTesting("integer")
 
-        index_out = source._index_universal([1, 2, 3])
-        index_expect = np.array([1, 2, 3])
-        np.testing.assert_array_equal(index_out, index_expect)
+    #     index_out = source._index_universal([1, 2, 3])
+    #     index_expect = np.array([1, 2, 3])
+    #     np.testing.assert_array_equal(index_out, index_expect)
 
 
 class Test_DrioDataSource:
@@ -590,8 +647,11 @@ class Test_DrioDataSource:
         source = DrioDataSource(
             drio_client,
             labels,
+            index_type="datetime",
             index_sync=True,
             tolerance=1,
+            cache=None,
+            cache_size=None,
             convert_date=False,
             raise_empty=True,
         )
@@ -602,6 +662,9 @@ class Test_DrioDataSource:
         assert source._index_sync is True
         assert source._tolerance == 1
         assert source._get_kwargs == {"convert_date": False, "raise_empty": True}
+        assert isinstance(source._index_converter, DatetimeIndexConverter)
+        assert source._cache is None
+        assert source._cache_size == "24H"
 
     def test__labels(self):
         labels = {
