@@ -198,7 +198,7 @@ class BaseDataSource(ABC):
 
     @abstractproperty
     def _fingerprint(self):
-        return NotImplementedError()
+        raise NotImplementedError()
 
     @abstractproperty
     def labels(self):
