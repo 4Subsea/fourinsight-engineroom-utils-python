@@ -171,12 +171,12 @@ class BaseDataSource(ABC):
         if self._cache and not self._cache.exists():
             self._cache.mkdir()
 
+    def _md5hash(self, *args):
+        return md5("_".join(map(lambda x: str(x), args)).encode()).hexdigest()
+
     @abstractproperty
     def _fingerprint(self):
-        fingerprint_str = (
-            f"{self._index_converter}_{self._index_sync}_{self._tolerance}"
-        )
-        return md5(fingerprint_str.encode()).hexdigest()
+        return NotImplementedError()
 
     @abstractproperty
     def labels(self):
@@ -274,9 +274,9 @@ class BaseDataSource(ABC):
         df_list = []
         memory_cache_update = {}
         for start_universal_i, end_universal_i in chunks_universal:
-            chunk_id = md5(
-                f"{self._fingerprint}_{start_universal_i}_{end_universal_i}".encode()
-            ).hexdigest()
+            chunk_id = self._md5hash(
+                self._fingerprint, start_universal_i, end_universal_i
+            )
 
             print(start_universal_i, end_universal_i)
             if not refresh_cache and chunk_id in self._memory_cache.keys():
@@ -288,13 +288,19 @@ class BaseDataSource(ABC):
             else:
                 print("Get from source")
                 df_i = self._source_get(start_universal_i, end_universal_i)
-                df_i = df_i.loc[start_universal_i:end_universal_i]  # slice to ensure no chunk overlap
+                df_i = df_i.loc[
+                    start_universal_i:end_universal_i
+                ]  # slice to ensure no chunk overlap
                 self._cache_write(chunk_id, df_i)
             df_list.append(df_i)
             memory_cache_update[chunk_id] = df_i
 
-        start = self._index_converter.to_universal_index(start)  # needed to make slicig work
-        end = self._index_converter.to_universal_index(end)  # needed to make slicig work
+        start = self._index_converter.to_universal_index(
+            start
+        )  # needed to make slicig work
+        end = self._index_converter.to_universal_index(
+            end
+        )  # needed to make slicig work
         self._memory_cache = memory_cache_update
         return pd.concat(df_list).loc[start:end]
 
@@ -494,11 +500,18 @@ class DrioDataSource(BaseDataSource):
 
     @property
     def _fingerprint(self):
-        fingerprint_str = (
-            f"{self._labels}_{self._get_kwargs}"
-            f"{self._index_converter}_{self._index_sync}_{self._tolerance}"
+        return self._md5hash(
+            self._labels,
+            self._get_kwargs,
+            self._index_converter,
+            self._index_sync,
+            self._tolerance,
         )
-        return md5(fingerprint_str.encode()).hexdigest()
+        # fingerprint_str = (
+        #     f"{self._labels}_{self._get_kwargs}"
+        #     f"{self._index_converter}_{self._index_sync}_{self._tolerance}"
+        # )
+        # return md5(fingerprint_str.encode()).hexdigest()
 
     def _get(self, start, end):
         """
