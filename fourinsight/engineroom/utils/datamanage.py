@@ -288,21 +288,15 @@ class BaseDataSource(ABC):
             else:
                 print("Get from source")
                 df_i = self._source_get(start_universal_i, end_universal_i)
-                df_i = df_i.loc[
-                    start_universal_i:end_universal_i
-                ]  # slice to ensure no chunk overlap
-                self._cache_write(chunk_id, df_i)
+                df_i = df_i.loc[start_universal_i:end_universal_i]  # ensure no overlap
+                self._cache_write(chunk_id, df_i.copy(deep=True))
             df_list.append(df_i)
             memory_cache_update[chunk_id] = df_i
 
-        start = self._index_converter.to_universal_index(
-            start
-        )  # needed to make slicig work
-        end = self._index_converter.to_universal_index(
-            end
-        )  # needed to make slicig work
+        start_universal = self._index_converter.to_universal_index(start)
+        end_universal = self._index_converter.to_universal_index(end)
         self._memory_cache = memory_cache_update
-        return pd.concat(df_list).loc[start:end]
+        return pd.concat(df_list).loc[start_universal:end_universal]
 
     @staticmethod
     def _sync_data(data, tolerance):
