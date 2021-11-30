@@ -251,9 +251,8 @@ class BaseDataSource(ABC):
         elif end_part < end:
             end_part += 2.0 * partition
 
-        num_partitions = int((end_part - start_part) / partition)
+        num_partitions = (end_part - start_part) // partition
         index_chunks = start_part + partition * np.arange(0, num_partitions, 1)
-        # index_chunks = np.arange(start_part, end_part, partition)
         return zip(index_chunks[:-1], index_chunks[1:])
 
     def _is_cached(self, id_):
@@ -301,9 +300,9 @@ class BaseDataSource(ABC):
             df_list.append(df_i)
             memory_cache_update[chunk_id] = df_i
 
+        self._memory_cache = memory_cache_update
         start_universal = self._index_converter.to_universal_index(start)
         end_universal = self._index_converter.to_universal_index(end)
-        self._memory_cache = memory_cache_update
         return pd.concat(df_list).loc[start_universal:end_universal]
 
     @staticmethod
