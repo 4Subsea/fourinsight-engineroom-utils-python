@@ -69,6 +69,10 @@ class BaseIndexConverter:
         """Convert index partition to universal type"""
         raise NotImplementedError()
 
+    def to_native_index(self, index):
+        """Convert index to native type"""
+        return self.to_universal_index(index)
+
     @abstractproperty
     def reference(self):
         """Index reference"""
@@ -294,8 +298,11 @@ class BaseDataSource(ABC):
                 df_i = self._cache_read(chunk_id)
             else:
                 print("Get from source")
-                df_i = self._source_get(start_universal_i, end_universal_i)
-                df_i = df_i.loc[start_universal_i:end_universal_i]  # ensure no overlap
+                df_i = self._source_get(
+                    self._index_converter.to_native_index(start_universal_i),
+                    self._index_converter.to_native_index(end_universal_i)
+                )
+                df_i = df_i.loc[start_universal_i:end_universal_i]
                 self._cache_write(chunk_id, df_i.copy(deep=True))
             df_list.append(df_i)
             memory_cache_update[chunk_id] = df_i
