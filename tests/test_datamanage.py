@@ -16,6 +16,7 @@ from fourinsight.engineroom.utils.datamanage import (
     BaseDataSource,
     DatetimeIndexConverter,
     IntegerIndexConverter,
+    FloatIndexConverter,
 )
 
 
@@ -123,7 +124,50 @@ class Test_BaseDataSource:
             "d": series_d,
         }
 
-        df_out = BaseDataSource._sync_data(data, pd.to_timedelta("2s"))
+        source = BaseDataSourceForTesting(DatetimeIndexConverter())
+        df_out = source._sync_data(data, pd.to_timedelta("2s"))
+
+        df_expect = pd.DataFrame(
+            data={
+                "a": values_a,
+                "b": values_b,
+                "c": values_c,
+                "d": values_d,
+            },
+            index=index_c,
+        )
+
+        pd.testing.assert_frame_equal(df_out, df_expect)
+
+    def test__sync_data_datetimeindex2(self):
+        index_a = pd.date_range("2020-01-01 00:00", "2020-02-01 00:00", freq="5s")
+        values_a = np.random.random(len(index_a))
+        series_a = pd.Series(data=values_a, index=index_a)
+
+        noise_b = pd.to_timedelta(np.random.randint(0, 999, len(index_a)), "ms")
+        index_b = index_a + noise_b
+        values_b = np.random.random(len(index_b))
+        series_b = pd.Series(data=values_b, index=index_b)
+
+        noise_c = pd.to_timedelta(np.random.randint(0, 999, len(index_a)), "ms")
+        index_c = index_a - noise_c
+        values_c = np.random.random(len(index_c))
+        series_c = pd.Series(data=values_c, index=index_c)
+
+        noise_d = pd.to_timedelta(np.random.randint(0, 999, len(index_a)), "ms")
+        index_d = index_a + noise_d
+        values_d = np.random.random(len(index_d))
+        series_d = pd.Series(data=values_d, index=index_d)
+
+        data = {
+            "a": series_a,
+            "b": series_b,
+            "c": series_c,
+            "d": series_d,
+        }
+
+        source = BaseDataSourceForTesting(DatetimeIndexConverter())
+        df_out = source._sync_data(data, "2s")
 
         df_expect = pd.DataFrame(
             data={
@@ -164,7 +208,8 @@ class Test_BaseDataSource:
             "d": series_d,
         }
 
-        df_out = BaseDataSource._sync_data(data, 4)
+        source = BaseDataSourceForTesting(IntegerIndexConverter())
+        df_out = source._sync_data(data, 4)
 
         df_expect = pd.DataFrame(
             data={
@@ -205,7 +250,8 @@ class Test_BaseDataSource:
             "d": series_d,
         }
 
-        df_out = BaseDataSource._sync_data(data, 2.0 / 100.0)
+        source = BaseDataSourceForTesting(FloatIndexConverter())
+        df_out = source._sync_data(data, 2.0 / 100.0)
 
         df_expect = pd.DataFrame(
             data={
@@ -243,7 +289,8 @@ class Test_BaseDataSource:
             "d": series_d,
         }
 
-        df_out = BaseDataSource._sync_data(data, 0.2)
+        source = BaseDataSourceForTesting(FloatIndexConverter())
+        df_out = source._sync_data(data, 0.2)
 
         df_expect = pd.DataFrame(
             data={
@@ -281,7 +328,8 @@ class Test_BaseDataSource:
             "d": series_d,
         }
 
-        df_out = BaseDataSource._sync_data(data, 0.2)
+        source = BaseDataSourceForTesting(FloatIndexConverter())
+        df_out = source._sync_data(data, 0.2)
 
         df_expect = pd.DataFrame(
             data={
@@ -319,7 +367,8 @@ class Test_BaseDataSource:
             "d": series_d,
         }
 
-        df_out = BaseDataSource._sync_data(
+        source = BaseDataSourceForTesting(FloatIndexConverter())
+        df_out = source._sync_data(
             data, 0.0001
         )  # small tolerance yields no syncing
 
@@ -459,7 +508,7 @@ class Test_BaseDataSource:
 
         mock_get.return_value = data
 
-        source = BaseDataSourceForTesting(DatetimeIndexConverter(), index_sync=True, tolerance=0.2)
+        source = BaseDataSourceForTesting(FloatIndexConverter(), index_sync=True, tolerance=0.2)
         df_out = source.get("<start-time>", "<end-time>")
 
         df_expect = pd.DataFrame(

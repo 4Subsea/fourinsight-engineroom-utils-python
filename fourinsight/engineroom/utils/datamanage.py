@@ -129,6 +129,24 @@ class IntegerIndexConverter(BaseIndexConverter):
         return "IntegerIndexConverter"
 
 
+class FloatIndexConverter(BaseIndexConverter):
+    def to_universal_index(self, index):
+        """Convert index to universal type"""
+        return np.float64(np.asarray_chkfinite(index))
+
+    def to_universal_delta(self, delta):
+        """Convert index partition to universal type"""
+        return float(delta)
+
+    @abstractproperty
+    def reference(self):
+        """Index reference"""
+        return 0.0
+
+    def __repr__(self):
+        return "FloatIndexConverter"
+
+
 class BaseDataSource(ABC):
     """
     Abstract class for data sources.
@@ -324,8 +342,7 @@ class BaseDataSource(ABC):
         end_universal = self._index_converter.to_universal_index(end)
         return pd.concat(df_list).loc[start_universal:end_universal]
 
-    @staticmethod
-    def _sync_data(data, tolerance):
+    def _sync_data(self, data, tolerance):
         """
         Sync data index.
 
@@ -349,6 +366,8 @@ class BaseDataSource(ABC):
         pandas.DataFrame
             Synchronized data.
         """
+
+        tolerance = self._index_converter.to_universal_delta(tolerance)
         index_common = np.sort(
             np.unique(np.concatenate([series.index for series in data.values()]))
         )
