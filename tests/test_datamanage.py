@@ -34,7 +34,7 @@ class BaseDataSourceForTesting(BaseDataSource):
 
 
 class Test_BaseDataSource:
-    def test__init__(self):
+    def test__init__default(self):
         source = BaseDataSourceForTesting(
             DatetimeIndexConverter(),
         )
@@ -412,7 +412,7 @@ class Test_BaseDataSource:
         pd.testing.assert_frame_equal(df_out, df_expect)
 
     @patch.object(BaseDataSourceForTesting, "_get")
-    def test_get_nosync(self, mock_get):
+    def test__source_get_nosync(self, mock_get):
         index_a = [1.0, 2.0, 3.0]
         values_a = ["value_a1", 2.0, "value_a3"]
         series_a = pd.Series(data=values_a, index=index_a)
@@ -439,7 +439,7 @@ class Test_BaseDataSource:
         mock_get.return_value = data
 
         source = BaseDataSourceForTesting(DatetimeIndexConverter(), index_sync=False)
-        df_out = source.get("<start-time>", "<end-time>")
+        df_out = source._source_get("<start-time>", "<end-time>")
 
         df_expect = pd.DataFrame(
             data={
@@ -482,7 +482,7 @@ class Test_BaseDataSource:
         mock_get.assert_called_once_with("<start-time>", "<end-time>")
 
     @patch.object(BaseDataSourceForTesting, "_get")
-    def test_get_sync(self, mock_get):
+    def test_source_get_sync(self, mock_get):
         index_a = [1.0, 2.0, 3.0]
         values_a = ["value_a1", 2.0, "value_a3"]
         series_a = pd.Series(data=values_a, index=index_a)
@@ -509,7 +509,7 @@ class Test_BaseDataSource:
         mock_get.return_value = data
 
         source = BaseDataSourceForTesting(FloatIndexConverter(), index_sync=True, tolerance=0.2)
-        df_out = source.get("<start-time>", "<end-time>")
+        df_out = source._source_get("<start-time>", "<end-time>")
 
         df_expect = pd.DataFrame(
             data={
@@ -525,14 +525,14 @@ class Test_BaseDataSource:
         mock_get.assert_called_once_with("<start-time>", "<end-time>")
 
     @patch.object(BaseDataSourceForTesting, "_get")
-    def test_get_raises_no_tolerance(self, mock_get):
+    def test_source_get_raises_no_tolerance(self, mock_get):
         source = BaseDataSourceForTesting(DatetimeIndexConverter(), index_sync=True, tolerance=None)
 
         with pytest.raises(ValueError):
-            source.get("<start-time>", "<end-time>")
+            source._source_get("<start-time>", "<end-time>")
 
     @patch.object(BaseDataSourceForTesting, "_get")
-    def test_get_sync_datetimeindex(self, mock_get):
+    def test_source_get_sync_datetimeindex(self, mock_get):
         index_a = pd.date_range("2020-01-01 00:00", "2020-02-01 00:00", freq="5s")
         values_a = np.random.random(len(index_a))
         series_a = pd.Series(data=values_a, index=index_a)
@@ -564,7 +564,7 @@ class Test_BaseDataSource:
         source = BaseDataSourceForTesting(
             DatetimeIndexConverter(), index_sync=True, tolerance=pd.to_timedelta("2s")
         )
-        df_out = source.get("<start-time>", "<end-time>")
+        df_out = source._source_get("<start-time>", "<end-time>")
 
         df_expect = pd.DataFrame(
             data={
