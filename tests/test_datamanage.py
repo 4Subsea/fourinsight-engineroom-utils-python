@@ -645,6 +645,90 @@ class Test_BaseDataSource:
         with pytest.raises(ValueError):
             source.iter(start, end, index_mode="invalide-mode")
 
+    @patch.object(BaseDataSourceForTesting, "_source_get")
+    def test_get_nocache(self, mock_source_get):
+        source = BaseDataSourceForTesting(DatetimeIndexConverter(), cache=None)
+
+        out = source.get("<start>", "<end>")
+        assert out == mock_source_get.return_value
+        mock_source_get.assert_called_once_with("<start>", "<end>")
+
+    @patch.object(BaseDataSourceForTesting, "_cache_source_get")
+    def test_get_cache(self, mock_cache_source_get, tmp_path):
+        cache_dir = tmp_path / ".cache"
+        source = BaseDataSourceForTesting(DatetimeIndexConverter(), cache=cache_dir, cache_size="1H")
+
+        out = source.get("<start>", "<end>")
+        assert out == mock_cache_source_get.return_value
+        mock_cache_source_get.assert_called_once_with("<start>", "<end>", refresh_cache=False)
+
+    @patch.object(BaseDataSourceForTesting, "_cache_source_get")
+    def test_get_cache_refresh(self, mock_cache_source_get, tmp_path):
+        cache_dir = tmp_path / ".cache"
+        source = BaseDataSourceForTesting(DatetimeIndexConverter(), cache=cache_dir, cache_size="1H")
+
+        out = source.get("<start>", "<end>", refresh_cache=True)
+        assert out == mock_cache_source_get.return_value
+        mock_cache_source_get.assert_called_once_with("<start>", "<end>", refresh_cache=True)
+
+    def test_partition_start_end_int(self):
+        out = BaseDataSourceForTesting._partition_start_end(3, 9, 3, 2)
+        expect = [(2, 5), (5, 8), (8, 11)]
+        assert list(out) == expect
+
+    def test_partition_start_end_float(self):
+        out = BaseDataSourceForTesting._partition_start_end(3.0, 9.0, 3.2, 2.1)
+        expect = [(2.1, 5.3), (5.3, 8.5), (8.5, 11.7)]
+        np.testing.assert_almost_equal(list(out), expect)
+
+    def test_partition_start_end_datetime(self):
+        start = pd.to_datetime("2020-01-01 03:00", utc=True)
+        end = pd.to_datetime("2020-01-01 09:00", utc=True)
+        partition = pd.to_timedelta("3H")
+        reference = pd.to_datetime("2020-01-01 02:00", utc=True)
+        out = BaseDataSourceForTesting._partition_start_end(start, end, partition, reference)
+        expect = [
+            (pd.to_datetime("2020-01-01 02:00", utc=True), pd.to_datetime("2020-01-01 05:00", utc=True)),
+            (pd.to_datetime("2020-01-01 05:00", utc=True), pd.to_datetime("2020-01-01 08:00", utc=True)),
+            (pd.to_datetime("2020-01-01 08:00", utc=True), pd.to_datetime("2020-01-01 11:00", utc=True)),
+        ]
+        assert list(out) == expect
+
+    def test__is_cached_false(self, tmp_path):
+        cache_dir = tmp_path / ".cache"
+        source = BaseDataSourceForTesting(DatetimeIndexConverter(), cache=cache_dir, cache_size="1H")
+        assert cache_dir.exists()
+        assert source._is_cached("filename") is False
+
+    def test__is_cached_true(self, tmp_path):
+        cache_dir = tmp_path / ".cache"
+        source = BaseDataSourceForTesting(DatetimeIndexConverter(), cache=cache_dir, cache_size="1H")
+        assert cache_dir.exists()
+        (cache_dir / "filename").touch()
+        assert source._is_cached("filename") is True
+
+    def test__cache_read(self, tmp_path):
+        cache_dir = tmp_path / ".cache"
+        source = BaseDataSourceForTesting(DatetimeIndexConverter(), cache=cache_dir, cache_size="1H")
+
+        df = pd.DataFrame(data={"filename": [2, 4, 6], "a": [1, 2, 3]})
+        df.to_feather(cache_dir / "filename")
+
+        df_out = source._cache_read("filename")
+        df_expect = pd.DataFrame(data={"a": [1, 2, 3]}, index=[2, 4, 6])
+        pd.testing.assert_frame_equal(df_out, df_expect)
+
+    def test__cache_write(self, tmp_path):
+        cache_dir = tmp_path / ".cache"
+        source = BaseDataSourceForTesting(DatetimeIndexConverter(), cache=cache_dir, cache_size="1H")
+
+        df = pd.DataFrame(data={"a": [1, 2, 3]}, index=[2, 4, 6])
+        source._cache_write("filename", df)
+
+        df_out = pd.read_feather(cache_dir / "filename")
+        df_expect = pd.DataFrame(data={"filename": [2, 4, 6], "a": [1, 2, 3]})
+        pd.testing.assert_frame_equal(df_out, df_expect)
+
 
 class Test_DrioDataSource:
     def test__init__(self):
