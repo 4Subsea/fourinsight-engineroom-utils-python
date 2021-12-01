@@ -731,22 +731,22 @@ class Test_DrioDataSource:
 
 class Test_NullDataSource:
     def test__init__(self):
-        source = NullDataSource(labels=["a", "b", "c"], index_type="datetime")
+        source = NullDataSource(DatetimeIndexConverter(), labels=["a", "b", "c"])
         assert isinstance(source, BaseDataSource)
         assert source._labels == ("a", "b", "c")
-        assert source._index_type == "datetime"
+        assert isinstance(source._index_converter, DatetimeIndexConverter)
         assert source._index_sync is False
 
     def test_labels(self):
-        source = NullDataSource(labels=["a", "b", "c"])
+        source = NullDataSource(DatetimeIndexConverter(), labels=["a", "b", "c"])
         assert source.labels == ("a", "b", "c")
 
     def test_labels_none(self):
-        source = NullDataSource(labels=None)
+        source = NullDataSource(DatetimeIndexConverter(), labels=None)
         assert source.labels == ()
 
     def test__get(self):
-        source = NullDataSource(labels=["a", "b", "c"])
+        source = NullDataSource(DatetimeIndexConverter(), labels=["a", "b", "c"])
         data_out = source._get("2020-01-01 00:00", "2021-01-01 00:00")
 
         data_expect = {
