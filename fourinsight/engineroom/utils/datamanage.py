@@ -579,6 +579,7 @@ class NullDataSource(BaseDataSource):
         """Data source labels."""
         return tuple(self._labels)
 
+    @property
     def _fingerprint(self):
         return self._md5hash(self._index_converter, self._labels)
 

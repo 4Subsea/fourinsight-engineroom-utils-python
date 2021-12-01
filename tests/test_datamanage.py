@@ -745,6 +745,12 @@ class Test_NullDataSource:
         source = NullDataSource(DatetimeIndexConverter(), labels=None)
         assert source.labels == ()
 
+    def test__fingerprint(self):
+        source = NullDataSource(DatetimeIndexConverter(), labels=["a", "b", "c"])
+        out = source._fingerprint
+        expect = md5(("DatetimeIndexConverter_" + str(("a", "b", "c"))).encode()).hexdigest()
+        assert out == expect
+
     def test__get(self):
         source = NullDataSource(DatetimeIndexConverter(), labels=["a", "b", "c"])
         data_out = source._get("2020-01-01 00:00", "2021-01-01 00:00")
@@ -767,7 +773,7 @@ class Test_CompositeDataSource:
             "C": "d40fcb53-cce8-4f1a-9772-c5640db29c18",
         }
         drio_source = DrioDataSource(drio_client, labels, index_type="datetime")
-        null_source = NullDataSource(labels=["C", "A", "B"], index_type="datetime")
+        null_source = NullDataSource(DatetimeIndexConverter(), labels=["C", "A", "B"])
         index_source = [
             ("1999-01-01 00:00", None),
             ("2020-01-01 00:00", drio_source),
@@ -779,7 +785,7 @@ class Test_CompositeDataSource:
 
         assert isinstance(source, BaseDataSource)
         assert source._labels == ("A", "B", "C")
-        assert source._index_type == "datetime"
+        assert source._index_converter == DatetimeIndexConverter()
         np.testing.assert_array_equal(
             list(source._index.values()),
             pd.to_datetime(
@@ -791,7 +797,7 @@ class Test_CompositeDataSource:
                     "2020-01-01 06:00",
                 ],
                 utc=True,
-            ).values.astype("int64"),
+            ),
         )
         np.testing.assert_array_equal(
             list(source._index.keys()),
