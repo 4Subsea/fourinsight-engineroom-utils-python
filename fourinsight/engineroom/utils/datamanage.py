@@ -58,7 +58,7 @@ import pandas as pd
 #     return np.int64(np.asarray_chkfinite(index))
 
 
-class BaseIndexConverter:
+class BaseIndexConverter(ABC):
     @abstractmethod
     def to_universal_index(self, index):
         """Convert index to universal type"""
@@ -120,7 +120,7 @@ class IntegerIndexConverter(BaseIndexConverter):
         """Convert index partition to universal type"""
         return int(delta)
 
-    @abstractproperty
+    @property
     def reference(self):
         """Index reference"""
         return 0
@@ -138,7 +138,7 @@ class FloatIndexConverter(BaseIndexConverter):
         """Convert index partition to universal type"""
         return float(delta)
 
-    @abstractproperty
+    @property
     def reference(self):
         """Index reference"""
         return 0.0
