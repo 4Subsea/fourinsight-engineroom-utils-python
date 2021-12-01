@@ -823,7 +823,7 @@ class Test_CompositeDataSource:
             "C": "d40fcb53-cce8-4f1a-9772-c5640db29c18",
         }
         drio_source = DrioDataSource(drio_client, labels, index_type="datetime")
-        null_source = NullDataSource(labels=["C", "A", "B"], index_type="datetime")
+        null_source = NullDataSource(DatetimeIndexConverter(), labels=["C", "A", "B"])
         index_source = [
             ("2020-01-01 00:00", drio_source),
             ("2020-01-01 02:00", null_source),
@@ -843,7 +843,7 @@ class Test_CompositeDataSource:
             "C": "d40fcb53-cce8-4f1a-9772-c5640db29c18",
         }
         drio_source = DrioDataSource(drio_client, labels, index_type="datetime")
-        null_source = NullDataSource(labels=["D", "A", "B"], index_type="datetime")
+        null_source = NullDataSource(DatetimeIndexConverter(), labels=["D", "A", "B"])
         index_source = [
             ("2020-01-01 00:00", drio_source),
             ("2020-01-01 02:00", null_source),
@@ -853,7 +853,7 @@ class Test_CompositeDataSource:
         with pytest.raises(ValueError):
             CompositeDataSource(index_source)
 
-    def test__init__raises_index_type(self):
+    def test__init__raises_index_converter(self):
         drio_client = Mock()
         labels = {
             "A": "8b1683bb-32a9-4e64-b122-6a0534eff592",
@@ -861,7 +861,7 @@ class Test_CompositeDataSource:
             "C": "d40fcb53-cce8-4f1a-9772-c5640db29c18",
         }
         drio_source = DrioDataSource(drio_client, labels, index_type="datetime")
-        null_source = NullDataSource(labels=["C", "A", "B"], index_type="integer")
+        null_source = NullDataSource(IntegerIndexConverter(), labels=["C", "A", "B"])
         index_source = [
             ("2020-01-01 00:00", drio_source),
             ("2020-01-01 02:00", null_source),
@@ -879,7 +879,7 @@ class Test_CompositeDataSource:
             "C": "d40fcb53-cce8-4f1a-9772-c5640db29c18",
         }
         drio_source = DrioDataSource(drio_client, labels, index_type="datetime")
-        null_source = NullDataSource(labels=["C", "A", "B"], index_type="datetime")
+        null_source = NullDataSource(DatetimeIndexConverter(), labels=["C", "A", "B"])
         index_source = [
             ("2020-01-01 00:00", drio_source),
             ("2020-01-01 02:00", null_source),
@@ -897,7 +897,7 @@ class Test_CompositeDataSource:
             "C": "d40fcb53-cce8-4f1a-9772-c5640db29c18",
         }
         source1 = DrioDataSource(drio_client, labels, index_type="datetime")
-        source2 = NullDataSource(labels=labels.keys(), index_type="datetime")
+        source2 = NullDataSource(DatetimeIndexConverter(), labels=labels.keys())
         source3 = DrioDataSource(drio_client, labels, index_type="datetime")
 
         # Ugly formatting by 'black'.
@@ -1046,10 +1046,10 @@ class Test_CompositeDataSource:
             "C": pd.Series([], dtype="object"),
         }
         index_source = [
-            (10, NullDataSource(labels=["A", "B", "C"], index_type="integer")),
-            (20, NullDataSource(labels=["A", "B", "C"], index_type="integer")),
-            (30, NullDataSource(labels=["A", "B", "C"], index_type="integer")),
-            (40, NullDataSource(labels=["A", "B", "C"], index_type="integer")),
+            (10, NullDataSource(IntegerIndexConverter(), labels=["A", "B", "C"])),
+            (20, NullDataSource(IntegerIndexConverter(), labels=["A", "B", "C"])),
+            (30, NullDataSource(IntegerIndexConverter(), labels=["A", "B", "C"])),
+            (40, NullDataSource(IntegerIndexConverter(), labels=["A", "B", "C"])),
         ]
         source = CompositeDataSource(index_source)
 
