@@ -113,11 +113,11 @@ class DatetimeIndexConverter(BaseIndexConverter):
 class IntegerIndexConverter(BaseIndexConverter):
     def to_universal_index(self, index):
         """Convert index to universal type"""
-        return np.int64(np.asarray_chkfinite(index))
+        return np.int64(index)
 
     def to_universal_delta(self, delta):
         """Convert index partition to universal type"""
-        return int(delta)
+        return np.int64(delta)
 
     @property
     def reference(self):
@@ -131,11 +131,11 @@ class IntegerIndexConverter(BaseIndexConverter):
 class FloatIndexConverter(BaseIndexConverter):
     def to_universal_index(self, index):
         """Convert index to universal type"""
-        return np.float64(np.asarray_chkfinite(index))
+        return np.float64(index)
 
     def to_universal_delta(self, delta):
         """Convert index partition to universal type"""
-        return float(delta)
+        return np.float64(delta)
 
     @property
     def reference(self):

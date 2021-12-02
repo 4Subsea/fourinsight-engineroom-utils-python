@@ -1250,3 +1250,114 @@ class Test_CompositeDataSource:
         mock_get.assert_has_calls(
             [call(0, 10), call(10, 20), call(20, 30), call(30, 40), call(40, 100)]
         )
+
+
+class Test_DatetimeIndexConverter:
+    def test_to_universal_index(self):
+        out = DatetimeIndexConverter().to_universal_index("2020-01-01 00:00")
+        expect = pd.to_datetime("2020-01-01 00:00", utc=True)
+        assert out == expect
+
+    def test_to_universal_index_arraylike(self):
+        out = DatetimeIndexConverter().to_universal_index(["2020-01-01 00:00", "2020-01-01 01:00", pd.to_datetime("2020-01-01 02:00").tz_localize(tz='Europe/Stockholm')])
+        expect = pd.to_datetime(["2020-01-01 00:00", "2020-01-01 01:00", pd.to_datetime("2020-01-01 02:00").tz_localize(tz='Europe/Stockholm')], utc=True)
+        np.testing.assert_array_equal(out, expect)
+
+    def test_to_universal_delta(self):
+        out = DatetimeIndexConverter().to_universal_delta("3H")
+        expect = pd.to_timedelta("3H")
+        assert out == expect
+
+    def test_to_universal_delta_arraylike(self):
+        out = DatetimeIndexConverter().to_universal_delta(["3H", "24H", pd.to_timedelta("2D")])
+        expect = pd.to_timedelta(["3H", "24H", pd.to_timedelta("2D")])
+        np.testing.assert_array_equal(out, expect)
+
+    def test_to_native_index(self):
+        out = DatetimeIndexConverter().to_native_index(DatetimeIndexConverter().to_universal_index("2020-01-01 00:00"))
+        expect = pd.to_datetime("2020-01-01 00:00", utc=True)
+        assert out == expect
+
+    def test_reference(self):
+        out = DatetimeIndexConverter().reference
+        expect = pd.to_datetime(0, utc=True)
+        assert out == expect
+
+    def test__repr__(self):
+        out = str(DatetimeIndexConverter())
+        expect = "DatetimeIndexConverter"
+        assert out == expect
+
+
+class Test_IntegerIndexConverter:
+    def test_to_universal_index_int(self):
+        out = IntegerIndexConverter().to_universal_index(3)
+        expect = 3
+        assert out == expect
+
+    def test_to_universal_index_arraylike(self):
+        out = IntegerIndexConverter().to_universal_index([2, 4.0, "3"])
+        expect = [2, 4, 3]
+        np.testing.assert_array_equal(out, expect)
+
+    def test_to_universal_delta(self):
+        out = IntegerIndexConverter().to_universal_delta(3)
+        expect = 3
+        assert out == expect
+
+    def test_to_universal_delta_arraylike(self):
+        out = IntegerIndexConverter().to_universal_delta([2, 4.0, "3"])
+        expect = [2, 4, 3]
+        np.testing.assert_array_equal(out, expect)
+
+    def test_to_native_index(self):
+        out = IntegerIndexConverter().to_native_index(IntegerIndexConverter().to_universal_index(3))
+        expect = 3
+        assert out == expect
+
+    def test_reference(self):
+        out = IntegerIndexConverter().reference
+        expect = 0
+        assert out == expect
+
+    def test__repr__(self):
+        out = str(IntegerIndexConverter())
+        expect = "IntegerIndexConverter"
+        assert out == expect
+
+
+class Test_FloatIndexConverter:
+    def test_to_universal_index_int(self):
+        out = FloatIndexConverter().to_universal_index(3)
+        expect = 3.0
+        assert out == pytest.approx(expect)
+
+    def test_to_universal_index_arraylike(self):
+        out = FloatIndexConverter().to_universal_index([2, 4.0, "3"])
+        expect = [2.0, 4.0, 3.0]
+        np.testing.assert_array_almost_equal(out, expect)
+
+    def test_to_universal_delta(self):
+        out = FloatIndexConverter().to_universal_delta(3)
+        expect = 3.0
+        assert out == pytest.approx(expect)
+
+    def test_to_universal_delta_arraylike(self):
+        out = FloatIndexConverter().to_universal_delta([2, 4.0, "3"])
+        expect = [2.0, 4.0, 3.0]
+        np.testing.assert_array_almost_equal(out, expect)
+
+    def test_to_native_index(self):
+        out = FloatIndexConverter().to_native_index(IntegerIndexConverter().to_universal_index(3))
+        expect = 3.0
+        assert out == pytest.approx(expect)
+
+    def test_reference(self):
+        out = FloatIndexConverter().reference
+        expect = 0.0
+        assert out == pytest.approx(expect)
+
+    def test__repr__(self):
+        out = str(FloatIndexConverter())
+        expect = "FloatIndexConverter"
+        assert out == expect
