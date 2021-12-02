@@ -10,10 +10,10 @@ import pytest
 from fourinsight.engineroom.utils import (
     CompositeDataSource,
     DrioDataSource,
-    NullDataSource,
 )
 from fourinsight.engineroom.utils.datamanage import (
     BaseDataSource,
+    _NullDataSource,
     DatetimeIndexConverter,
     FloatIndexConverter,
     IntegerIndexConverter,
@@ -914,22 +914,22 @@ class Test_DrioDataSource:
 
 class Test_NullDataSource:
     def test__init__(self):
-        source = NullDataSource(DatetimeIndexConverter(), labels=["a", "b", "c"])
+        source = _NullDataSource(DatetimeIndexConverter(), labels=["a", "b", "c"])
         assert isinstance(source, BaseDataSource)
         assert source._labels == ("a", "b", "c")
         assert isinstance(source._index_converter, DatetimeIndexConverter)
         assert source._index_sync is False
 
     def test_labels(self):
-        source = NullDataSource(DatetimeIndexConverter(), labels=["a", "b", "c"])
+        source = _NullDataSource(DatetimeIndexConverter(), labels=["a", "b", "c"])
         assert source.labels == ("a", "b", "c")
 
     def test_labels_none(self):
-        source = NullDataSource(DatetimeIndexConverter(), labels=None)
+        source = _NullDataSource(DatetimeIndexConverter(), labels=None)
         assert source.labels == ()
 
     def test__fingerprint(self):
-        source = NullDataSource(DatetimeIndexConverter(), labels=["a", "b", "c"])
+        source = _NullDataSource(DatetimeIndexConverter(), labels=["a", "b", "c"])
         out = source._fingerprint
         expect = md5(
             ("DatetimeIndexConverter_" + str(("a", "b", "c"))).encode()
@@ -937,7 +937,7 @@ class Test_NullDataSource:
         assert out == expect
 
     def test__get(self):
-        source = NullDataSource(DatetimeIndexConverter(), labels=["a", "b", "c"])
+        source = _NullDataSource(DatetimeIndexConverter(), labels=["a", "b", "c"])
         data_out = source._get("2020-01-01 00:00", "2021-01-01 00:00")
 
         data_expect = {
@@ -958,7 +958,7 @@ class Test_CompositeDataSource:
             "C": "d40fcb53-cce8-4f1a-9772-c5640db29c18",
         }
         drio_source = DrioDataSource(drio_client, labels, index_type="datetime")
-        null_source = NullDataSource(DatetimeIndexConverter(), labels=["C", "A", "B"])
+        null_source = _NullDataSource(DatetimeIndexConverter(), labels=["C", "A", "B"])
         index_source = [
             ("1999-01-01 00:00", None),
             ("2020-01-01 00:00", drio_source),
@@ -994,11 +994,11 @@ class Test_CompositeDataSource:
                 "2020-01-01 06:00",
             ],
         )
-        assert isinstance(source._sources[0], NullDataSource)
+        assert isinstance(source._sources[0], _NullDataSource)
         assert isinstance(source._sources[1], DrioDataSource)
-        assert isinstance(source._sources[2], NullDataSource)
+        assert isinstance(source._sources[2], _NullDataSource)
         assert isinstance(source._sources[3], DrioDataSource)
-        assert isinstance(source._sources[4], NullDataSource)
+        assert isinstance(source._sources[4], _NullDataSource)
 
     def test__init__raise_wrong_order(self):
         drio_client = Mock()
@@ -1008,7 +1008,7 @@ class Test_CompositeDataSource:
             "C": "d40fcb53-cce8-4f1a-9772-c5640db29c18",
         }
         drio_source = DrioDataSource(drio_client, labels, index_type="datetime")
-        null_source = NullDataSource(DatetimeIndexConverter(), labels=["C", "A", "B"])
+        null_source = _NullDataSource(DatetimeIndexConverter(), labels=["C", "A", "B"])
         index_source = [
             ("2020-01-01 00:00", drio_source),
             ("2020-01-01 02:00", null_source),
@@ -1028,7 +1028,7 @@ class Test_CompositeDataSource:
             "C": "d40fcb53-cce8-4f1a-9772-c5640db29c18",
         }
         drio_source = DrioDataSource(drio_client, labels, index_type="datetime")
-        null_source = NullDataSource(DatetimeIndexConverter(), labels=["D", "A", "B"])
+        null_source = _NullDataSource(DatetimeIndexConverter(), labels=["D", "A", "B"])
         index_source = [
             ("2020-01-01 00:00", drio_source),
             ("2020-01-01 02:00", null_source),
@@ -1046,7 +1046,7 @@ class Test_CompositeDataSource:
             "C": "d40fcb53-cce8-4f1a-9772-c5640db29c18",
         }
         drio_source = DrioDataSource(drio_client, labels, index_type="datetime")
-        null_source = NullDataSource(IntegerIndexConverter(), labels=["C", "A", "B"])
+        null_source = _NullDataSource(IntegerIndexConverter(), labels=["C", "A", "B"])
         index_source = [
             ("2020-01-01 00:00", drio_source),
             ("2020-01-01 02:00", null_source),
@@ -1064,7 +1064,7 @@ class Test_CompositeDataSource:
             "C": "d40fcb53-cce8-4f1a-9772-c5640db29c18",
         }
         drio_source = DrioDataSource(drio_client, labels, index_type="datetime")
-        null_source = NullDataSource(DatetimeIndexConverter(), labels=["C", "A", "B"])
+        null_source = _NullDataSource(DatetimeIndexConverter(), labels=["C", "A", "B"])
         index_source = [
             ("2020-01-01 00:00", drio_source),
             ("2020-01-01 02:00", null_source),
@@ -1082,7 +1082,7 @@ class Test_CompositeDataSource:
             "C": "d40fcb53-cce8-4f1a-9772-c5640db29c18",
         }
         source1 = DrioDataSource(drio_client, labels, index_type="datetime")
-        source2 = NullDataSource(DatetimeIndexConverter(), labels=labels.keys())
+        source2 = _NullDataSource(DatetimeIndexConverter(), labels=labels.keys())
         source3 = DrioDataSource(drio_client, labels, index_type="datetime")
 
         # Ugly formatting by 'black'.
@@ -1223,7 +1223,7 @@ class Test_CompositeDataSource:
             pd.testing.assert_frame_equal(data_out_left, data_expect)
             pd.testing.assert_frame_equal(data_out_right, data_expect)
 
-    @patch.object(NullDataSource, "_get")
+    @patch.object(_NullDataSource, "_get")
     def test_get_integer(self, mock_get):
         mock_get.return_value = {
             "A": pd.Series([], dtype="object"),
@@ -1231,10 +1231,10 @@ class Test_CompositeDataSource:
             "C": pd.Series([], dtype="object"),
         }
         index_source = [
-            (10, NullDataSource(IntegerIndexConverter(), labels=["A", "B", "C"])),
-            (20, NullDataSource(IntegerIndexConverter(), labels=["A", "B", "C"])),
-            (30, NullDataSource(IntegerIndexConverter(), labels=["A", "B", "C"])),
-            (40, NullDataSource(IntegerIndexConverter(), labels=["A", "B", "C"])),
+            (10, _NullDataSource(IntegerIndexConverter(), labels=["A", "B", "C"])),
+            (20, _NullDataSource(IntegerIndexConverter(), labels=["A", "B", "C"])),
+            (30, _NullDataSource(IntegerIndexConverter(), labels=["A", "B", "C"])),
+            (40, _NullDataSource(IntegerIndexConverter(), labels=["A", "B", "C"])),
         ]
         source = CompositeDataSource(index_source)
 

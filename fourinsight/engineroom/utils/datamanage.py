@@ -576,7 +576,7 @@ class DrioDataSource(BaseDataSource):
         return tuple(self._labels.keys())
 
 
-class NullDataSource(BaseDataSource):
+class _NullDataSource(BaseDataSource):
     """
     Will return empty data.
 
@@ -656,7 +656,7 @@ class CompositeDataSource(BaseDataSource):
         super().__init__(index_converter, index_sync=False, cache=None)
 
         self._sources = [
-            source if source else NullDataSource(index_converter, self._labels)
+            source if source else _NullDataSource(index_converter, self._labels)
             for source in self._sources
         ]
 
@@ -719,7 +719,7 @@ class CompositeDataSource(BaseDataSource):
         else:
             index_list.insert(0, start)
             sources_list.insert(
-                0, first_source or NullDataSource(self._index_converter, self._labels)
+                0, first_source or _NullDataSource(self._index_converter, self._labels)
             )
 
         while index_uni_list and index_uni_list[-1] >= end_uni:
