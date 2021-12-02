@@ -1,7 +1,7 @@
 import types
 from hashlib import md5
 from pathlib import Path
-from unittest.mock import Base, Mock, call, patch
+from unittest.mock import Mock, call, patch
 
 import numpy as np
 import pandas as pd
