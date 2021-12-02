@@ -586,12 +586,13 @@ class Test_BaseDataSource:
 
         start = [1, 2, 3]
         end = [2, 3, 4]
-        data_iter = source.iter(start, end, index_mode="start")
+        data_iter = source.iter(start, end, index_mode="start", refresh_cache=False)
 
         assert isinstance(data_iter, types.GeneratorType)
         for i, (index_i, data_i) in enumerate(data_iter):
             assert index_i == start[i]
             assert data_i == (start[i], end[i])
+            mock_get.assert_called_with(start[i], end[i], refresh_cache=False)
 
     @patch.object(BaseDataSourceForTesting, "get")
     def test_iter_index_mode_end(self, mock_get):
@@ -601,12 +602,13 @@ class Test_BaseDataSource:
 
         start = [1, 2, 3]
         end = [2, 3, 4]
-        data_iter = source.iter(start, end, index_mode="end")
+        data_iter = source.iter(start, end, index_mode="end", refresh_cache=True)
 
         assert isinstance(data_iter, types.GeneratorType)
         for i, (index_i, data_i) in enumerate(data_iter):
             assert index_i == end[i]
             assert data_i == (start[i], end[i])
+            mock_get.assert_called_with(start[i], end[i], refresh_cache=True)
 
     @patch.object(BaseDataSourceForTesting, "get")
     def test_iter_index_mode_mid(self, mock_get):
@@ -622,6 +624,7 @@ class Test_BaseDataSource:
         for i, (index_i, data_i) in enumerate(data_iter):
             assert index_i == start[i] + (end[i] - start[i]) / 2.0
             assert data_i == (start[i], end[i])
+            mock_get.assert_called_with(start[i], end[i], refresh_cache=False)
 
     @patch.object(BaseDataSourceForTesting, "get")
     def test_iter_raises_length(self, mock_get):
