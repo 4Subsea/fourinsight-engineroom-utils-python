@@ -264,6 +264,14 @@ class BaseDataSource(ABC):
         dataframe = dataframe.reset_index()
         dataframe.to_feather(self._cache / id_)
 
+    @staticmethod
+    def _slice(df, start, end):
+        """Slice dataframe and exclude endpoint"""
+        df = df.loc[start:end]
+        if df.index[-1] == end:
+            df = df.iloc[:-1]
+        return df
+
     def _cache_source_get(self, start, end, refresh_cache=False):
         """Get data from cache. Fall back to source if not available in cache."""
 
@@ -294,7 +302,7 @@ class BaseDataSource(ABC):
                     self._index_converter.to_native_index(start_universal_i),
                     self._index_converter.to_native_index(end_universal_i),
                 )
-                df_i = df_i.loc[start_universal_i:end_universal_i]
+                df_i = self._slice(df_i, start_universal_i, end_universal_i)
                 self._cache_write(chunk_id, df_i.copy(deep=True))
             df_list.append(df_i)
             memory_cache_update[chunk_id] = df_i
