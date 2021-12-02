@@ -1,11 +1,11 @@
 import types
+from hashlib import md5
 from pathlib import Path
 from unittest.mock import Base, Mock, call, patch
 
 import numpy as np
 import pandas as pd
 import pytest
-from hashlib import md5
 
 from fourinsight.engineroom.utils import (
     CompositeDataSource,
@@ -15,8 +15,8 @@ from fourinsight.engineroom.utils import (
 from fourinsight.engineroom.utils.datamanage import (
     BaseDataSource,
     DatetimeIndexConverter,
-    IntegerIndexConverter,
     FloatIndexConverter,
+    IntegerIndexConverter,
 )
 
 
@@ -368,9 +368,7 @@ class Test_BaseDataSource:
         }
 
         source = BaseDataSourceForTesting(FloatIndexConverter())
-        df_out = source._sync_data(
-            data, 0.0001
-        )  # small tolerance yields no syncing
+        df_out = source._sync_data(data, 0.0001)  # small tolerance yields no syncing
 
         df_expect = pd.DataFrame(
             data={
@@ -508,7 +506,9 @@ class Test_BaseDataSource:
 
         mock_get.return_value = data
 
-        source = BaseDataSourceForTesting(FloatIndexConverter(), index_sync=True, tolerance=0.2)
+        source = BaseDataSourceForTesting(
+            FloatIndexConverter(), index_sync=True, tolerance=0.2
+        )
         df_out = source._source_get("<start-time>", "<end-time>")
 
         df_expect = pd.DataFrame(
@@ -526,7 +526,9 @@ class Test_BaseDataSource:
 
     @patch.object(BaseDataSourceForTesting, "_get")
     def test_source_get_raises_no_tolerance(self, mock_get):
-        source = BaseDataSourceForTesting(DatetimeIndexConverter(), index_sync=True, tolerance=None)
+        source = BaseDataSourceForTesting(
+            DatetimeIndexConverter(), index_sync=True, tolerance=None
+        )
 
         with pytest.raises(ValueError):
             source._source_get("<start-time>", "<end-time>")
@@ -659,20 +661,28 @@ class Test_BaseDataSource:
     @patch.object(BaseDataSourceForTesting, "_cache_source_get")
     def test_get_cache(self, mock_cache_source_get, tmp_path):
         cache_dir = tmp_path / ".cache"
-        source = BaseDataSourceForTesting(DatetimeIndexConverter(), cache=cache_dir, cache_size="1H")
+        source = BaseDataSourceForTesting(
+            DatetimeIndexConverter(), cache=cache_dir, cache_size="1H"
+        )
 
         out = source.get("<start>", "<end>")
         assert out == mock_cache_source_get.return_value
-        mock_cache_source_get.assert_called_once_with("<start>", "<end>", refresh_cache=False)
+        mock_cache_source_get.assert_called_once_with(
+            "<start>", "<end>", refresh_cache=False
+        )
 
     @patch.object(BaseDataSourceForTesting, "_cache_source_get")
     def test_get_cache_refresh(self, mock_cache_source_get, tmp_path):
         cache_dir = tmp_path / ".cache"
-        source = BaseDataSourceForTesting(DatetimeIndexConverter(), cache=cache_dir, cache_size="1H")
+        source = BaseDataSourceForTesting(
+            DatetimeIndexConverter(), cache=cache_dir, cache_size="1H"
+        )
 
         out = source.get("<start>", "<end>", refresh_cache=True)
         assert out == mock_cache_source_get.return_value
-        mock_cache_source_get.assert_called_once_with("<start>", "<end>", refresh_cache=True)
+        mock_cache_source_get.assert_called_once_with(
+            "<start>", "<end>", refresh_cache=True
+        )
 
     def test_partition_start_end_int(self):
         out = BaseDataSourceForTesting._partition_start_end(3, 9, 3, 2)
@@ -689,30 +699,47 @@ class Test_BaseDataSource:
         end = pd.to_datetime("2020-01-01 09:00", utc=True)
         partition = pd.to_timedelta("3H")
         reference = pd.to_datetime("2020-01-01 02:00", utc=True)
-        out = BaseDataSourceForTesting._partition_start_end(start, end, partition, reference)
+        out = BaseDataSourceForTesting._partition_start_end(
+            start, end, partition, reference
+        )
         expect = [
-            (pd.to_datetime("2020-01-01 02:00", utc=True), pd.to_datetime("2020-01-01 05:00", utc=True)),
-            (pd.to_datetime("2020-01-01 05:00", utc=True), pd.to_datetime("2020-01-01 08:00", utc=True)),
-            (pd.to_datetime("2020-01-01 08:00", utc=True), pd.to_datetime("2020-01-01 11:00", utc=True)),
+            (
+                pd.to_datetime("2020-01-01 02:00", utc=True),
+                pd.to_datetime("2020-01-01 05:00", utc=True),
+            ),
+            (
+                pd.to_datetime("2020-01-01 05:00", utc=True),
+                pd.to_datetime("2020-01-01 08:00", utc=True),
+            ),
+            (
+                pd.to_datetime("2020-01-01 08:00", utc=True),
+                pd.to_datetime("2020-01-01 11:00", utc=True),
+            ),
         ]
         assert list(out) == expect
 
     def test__is_cached_false(self, tmp_path):
         cache_dir = tmp_path / ".cache"
-        source = BaseDataSourceForTesting(DatetimeIndexConverter(), cache=cache_dir, cache_size="1H")
+        source = BaseDataSourceForTesting(
+            DatetimeIndexConverter(), cache=cache_dir, cache_size="1H"
+        )
         assert cache_dir.exists()
         assert source._is_cached("filename") is False
 
     def test__is_cached_true(self, tmp_path):
         cache_dir = tmp_path / ".cache"
-        source = BaseDataSourceForTesting(DatetimeIndexConverter(), cache=cache_dir, cache_size="1H")
+        source = BaseDataSourceForTesting(
+            DatetimeIndexConverter(), cache=cache_dir, cache_size="1H"
+        )
         assert cache_dir.exists()
         (cache_dir / "filename").touch()
         assert source._is_cached("filename") is True
 
     def test__cache_read(self, tmp_path):
         cache_dir = tmp_path / ".cache"
-        source = BaseDataSourceForTesting(DatetimeIndexConverter(), cache=cache_dir, cache_size="1H")
+        source = BaseDataSourceForTesting(
+            DatetimeIndexConverter(), cache=cache_dir, cache_size="1H"
+        )
 
         df = pd.DataFrame(data={"filename": [2, 4, 6], "a": [1, 2, 3]})
         df.to_feather(cache_dir / "filename")
@@ -723,7 +750,9 @@ class Test_BaseDataSource:
 
     def test__cache_write(self, tmp_path):
         cache_dir = tmp_path / ".cache"
-        source = BaseDataSourceForTesting(DatetimeIndexConverter(), cache=cache_dir, cache_size="1H")
+        source = BaseDataSourceForTesting(
+            DatetimeIndexConverter(), cache=cache_dir, cache_size="1H"
+        )
 
         df = pd.DataFrame(data={"a": [1, 2, 3]}, index=[2, 4, 6])
         source._cache_write("filename", df)
@@ -734,7 +763,8 @@ class Test_BaseDataSource:
 
 
 class Test_DrioDataSource:
-    def test__init__(self):
+    def test__init__(self, tmp_path):
+        cache_dir = tmp_path / ".cache"
         drio_client = Mock()
         labels = {
             "a": "timeseriesid-a",
@@ -747,7 +777,7 @@ class Test_DrioDataSource:
             index_type="datetime",
             index_sync=True,
             tolerance=1,
-            cache=None,
+            cache=cache_dir,
             cache_size=None,
             convert_date=False,
             raise_empty=True,
@@ -760,8 +790,64 @@ class Test_DrioDataSource:
         assert source._tolerance == 1
         assert source._get_kwargs == {"convert_date": False, "raise_empty": True}
         assert isinstance(source._index_converter, DatetimeIndexConverter)
-        assert source._cache is None
+        assert source._cache == Path(cache_dir)
         assert source._cache_size == "24H"
+
+    def test__init__integer(self):
+        drio_client = Mock()
+        labels = {
+            "a": "timeseriesid-a",
+            "b": "timeseriesid-b",
+            "c": "timeseriesid-c",
+        }
+        source = DrioDataSource(
+            drio_client,
+            labels,
+            index_type="integer",
+        )
+
+        assert isinstance(source._index_converter, IntegerIndexConverter)
+        assert source._cache_size == 8.64e13
+
+    def test__init__index_type_raises(self):
+        drio_client = Mock()
+        labels = {
+            "a": "timeseriesid-a",
+            "b": "timeseriesid-b",
+            "c": "timeseriesid-c",
+        }
+
+        with pytest.raises(ValueError):
+            DrioDataSource(
+                drio_client,
+                labels,
+                index_type="invalid index type",
+            )
+
+    def test__fingerprint(self):
+        drio_client = Mock()
+        labels = {
+            "a": "timeseriesid-a",
+            "b": "timeseriesid-b",
+            "c": "timeseriesid-c",
+        }
+        source = DrioDataSource(
+            drio_client,
+            labels,
+            index_type="integer",
+            index_sync=False,
+            tolerance=1,
+            cache=None,
+            cache_size=None,
+            convert_date=False,
+            raise_empty=True,
+        )
+        out = source._fingerprint
+        get_kwargs = {"convert_date": False, "raise_empty": True}
+        expect = md5(
+            f"{labels}_{get_kwargs}_IntegerIndexConverter_False_1".encode()
+        ).hexdigest()
+        assert out == expect
 
     def test__labels(self):
         labels = {
@@ -845,7 +931,9 @@ class Test_NullDataSource:
     def test__fingerprint(self):
         source = NullDataSource(DatetimeIndexConverter(), labels=["a", "b", "c"])
         out = source._fingerprint
-        expect = md5(("DatetimeIndexConverter_" + str(("a", "b", "c"))).encode()).hexdigest()
+        expect = md5(
+            ("DatetimeIndexConverter_" + str(("a", "b", "c"))).encode()
+        ).hexdigest()
         assert out == expect
 
     def test__get(self):

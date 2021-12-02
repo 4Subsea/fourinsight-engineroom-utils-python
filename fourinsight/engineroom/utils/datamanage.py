@@ -19,7 +19,6 @@ except ImportError:
 import numpy as np
 import pandas as pd
 
-
 # def universal_datetime_index(index):
 #     """
 #     Convert datetime-like index to universal type.
