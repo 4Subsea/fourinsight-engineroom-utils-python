@@ -1,23 +1,20 @@
+import os
 import types
 from hashlib import md5
 from pathlib import Path
 from unittest.mock import Mock, call, patch
-import os
 
 import numpy as np
 import pandas as pd
 import pytest
 
-from fourinsight.engineroom.utils import (
-    CompositeDataSource,
-    DrioDataSource,
-)
+from fourinsight.engineroom.utils import CompositeDataSource, DrioDataSource
 from fourinsight.engineroom.utils.datamanage import (
     BaseDataSource,
-    _NullDataSource,
     DatetimeIndexConverter,
     FloatIndexConverter,
     IntegerIndexConverter,
+    _NullDataSource,
 )
 
 
@@ -764,9 +761,8 @@ class Test_BaseDataSource:
 
     @patch.object(BaseDataSourceForTesting, "_get")
     def test__cache_source_get(self, mock_get, tmp_path):
-
         def _get_side_effect(start, end):
-            index = np.arange(start, end+1, dtype="int64")
+            index = np.arange(start, end + 1, dtype="int64")
             values_a = [1.0] * len(index)
             values_b = [2.1] * len(index)
             df = pd.DataFrame(data={"a": values_a, "b": values_b}, index=index)
@@ -787,7 +783,7 @@ class Test_BaseDataSource:
         source = DataSource(IntegerIndexConverter(), cache=cache_dir, cache_size=10)
         out_file_cache = source._cache_source_get(5, 105, refresh_cache=False)
 
-        index = np.arange(5, 105+1, dtype="int64")
+        index = np.arange(5, 105 + 1, dtype="int64")
         values_a = [1.0] * len(index)
         values_b = [2.1] * len(index)
         expect = pd.DataFrame(data={"a": values_a, "b": values_b}, index=index)
@@ -796,23 +792,27 @@ class Test_BaseDataSource:
         pd.testing.assert_frame_equal(out_memory_cache, expect)
         pd.testing.assert_frame_equal(out_file_cache, expect)
 
-        mock_get.assert_has_calls([
-            call(0, 10),
-            call(10, 20),
-            call(20, 30),
-            call(30, 40),
-            call(40, 50),
-            call(50, 60),
-            call(60, 70),
-            call(70, 80),
-            call(80, 90),
-            call(90, 100),
-            call(100, 110),
-        ])
+        mock_get.assert_has_calls(
+            [
+                call(0, 10),
+                call(10, 20),
+                call(20, 30),
+                call(30, 40),
+                call(40, 50),
+                call(50, 60),
+                call(60, 70),
+                call(70, 80),
+                call(80, 90),
+                call(90, 100),
+                call(100, 110),
+            ]
+        )
 
         # memory cache
         assert len(source._memory_cache) == 11
-        pd.testing.assert_frame_equal(pd.concat(source._memory_cache.values()).sort_index().loc[5:105], expect)
+        pd.testing.assert_frame_equal(
+            pd.concat(source._memory_cache.values()).sort_index().loc[5:105], expect
+        )
 
         # file cache
         df_list = []
@@ -821,13 +821,14 @@ class Test_BaseDataSource:
             df_list.append(df_i)
 
         assert len(os.listdir(cache_dir)) == 11
-        pd.testing.assert_frame_equal(pd.concat(df_list).sort_index().loc[5:105], expect)
+        pd.testing.assert_frame_equal(
+            pd.concat(df_list).sort_index().loc[5:105], expect
+        )
 
     @patch.object(BaseDataSourceForTesting, "_get")
     def test__cache_source_get_refresh(self, mock_get, tmp_path):
-
         def _get_side_effect(start, end):
-            index = np.arange(start, end+1, dtype="int64")
+            index = np.arange(start, end + 1, dtype="int64")
             values_a = [1.0] * len(index)
             values_b = [2.1] * len(index)
             df = pd.DataFrame(data={"a": values_a, "b": values_b}, index=index)
@@ -849,36 +850,37 @@ class Test_BaseDataSource:
         assert len(source._memory_cache) == 11
         assert len(os.listdir(cache_dir)) == 11
 
-        mock_get.assert_has_calls([
-            call(0, 10),
-            call(10, 20),
-            call(20, 30),
-            call(30, 40),
-            call(40, 50),
-            call(50, 60),
-            call(60, 70),
-            call(70, 80),
-            call(80, 90),
-            call(90, 100),
-            call(100, 110),
-            call(0, 10),
-            call(10, 20),
-            call(20, 30),
-            call(30, 40),
-            call(40, 50),
-            call(50, 60),
-            call(60, 70),
-            call(70, 80),
-            call(80, 90),
-            call(90, 100),
-            call(100, 110),
-        ])
+        mock_get.assert_has_calls(
+            [
+                call(0, 10),
+                call(10, 20),
+                call(20, 30),
+                call(30, 40),
+                call(40, 50),
+                call(50, 60),
+                call(60, 70),
+                call(70, 80),
+                call(80, 90),
+                call(90, 100),
+                call(100, 110),
+                call(0, 10),
+                call(10, 20),
+                call(20, 30),
+                call(30, 40),
+                call(40, 50),
+                call(50, 60),
+                call(60, 70),
+                call(70, 80),
+                call(80, 90),
+                call(90, 100),
+                call(100, 110),
+            ]
+        )
 
     @patch.object(BaseDataSourceForTesting, "_get")
     def test__cache_source_get_2(self, mock_get, tmp_path):
-
         def _get_side_effect(start, end):
-            index = np.arange(start, end+1, dtype="int64")
+            index = np.arange(start, end + 1, dtype="int64")
             values_a = [1.0] * len(index)
             values_b = [2.1] * len(index)
             df = pd.DataFrame(data={"a": values_a, "b": values_b}, index=index)
@@ -898,26 +900,28 @@ class Test_BaseDataSource:
         out_a = source_a._cache_source_get(5, 45, refresh_cache=True)
         out_b = source_b._cache_source_get(5, 105, refresh_cache=True)
 
-        mock_get.assert_has_calls([
-            call(0, 10),
-            call(10, 20),
-            call(20, 30),
-            call(30, 40),
-            call(40, 50),
-            call(50, 60),
-            call(60, 70),
-            call(70, 80),
-            call(80, 90),
-            call(90, 100),
-            call(100, 110),
-        ])
+        mock_get.assert_has_calls(
+            [
+                call(0, 10),
+                call(10, 20),
+                call(20, 30),
+                call(30, 40),
+                call(40, 50),
+                call(50, 60),
+                call(60, 70),
+                call(70, 80),
+                call(80, 90),
+                call(90, 100),
+                call(100, 110),
+            ]
+        )
 
-        index = np.arange(5, 45+1, dtype="int64")
+        index = np.arange(5, 45 + 1, dtype="int64")
         values_a = [1.0] * len(index)
         values_b = [2.1] * len(index)
         expect_a = pd.DataFrame(data={"a": values_a, "b": values_b}, index=index)
 
-        index = np.arange(5, 105+1, dtype="int64")
+        index = np.arange(5, 105 + 1, dtype="int64")
         values_a = [1.0] * len(index)
         values_b = [2.1] * len(index)
         expect_b = pd.DataFrame(data={"a": values_a, "b": values_b}, index=index)
@@ -1423,8 +1427,21 @@ class Test_DatetimeIndexConverter:
         assert out == expect
 
     def test_to_universal_index_arraylike(self):
-        out = DatetimeIndexConverter().to_universal_index(["2020-01-01 00:00", "2020-01-01 01:00", pd.to_datetime("2020-01-01 02:00").tz_localize(tz='Europe/Stockholm')])
-        expect = pd.to_datetime(["2020-01-01 00:00", "2020-01-01 01:00", pd.to_datetime("2020-01-01 02:00").tz_localize(tz='Europe/Stockholm')], utc=True)
+        out = DatetimeIndexConverter().to_universal_index(
+            [
+                "2020-01-01 00:00",
+                "2020-01-01 01:00",
+                pd.to_datetime("2020-01-01 02:00").tz_localize(tz="Europe/Stockholm"),
+            ]
+        )
+        expect = pd.to_datetime(
+            [
+                "2020-01-01 00:00",
+                "2020-01-01 01:00",
+                pd.to_datetime("2020-01-01 02:00").tz_localize(tz="Europe/Stockholm"),
+            ],
+            utc=True,
+        )
         np.testing.assert_array_equal(out, expect)
 
     def test_to_universal_delta(self):
@@ -1433,12 +1450,16 @@ class Test_DatetimeIndexConverter:
         assert out == expect
 
     def test_to_universal_delta_arraylike(self):
-        out = DatetimeIndexConverter().to_universal_delta(["3H", "24H", pd.to_timedelta("2D")])
+        out = DatetimeIndexConverter().to_universal_delta(
+            ["3H", "24H", pd.to_timedelta("2D")]
+        )
         expect = pd.to_timedelta(["3H", "24H", pd.to_timedelta("2D")])
         np.testing.assert_array_equal(out, expect)
 
     def test_to_native_index(self):
-        out = DatetimeIndexConverter().to_native_index(DatetimeIndexConverter().to_universal_index("2020-01-01 00:00"))
+        out = DatetimeIndexConverter().to_native_index(
+            DatetimeIndexConverter().to_universal_index("2020-01-01 00:00")
+        )
         expect = pd.to_datetime("2020-01-01 00:00", utc=True)
         assert out == expect
 
@@ -1475,7 +1496,9 @@ class Test_IntegerIndexConverter:
         np.testing.assert_array_equal(out, expect)
 
     def test_to_native_index(self):
-        out = IntegerIndexConverter().to_native_index(IntegerIndexConverter().to_universal_index(3))
+        out = IntegerIndexConverter().to_native_index(
+            IntegerIndexConverter().to_universal_index(3)
+        )
         expect = 3
         assert out == expect
 
@@ -1512,7 +1535,9 @@ class Test_FloatIndexConverter:
         np.testing.assert_array_almost_equal(out, expect)
 
     def test_to_native_index(self):
-        out = FloatIndexConverter().to_native_index(IntegerIndexConverter().to_universal_index(3))
+        out = FloatIndexConverter().to_native_index(
+            IntegerIndexConverter().to_universal_index(3)
+        )
         expect = 3.0
         assert out == pytest.approx(expect)
 
