@@ -13,9 +13,6 @@ regardless of the source.
 
 :mod:`fourinsight.engineroom.utils` comes with the following built-in data sources:
 
-:class:`~fourinsight.engineroom.utils.NullDataSource`
-    Returns empty data.
-
 :class:`~fourinsight.engineroom.utils.DrioDataSource`
     Handles data from DataReservoir.io_.
 
