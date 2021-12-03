@@ -21,6 +21,10 @@ import pandas as pd
 
 
 class BaseIndexConverter(ABC):
+    """
+    Abstract class for index converters.
+    """
+
     @abstractmethod
     def to_universal_index(self, index):
         """Convert index to universal type"""
@@ -56,6 +60,12 @@ class BaseIndexConverter(ABC):
 
 
 class DatetimeIndexConverter(BaseIndexConverter):
+    """
+    Datetime index converter.
+
+    Index values will be passed on to meth:`pandas.to_datetime` function to convert
+    to universal type.
+    """
     def to_universal_index(self, index):
         """Convert index to universal type"""
         return pd.to_datetime(index, utc=True)
@@ -74,6 +84,12 @@ class DatetimeIndexConverter(BaseIndexConverter):
 
 
 class IntegerIndexConverter(BaseIndexConverter):
+    """
+    Integer index converter.
+
+    Index values will be passed on to meth:`numpy.int64` function to convert
+    to universal type.
+    """
     def to_universal_index(self, index):
         """Convert index to universal type"""
         return np.int64(index)
@@ -92,6 +108,12 @@ class IntegerIndexConverter(BaseIndexConverter):
 
 
 class FloatIndexConverter(BaseIndexConverter):
+    """
+    Float index converter.
+
+    Index values will be passed on to meth:`numpy.float64` function to convert
+    to universal type.
+    """
     def to_universal_index(self, index):
         """Convert index to universal type"""
         return np.float64(index)
@@ -115,8 +137,8 @@ class BaseDataSource(ABC):
 
     Parameters
     ----------
-    index_type : str or callable
-        Index type (see Notes). Should be 'datetime', 'integer' or a callable.
+    index_converter : obj
+        Index converter (instance of class:`BaseIndexConverter`).
     index_sync : bool, optional
         If the index should be synced. If True, a valid tolerance must be given.
     tolerance : int, float or pandas.Timedelta
@@ -124,6 +146,11 @@ class BaseDataSource(ABC):
         datapoints that are closer than the tolerance are merged so that they
         share a common index. The common index will be the first index of the
         neighboring datapoints.
+    cache : str
+        Cache folder. If None, caching is disabled.
+    cache_size :
+        Cache size as an index partition. Describes the size of each cache chunk.
+        Will be passed on to `index_converter.to_universal_delta`.
 
     Notes
     -----
@@ -174,10 +201,14 @@ class BaseDataSource(ABC):
             self._cache.mkdir()
 
     def _md5hash(self, *args):
+        """
+        Returns a hash from the list of input values.
+        """
         return md5("_".join(map(lambda x: str(x), args)).encode()).hexdigest()
 
     @abstractproperty
     def _fingerprint(self):
+        """Fingerprint that uniquely identifies the configuration of the data source."""
         raise NotImplementedError()
 
     @abstractproperty
