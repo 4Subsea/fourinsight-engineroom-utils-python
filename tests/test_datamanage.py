@@ -717,71 +717,195 @@ class Test_BaseDataSource:
         df_expect = pd.DataFrame(data={"filename": [2, 4, 6], "a": [1, 2, 3]})
         pd.testing.assert_frame_equal(df_out, df_expect)
 
-    # @patch.object(BaseDataSourceForTesting, "_get")
-    # def test__cache_source_get(self, mock_get, tmp_path):
-    #     def _get_side_effect(start, end):
-    #         index = np.arange(start, end + 1, dtype="int64")
-    #         values_a = [1.0] * len(index)
-    #         values_b = [2.1] * len(index)
-    #         df = pd.DataFrame(data={"a": values_a, "b": values_b}, index=index)
-    #         return df
+    @patch.object(BaseDataSourceForTesting, "_source_get")
+    def test_get_nocache(self, mock_source_get):
+        source = BaseDataSourceForTesting(DatetimeIndexConverter(), cache=None)
 
-    #     mock_get.side_effect = _get_side_effect
+        out = source.get("<start>", "<end>")
+        assert out == mock_source_get.return_value
+        mock_source_get.assert_called_once_with("<start>", "<end>")
 
-    #     class DataSource(BaseDataSourceForTesting):
-    #         @property
-    #         def _fingerprint(self):
-    #             return "1234"
+    @patch.object(BaseDataSourceForTesting, "_cache_get")
+    def test_get_cache(self, mock_cache_get, tmp_path):
+        cache_dir = tmp_path / ".cache"
+        source = BaseDataSourceForTesting(IntegerIndexConverter(), cache=cache_dir, cache_size=1)
 
-    #     cache_dir = tmp_path / ".cache"
-    #     source = DataSource(IntegerIndexConverter(), cache=cache_dir, cache_size=10)
+        out = source.get("<start>", "<end>", refresh_cache=False)
+        assert out == mock_cache_get.return_value
+        mock_cache_get.assert_called_once_with("<start>", "<end>")
 
-    #     out_source = source._cache_source_get(5, 105, refresh_cache=False)
-    #     out_memory_cache = source._cache_source_get(5, 105, refresh_cache=False)
-    #     source = DataSource(IntegerIndexConverter(), cache=cache_dir, cache_size=10)
-    #     out_file_cache = source._cache_source_get(5, 105, refresh_cache=False)
+    @patch.object(BaseDataSourceForTesting, "_build_cache")
+    @patch.object(BaseDataSourceForTesting, "_cache_get")
+    def test_get_refresh_cache(self, mock_cache_get, mock_build_cache, tmp_path):
+        cache_dir = tmp_path / ".cache"
+        source = BaseDataSourceForTesting(IntegerIndexConverter(), cache=cache_dir, cache_size=1)
 
-    #     index = np.arange(5, 105 + 1, dtype="int64")
-    #     values_a = [1.0] * len(index)
-    #     values_b = [2.1] * len(index)
-    #     expect = pd.DataFrame(data={"a": values_a, "b": values_b}, index=index)
+        out = source.get("<start>", "<end>", refresh_cache=True)
+        assert out == mock_cache_get.return_value
+        mock_cache_get.assert_called_once_with("<start>", "<end>")
+        mock_build_cache.assert_called_once_with("<start>", "<end>")
 
-    #     pd.testing.assert_frame_equal(out_source, expect)
-    #     pd.testing.assert_frame_equal(out_memory_cache, expect)
-    #     pd.testing.assert_frame_equal(out_file_cache, expect)
+    @patch.object(BaseDataSourceForTesting, "_get")
+    def test__cache_get(self, mock_get, tmp_path):
+        def _get_side_effect(start, end):
+            index = np.arange(start, end + 1, dtype="int64")
+            values_a = [1.0] * len(index)
+            values_b = [2.1] * len(index)
+            df = pd.DataFrame(data={"a": values_a, "b": values_b}, index=index)
+            return df
 
-    #     mock_get.assert_has_calls(
-    #         [
-    #             call(0, 10),
-    #             call(10, 20),
-    #             call(20, 30),
-    #             call(30, 40),
-    #             call(40, 50),
-    #             call(50, 60),
-    #             call(60, 70),
-    #             call(70, 80),
-    #             call(80, 90),
-    #             call(90, 100),
-    #             call(100, 110),
-    #         ]
-    #     )
+        mock_get.side_effect = _get_side_effect
 
-    #     # memory cache
-    #     assert len(source._memory_cache) == 11
-    #     pd.testing.assert_frame_equal(
-    #         pd.concat(source._memory_cache.values()).sort_index().loc[5:105], expect
-    #     )
+        class DataSource(BaseDataSourceForTesting):
+            @property
+            def _fingerprint(self):
+                return "1234"
 
-    #     # file cache
-    #     df_list = []
-    #     for fname in os.listdir(cache_dir):
-    #         df_i = source._cache_read(fname)
-    #         df_list.append(df_i)
+        cache_dir = tmp_path / ".cache"
+        source = DataSource(IntegerIndexConverter(), cache=cache_dir, cache_size=10)
 
-    #     assert len(os.listdir(cache_dir)) == 11
-    #     pd.testing.assert_frame_equal(
-    #         pd.concat(df_list).sort_index().loc[5:105], expect
-    #     )
+        out_source = source._cache_get(5, 105)
+        out_memory_cache = source._cache_get(5, 105)
+        source = DataSource(IntegerIndexConverter(), cache=cache_dir, cache_size=10)
+        out_file_cache = source._cache_get(5, 105)
+
+        index = np.arange(5, 105 + 1, dtype="int64")
+        values_a = [1.0] * len(index)
+        values_b = [2.1] * len(index)
+        expect = pd.DataFrame(data={"a": values_a, "b": values_b}, index=index)
+
+        pd.testing.assert_frame_equal(out_source, expect)
+        pd.testing.assert_frame_equal(out_memory_cache, expect)
+        pd.testing.assert_frame_equal(out_file_cache, expect)
+
+        mock_get.assert_has_calls(
+            [
+                call(0, 10),
+                call(10, 20),
+                call(20, 30),
+                call(30, 40),
+                call(40, 50),
+                call(50, 60),
+                call(60, 70),
+                call(70, 80),
+                call(80, 90),
+                call(90, 100),
+                call(100, 110),
+            ]
+        )
+
+        # memory cache
+        assert len(source._memory_cache) == 11
+        pd.testing.assert_frame_equal(
+            pd.concat(source._memory_cache.values()).sort_index().loc[5:105], expect
+        )
+
+        # file cache
+        df_list = []
+        for fname in os.listdir(cache_dir):
+            df_i = source._cache_read(fname)
+            df_list.append(df_i)
+
+        assert len(os.listdir(cache_dir)) == 11
+        pd.testing.assert_frame_equal(
+            pd.concat(df_list).sort_index().loc[5:105], expect
+        )
+
+    @patch.object(BaseDataSourceForTesting, "_get")
+    def test__cache_get_2(self, mock_get, tmp_path):
+        def _get_side_effect(start, end):
+            index = np.arange(start, end + 1, dtype="int64")
+            values_a = [1.0] * len(index)
+            values_b = [2.1] * len(index)
+            df = pd.DataFrame(data={"a": values_a, "b": values_b}, index=index)
+            return df
+
+        mock_get.side_effect = _get_side_effect
+
+        class DataSource(BaseDataSourceForTesting):
+            @property
+            def _fingerprint(self):
+                return "1234"
+
+        cache_dir = tmp_path / ".cache"
+        source_a = DataSource(IntegerIndexConverter(), cache=cache_dir, cache_size=10)
+        source_b = DataSource(IntegerIndexConverter(), cache=cache_dir, cache_size=10)
+
+        out_a = source_a._cache_get(5, 45)
+        out_b = source_b._cache_get(5, 105)
+
+        mock_get.assert_has_calls(
+            [
+                call(0, 10),
+                call(10, 20),
+                call(20, 30),
+                call(30, 40),
+                call(40, 50),
+                call(50, 60),
+                call(60, 70),
+                call(70, 80),
+                call(80, 90),
+                call(90, 100),
+                call(100, 110),
+            ]
+        )
+
+        index = np.arange(5, 45 + 1, dtype="int64")
+        values_a = [1.0] * len(index)
+        values_b = [2.1] * len(index)
+        expect_a = pd.DataFrame(data={"a": values_a, "b": values_b}, index=index)
+
+        index = np.arange(5, 105 + 1, dtype="int64")
+        values_a = [1.0] * len(index)
+        values_b = [2.1] * len(index)
+        expect_b = pd.DataFrame(data={"a": values_a, "b": values_b}, index=index)
+
+        pd.testing.assert_frame_equal(out_a, expect_a)
+        pd.testing.assert_frame_equal(out_b, expect_b)
+
+    @patch.object(BaseDataSourceForTesting, "_get")
+    def test__build_cache(self, mock_get, tmp_path):
+        def _get_side_effect(start, end):
+            index = np.arange(start, end + 1, dtype="int64")
+            values_a = [1.0] * len(index)
+            values_b = [2.1] * len(index)
+            df = pd.DataFrame(data={"a": values_a, "b": values_b}, index=index)
+            return df
+
+        mock_get.side_effect = _get_side_effect
+
+        class DataSource(BaseDataSourceForTesting):
+            @property
+            def _fingerprint(self):
+                return "1234"
+
+        cache_dir = tmp_path / ".cache"
+        source = DataSource(IntegerIndexConverter(), cache=cache_dir, cache_size=10)
+        source._build_cache(5, 105)
+
+        index = np.arange(0, 110, 1, dtype="int64")
+        values_a = [1.0] * len(index)
+        values_b = [2.1] * len(index)
+        expect = pd.DataFrame(data={"a": values_a, "b": values_b}, index=index)
+
+        mock_get.assert_called_once_with(0, 110)
+
+        # memory cache
+        assert len(source._memory_cache) == 11
+        pd.testing.assert_frame_equal(
+            pd.concat(source._memory_cache.values()).sort_index(), expect
+        )
+
+        # file cache
+        df_list = []
+        for fname in os.listdir(cache_dir):
+            df_i = source._cache_read(fname)
+            df_list.append(df_i)
+
+        assert len(os.listdir(cache_dir)) == 11
+        pd.testing.assert_frame_equal(
+            pd.concat(df_list).sort_index(), expect
+        )
 
     # @patch.object(BaseDataSourceForTesting, "_get")
     # def test__cache_source_get_refresh(self, mock_get, tmp_path):
@@ -886,14 +1010,6 @@ class Test_BaseDataSource:
 
     #     pd.testing.assert_frame_equal(out_a, expect_a)
     #     pd.testing.assert_frame_equal(out_b, expect_b)
-
-    @patch.object(BaseDataSourceForTesting, "_source_get")
-    def test_get_nocache(self, mock_source_get):
-        source = BaseDataSourceForTesting(DatetimeIndexConverter(), cache=None)
-
-        out = source.get("<start>", "<end>")
-        assert out == mock_source_get.return_value
-        mock_source_get.assert_called_once_with("<start>", "<end>")
 
 
 class Test_DrioDataSource:
