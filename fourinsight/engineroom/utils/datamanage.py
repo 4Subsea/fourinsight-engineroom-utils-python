@@ -66,6 +66,7 @@ class DatetimeIndexConverter(BaseIndexConverter):
     Index values will be passed on to meth:`pandas.to_datetime` function to convert
     to universal type.
     """
+
     def to_universal_index(self, index):
         """Convert index to universal type"""
         return pd.to_datetime(index, utc=True)
@@ -90,6 +91,7 @@ class IntegerIndexConverter(BaseIndexConverter):
     Index values will be passed on to meth:`numpy.int64` function to convert
     to universal type.
     """
+
     def to_universal_index(self, index):
         """Convert index to universal type"""
         return np.int64(index)
@@ -114,6 +116,7 @@ class FloatIndexConverter(BaseIndexConverter):
     Index values will be passed on to meth:`numpy.float64` function to convert
     to universal type.
     """
+
     def to_universal_index(self, index):
         """Convert index to universal type"""
         return np.float64(index)
@@ -339,7 +342,9 @@ class BaseDataSource(ABC):
         num_partitions = (end_part - start_part) // partition
         if (end_part - start_part) % partition:
             num_partitions += 1
-        return start_part + partition * np.arange(0, num_partitions+1, 1, dtype="int64")
+        return start_part + partition * np.arange(
+            0, num_partitions + 1, 1, dtype="int64"
+        )
 
     # @staticmethod
     # def _partition_start_end_old(start, end, partition, reference):

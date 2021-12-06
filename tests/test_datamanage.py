@@ -728,7 +728,9 @@ class Test_BaseDataSource:
     @patch.object(BaseDataSourceForTesting, "_cache_get")
     def test_get_cache(self, mock_cache_get, tmp_path):
         cache_dir = tmp_path / ".cache"
-        source = BaseDataSourceForTesting(IntegerIndexConverter(), cache=cache_dir, cache_size=1)
+        source = BaseDataSourceForTesting(
+            IntegerIndexConverter(), cache=cache_dir, cache_size=1
+        )
 
         out = source.get("<start>", "<end>", refresh_cache=False)
         assert out == mock_cache_get.return_value
@@ -738,7 +740,9 @@ class Test_BaseDataSource:
     @patch.object(BaseDataSourceForTesting, "_cache_get")
     def test_get_refresh_cache(self, mock_cache_get, mock_build_cache, tmp_path):
         cache_dir = tmp_path / ".cache"
-        source = BaseDataSourceForTesting(IntegerIndexConverter(), cache=cache_dir, cache_size=1)
+        source = BaseDataSourceForTesting(
+            IntegerIndexConverter(), cache=cache_dir, cache_size=1
+        )
 
         out = source.get("<start>", "<end>", refresh_cache=True)
         assert out == mock_cache_get.return_value
@@ -903,9 +907,7 @@ class Test_BaseDataSource:
             df_list.append(df_i)
 
         assert len(os.listdir(cache_dir)) == 11
-        pd.testing.assert_frame_equal(
-            pd.concat(df_list).sort_index(), expect
-        )
+        pd.testing.assert_frame_equal(pd.concat(df_list).sort_index(), expect)
 
 
 class Test_DrioDataSource:
