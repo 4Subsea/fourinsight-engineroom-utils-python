@@ -384,21 +384,6 @@ class BaseDataSource(ABC):
             0, num_partitions + 1, 1, dtype="int64"
         )
 
-    # @staticmethod
-    # def _partition_start_end_old(start, end, partition, reference):
-    #     start_part = reference + ((start - reference) // partition) * partition
-    #     end_part = reference + ((end - reference) // partition) * partition
-    #     if end_part == end:
-    #         end_part += partition
-    #     elif end_part < end:
-    #         end_part += 2.0 * partition
-
-    #     num_partitions = (end_part - start_part) // partition
-    #     index_chunks = start_part + partition * np.arange(
-    #         0, num_partitions, 1, dtype="int64"
-    #     )
-    #     return zip(index_chunks[:-1], index_chunks[1:])
-
     def _is_cached(self, id_):
         """Check if data is cached."""
         return (self._cache / id_).exists()
@@ -422,46 +407,6 @@ class BaseDataSource(ABC):
         if df.index[-1] == end:
             df = df.iloc[:-1]
         return df
-
-    # def _cache_source_get(self, start, end, refresh_cache=False):
-    #     """Get data from cache. Fall back to source if not available in cache."""
-
-    #     chunks_universal = self._partition_start_end(
-    #         self._index_converter.to_universal_index(start),
-    #         self._index_converter.to_universal_index(end),
-    #         self._index_converter.to_universal_delta(self._cache_size),
-    #         self._index_converter.to_universal_index(self._index_converter.reference),
-    #     )
-
-    #     df_list = []
-    #     memory_cache_update = {}
-    #     for start_universal_i, end_universal_i in chunks_universal:
-    #         chunk_id = self._md5hash(
-    #             self._fingerprint, start_universal_i, end_universal_i
-    #         )
-
-    #         print(start_universal_i, end_universal_i)
-    #         if not refresh_cache and chunk_id in self._memory_cache.keys():
-    #             print("Get from memory")
-    #             df_i = self._memory_cache[chunk_id]
-    #         elif not refresh_cache and self._is_cached(chunk_id):
-    #             print("Get from cache")
-    #             df_i = self._cache_read(chunk_id)
-    #         else:
-    #             print("Get from source")
-    #             df_i = self._source_get(
-    #                 self._index_converter.to_native_index(start_universal_i),
-    #                 self._index_converter.to_native_index(end_universal_i),
-    #             )
-    #             df_i = self._slice(df_i, start_universal_i, end_universal_i)
-    #             self._cache_write(chunk_id, df_i.copy(deep=True))
-    #         df_list.append(df_i)
-    #         memory_cache_update[chunk_id] = df_i
-
-    #     self._memory_cache = memory_cache_update
-    #     start_universal = self._index_converter.to_universal_index(start)
-    #     end_universal = self._index_converter.to_universal_index(end)
-    #     return pd.concat(df_list).loc[start_universal:end_universal]
 
     def _sync_data(self, data, tolerance):
         """
