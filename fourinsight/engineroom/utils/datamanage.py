@@ -336,6 +336,7 @@ class BaseDataSource(ABC):
         )
 
         df_list = []
+        memory_cache_update = {}
         for start_uni_i, end_uni_i in zip(start_end_uni[:-1], start_end_uni[1:]):
             print(start_uni_i, end_uni_i)
             chunk_id = self._md5hash(self._fingerprint, start_uni_i, end_uni_i)
@@ -354,7 +355,9 @@ class BaseDataSource(ABC):
                 df_i = self._slice(df_i, start_uni_i, end_uni_i)
                 self._cache_write(chunk_id, df_i.copy(deep=True))
             df_list.append(df_i)
+            memory_cache_update[chunk_id] = df_i
 
+        self._memory_cache = memory_cache_update
         start_uni = self._index_converter.to_universal_index(start)
         end_uni = self._index_converter.to_universal_index(end)
         return pd.concat(df_list).loc[start_uni:end_uni]
