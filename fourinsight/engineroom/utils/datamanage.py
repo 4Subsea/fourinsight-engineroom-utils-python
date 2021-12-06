@@ -236,71 +236,6 @@ class BaseDataSource(ABC):
         """
         raise NotImplementedError()
 
-    # def get_alt(self, start, end, refresh_cache=False):
-    #     if not self._cache:
-    #         print("Cache disabled")
-    #         return self._source_get(start, end)
-    #     elif refresh_cache:
-    #         return self._refresh_cache_get(start, end)
-    #     else:
-    #         return self._cache_source_get(start, end)
-
-    # def _refresh_cache_get(self, start, end):
-    #     start_end_uni = self._partition_start_end(
-    #         self._index_converter.to_universal_index(start),
-    #         self._index_converter.to_universal_index(end),
-    #         self._index_converter.to_universal_delta(self._cache_size),
-    #         self._index_converter.to_universal_index(self._index_converter.reference),
-    #     )
-    #     dataframe = self._source_get(
-    #         self._index_converter.to_native_index(start_end_uni[0]),
-    #         self._index_converter.to_native_index(start_end_uni[-1]),
-    #     )
-    #     memory_cache_update = {}
-    #     for start_uni_i, end_uni_i in zip(start_end_uni[:-1], start_end_uni[1:]):
-    #         chunk_id = self._md5hash(self._fingerprint, start_uni_i, end_uni_i)
-    #         df_i = self._slice(dataframe, start_uni_i, end_uni_i)
-    #         self._cache_write(chunk_id, df_i.copy(deep=True))
-    #         memory_cache_update[chunk_id] = df_i
-    #     start_uni = self._index_converter.to_universal_index(start)
-    #     end_uni = self._index_converter.to_universal_index(end)
-    #     return dataframe.loc[start_uni:end_uni]
-
-    # def _cache_source_get(self, start, end):
-    #     start_end_uni = self._partition_start_end(
-    #         self._index_converter.to_universal_index(start),
-    #         self._index_converter.to_universal_index(end),
-    #         self._index_converter.to_universal_delta(self._cache_size),
-    #         self._index_converter.to_universal_index(self._index_converter.reference),
-    #     )
-
-    #     df_list = []
-    #     memory_cache_update = {}
-    #     for start_uni_i, end_uni_i in zip(start_end_uni[:-1], start_end_uni[1:]):
-    #         print(start_uni_i, end_uni_i)
-    #         chunk_id = self._md5hash(self._fingerprint, start_uni_i, end_uni_i)
-    #         if chunk_id in self._memory_cache.keys():
-    #             print("Get from memory cache")
-    #             df_i = self._memory_cache[chunk_id]
-    #         elif self._is_cached(chunk_id):
-    #             print("Get from file cache")
-    #             df_i = self._cache_read(chunk_id)
-    #         else:
-    #             print("Get from source")
-    #             df_i = self._source_get(
-    #                 self._index_converter.to_native_index(start_uni_i),
-    #                 self._index_converter.to_native_index(end_uni_i),
-    #             )
-    #             df_i = self._slice(df_i, start_uni_i, end_uni_i)
-    #             self._cache_write(chunk_id, df_i.copy(deep=True))
-    #         df_list.append(df_i)
-    #         memory_cache_update[chunk_id] = df_i
-
-    #     self._memory_cache = memory_cache_update
-    #     start_uni = self._index_converter.to_universal_index(start)
-    #     end_uni = self._index_converter.to_universal_index(end)
-    #     return pd.concat(df_list).loc[start_uni:end_uni]
-
     def get(self, start, end, refresh_cache=False):
         if not self._cache:
             return self._source_get(start, end)
@@ -362,64 +297,6 @@ class BaseDataSource(ABC):
         end_uni = self._index_converter.to_universal_index(end)
         return pd.concat(df_list).loc[start_uni:end_uni]
 
-    # def get(self, start, end, refresh_cache=False):
-    #     """
-    #     Txt.
-    #     """
-    #     if not self._cache:
-    #         print("Cache disabled")
-    #         return self._source_get(start, end)
-
-    #     start_end_uni = self._partition_start_end(
-    #         self._index_converter.to_universal_index(start),
-    #         self._index_converter.to_universal_index(end),
-    #         self._index_converter.to_universal_delta(self._cache_size),
-    #         self._index_converter.to_universal_index(self._index_converter.reference),
-    #     )
-
-    #     if refresh_cache:
-    #         dataframe = self._source_get(
-    #             self._index_converter.to_native_index(start_end_uni[0]),
-    #             self._index_converter.to_native_index(start_end_uni[-1]),
-    #         )
-    #     else:
-    #         df_list = []
-
-    #     memory_cache_update = {}
-    #     for start_uni_i, end_uni_i in zip(start_end_uni[:-1], start_end_uni[1:]):
-    #         print(start_uni_i, end_uni_i)
-    #         chunk_id = self._md5hash(self._fingerprint, start_uni_i, end_uni_i)
-    #         if refresh_cache:
-    #             print("Refresh cache")
-    #             df_i = self._slice(dataframe, start_uni_i, end_uni_i)
-    #             self._cache_write(chunk_id, df_i.copy(deep=True))
-    #         elif chunk_id in self._memory_cache.keys():
-    #             print("Get from memory cache")
-    #             df_i = self._memory_cache[chunk_id]
-    #             df_list.append(df_i)
-    #         elif self._is_cached(chunk_id):
-    #             print("Get from file cache")
-    #             df_i = self._cache_read(chunk_id)
-    #             df_list.append(df_i)
-    #         else:
-    #             print("Get from source")
-    #             df_i = self._source_get(
-    #                 self._index_converter.to_native_index(start_uni_i),
-    #                 self._index_converter.to_native_index(end_uni_i),
-    #             )
-    #             df_i = self._slice(df_i, start_uni_i, end_uni_i)
-    #             self._cache_write(chunk_id, df_i.copy(deep=True))
-    #             df_list.append(df_i)
-    #         memory_cache_update[chunk_id] = df_i
-
-    #     if not refresh_cache:
-    #         dataframe = pd.concat(df_list)
-
-    #     self._memory_cache = memory_cache_update
-    #     start_uni = self._index_converter.to_universal_index(start)
-    #     end_uni = self._index_converter.to_universal_index(end)
-    #     return dataframe.loc[start_uni:end_uni]
-
     def _source_get(self, start, end):
         """
         Get data from source.
@@ -465,23 +342,6 @@ class BaseDataSource(ABC):
         return start_part + partition * np.arange(0, num_partitions+1, 1, dtype="int64")
 
     # @staticmethod
-    # def _partition_start_end(start, end, partition, reference):
-    #     start_part = reference + ((start - reference) // partition) * partition
-    #     end_part = reference + ((end - reference) // partition) * partition
-    #     if end_part < end:
-    #         end_part += partition
-
-    #     num_partitions = (end_part - start_part) // partition
-    #     return start_part + partition * np.arange(0, num_partitions+1, 1, dtype="int64")
-
-    #     return start_part, end_part
-
-    # @staticmethod
-    # def _arange(start, end, step):
-    #     num_steps = (end - start) // step
-    #     return start + step * np.arange(0, num_steps+1, 1, dtype="int64")
-
-    # @staticmethod
     # def _partition_start_end_old(start, end, partition, reference):
     #     start_part = reference + ((start - reference) // partition) * partition
     #     end_part = reference + ((end - reference) // partition) * partition
@@ -516,24 +376,6 @@ class BaseDataSource(ABC):
         if df.index[-1] == end:
             df = df.iloc[:-1]
         return df
-
-    # def _cache_partition_write(self, dataframe, start, end):
-    #     chunks_universal = self._partition_start_end(
-    #         self._index_converter.to_universal_index(start),
-    #         self._index_converter.to_universal_index(end),
-    #         self._index_converter.to_universal_delta(self._cache_size),
-    #         self._index_converter.to_universal_index(self._index_converter.reference),
-    #     )
-
-    #     memory_cache_update = {}
-    #     for start_universal_i, end_universal_i in chunks_universal:
-    #         chunk_id = self._md5hash(
-    #             self._fingerprint, start_universal_i, end_universal_i
-    #         )
-    #         df_i = self._slice(dataframe, start_universal_i, end_universal_i)
-    #         self._cache_write(chunk_id, df_i.copy(deep=True))
-    #         memory_cache_update[chunk_id] = df_i
-    #         self._memory_cache = memory_cache_update
 
     # def _cache_source_get(self, start, end, refresh_cache=False):
     #     """Get data from cache. Fall back to source if not available in cache."""
