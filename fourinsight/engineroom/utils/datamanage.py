@@ -236,6 +236,129 @@ class BaseDataSource(ABC):
         """
         raise NotImplementedError()
 
+    def get_alt(self, start, end, refresh_cache=False):
+        if not self._cache:
+            print("Cache disabled")
+            return self._source_get(start, end)
+        elif refresh_cache:
+            return self._refresh_cache_get(start, end)
+        else:
+            return self._cache_source_get(start, end)
+
+    def _refresh_cache_get(self, start, end):
+        start_end_uni = self._partition_start_end(
+            self._index_converter.to_universal_index(start),
+            self._index_converter.to_universal_index(end),
+            self._index_converter.to_universal_delta(self._cache_size),
+            self._index_converter.to_universal_index(self._index_converter.reference),
+        )
+        dataframe = self._source_get(
+            self._index_converter.to_native_index(start_end_uni[0]),
+            self._index_converter.to_native_index(start_end_uni[-1]),
+        )
+        memory_cache_update = {}
+        for start_uni_i, end_uni_i in zip(start_end_uni[:-1], start_end_uni[1:]):
+            chunk_id = self._md5hash(self._fingerprint, start_uni_i, end_uni_i)
+            df_i = self._slice(dataframe, start_uni_i, end_uni_i)
+            self._cache_write(chunk_id, df_i.copy(deep=True))
+            memory_cache_update[chunk_id] = df_i
+        start_uni = self._index_converter.to_universal_index(start)
+        end_uni = self._index_converter.to_universal_index(end)
+        return dataframe.loc[start_uni:end_uni]
+
+    def _cache_source_get(self, start, end):
+        start_end_uni = self._partition_start_end(
+            self._index_converter.to_universal_index(start),
+            self._index_converter.to_universal_index(end),
+            self._index_converter.to_universal_delta(self._cache_size),
+            self._index_converter.to_universal_index(self._index_converter.reference),
+        )
+
+        df_list = []
+        memory_cache_update = {}
+        for start_uni_i, end_uni_i in zip(start_end_uni[:-1], start_end_uni[1:]):
+            print(start_uni_i, end_uni_i)
+            chunk_id = self._md5hash(self._fingerprint, start_uni_i, end_uni_i)
+            if chunk_id in self._memory_cache.keys():
+                print("Get from memory cache")
+                df_i = self._memory_cache[chunk_id]
+            elif self._is_cached(chunk_id):
+                print("Get from file cache")
+                df_i = self._cache_read(chunk_id)
+            else:
+                print("Get from source")
+                df_i = self._source_get(
+                    self._index_converter.to_native_index(start_uni_i),
+                    self._index_converter.to_native_index(end_uni_i),
+                )
+                df_i = self._slice(df_i, start_uni_i, end_uni_i)
+                self._cache_write(chunk_id, df_i.copy(deep=True))
+            df_list.append(df_i)
+            memory_cache_update[chunk_id] = df_i
+
+        self._memory_cache = memory_cache_update
+        start_uni = self._index_converter.to_universal_index(start)
+        end_uni = self._index_converter.to_universal_index(end)
+        return pd.concat(df_list).loc[start_uni:end_uni]
+
+    def get_new(self, start, end, refresh_cache=False):
+        if not self._cache:
+            return self._source_get(start, end)
+        elif refresh_cache:
+            self._build_cache(start, end)
+        return self._cache_get(start, end)
+
+    def _build_cache(self, start, end):
+        start_end_uni = self._partition_start_end(
+            self._index_converter.to_universal_index(start),
+            self._index_converter.to_universal_index(end),
+            self._index_converter.to_universal_delta(self._cache_size),
+            self._index_converter.to_universal_index(self._index_converter.reference),
+        )
+        dataframe = self._source_get(
+            self._index_converter.to_native_index(start_end_uni[0]),
+            self._index_converter.to_native_index(start_end_uni[-1]),
+        )
+        memory_cache_update = {}
+        for start_uni_i, end_uni_i in zip(start_end_uni[:-1], start_end_uni[1:]):
+            chunk_id = self._md5hash(self._fingerprint, start_uni_i, end_uni_i)
+            df_i = self._slice(dataframe, start_uni_i, end_uni_i)
+            self._cache_write(chunk_id, df_i.copy(deep=True))
+            memory_cache_update[chunk_id] = df_i
+        self._memory_cache = memory_cache_update
+
+    def _cache_get(self, start, end):
+        start_end_uni = self._partition_start_end(
+            self._index_converter.to_universal_index(start),
+            self._index_converter.to_universal_index(end),
+            self._index_converter.to_universal_delta(self._cache_size),
+            self._index_converter.to_universal_index(self._index_converter.reference),
+        )
+
+        df_list = []
+        for start_uni_i, end_uni_i in zip(start_end_uni[:-1], start_end_uni[1:]):
+            print(start_uni_i, end_uni_i)
+            chunk_id = self._md5hash(self._fingerprint, start_uni_i, end_uni_i)
+            if chunk_id in self._memory_cache.keys():
+                print("Get from memory cache")
+                df_i = self._memory_cache[chunk_id]
+            elif self._is_cached(chunk_id):
+                print("Get from file cache")
+                df_i = self._cache_read(chunk_id)
+            else:
+                print("Get from source")
+                df_i = self._source_get(
+                    self._index_converter.to_native_index(start_uni_i),
+                    self._index_converter.to_native_index(end_uni_i),
+                )
+                df_i = self._slice(df_i, start_uni_i, end_uni_i)
+                self._cache_write(chunk_id, df_i.copy(deep=True))
+            df_list.append(df_i)
+
+        start_uni = self._index_converter.to_universal_index(start)
+        end_uni = self._index_converter.to_universal_index(end)
+        return pd.concat(df_list).loc[start_uni:end_uni]
+
     def get(self, start, end, refresh_cache=False):
         """
         Txt.
