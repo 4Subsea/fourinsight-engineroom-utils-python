@@ -240,6 +240,23 @@ class BaseDataSource(ABC):
         raise NotImplementedError()
 
     def get(self, start, end, refresh_cache=False):
+        """
+        Get data from source.
+
+        Parameters
+        ----------
+        start :
+            Start index of the data. Will be passed on to the :meth:`_get` method.
+        end :
+            End index of the data. Will be passed on to the :meth:`_get` method.
+        refresh_cache : bool
+            Refresh cache if True.
+
+        Returns
+        -------
+        pandas.DataFrame
+            Source data.
+        """
         if not self._cache:
             return self._source_get(start, end)
         elif refresh_cache:
@@ -247,6 +264,16 @@ class BaseDataSource(ABC):
         return self._cache_get(start, end)
 
     def _build_cache(self, start, end):
+        """
+        Build/refresh cache.
+
+        Parameters
+        ----------
+        start :
+            Start index.
+        end :
+            End index.
+        """
         start_end_uni = self._partition_start_end(
             self._index_converter.to_universal_index(start),
             self._index_converter.to_universal_index(end),
@@ -266,6 +293,17 @@ class BaseDataSource(ABC):
         self._memory_cache = memory_cache_update
 
     def _cache_get(self, start, end):
+        """
+        Get data from cache. Data is retrieved from source if a partition is not
+        available in cache.
+
+        Parameters
+        ----------
+        start :
+            Start index of the data.
+        end :
+            End index of the data.
+        """
         start_end_uni = self._partition_start_end(
             self._index_converter.to_universal_index(start),
             self._index_converter.to_universal_index(end),
@@ -362,14 +400,17 @@ class BaseDataSource(ABC):
     #     return zip(index_chunks[:-1], index_chunks[1:])
 
     def _is_cached(self, id_):
+        """Check if data is cached."""
         return (self._cache / id_).exists()
 
     def _cache_read(self, id_):
+        """Read data from cache file."""
         dataframe = pd.read_feather(self._cache / id_).set_index(id_)
         dataframe.index.name = None
         return dataframe
 
     def _cache_write(self, id_, dataframe):
+        """Write dataframe to cache file."""
         dataframe.index.name = id_
         dataframe = dataframe.reset_index()
         dataframe.to_feather(self._cache / id_)
@@ -603,6 +644,7 @@ class DrioDataSource(BaseDataSource):
 
     @property
     def _fingerprint(self):
+        """Fingerprint that uniquely identifies the configuration of the data source."""
         return self._md5hash(
             self._labels,
             self._get_kwargs,
@@ -664,6 +706,7 @@ class _NullDataSource(BaseDataSource):
 
     @property
     def _fingerprint(self):
+        """Fingerprint that uniquely identifies the configuration of the data source."""
         return self._md5hash(self._index_converter, self._labels)
 
     def _get(self, start, end):
@@ -682,7 +725,8 @@ class CompositeDataSource(BaseDataSource):
     index_source : list-like
         Sequence of (index, source) tuples. The `index` value determines which index
         a `source` is valid from. The source will then be valid until the next item
-        in the sequence (see Example).
+        in the sequence (see Example). If a source is set to ``None``, empty data will
+        be returned.
 
     Examples
     --------
@@ -735,6 +779,7 @@ class CompositeDataSource(BaseDataSource):
             )
 
     def _fingerprint(self):
+        """Fingerprint that uniquely identifies the configuration of the data source."""
         fingerprint_list = [source._fingerprint for source in self._sources]
         return self._md5hash(*fingerprint_list)
 
@@ -758,6 +803,8 @@ class CompositeDataSource(BaseDataSource):
         end :
             End index of the data. Will be passed on to the :meth:`get` method
             of each individual data source.
+        refresh_cache : bool
+            Refresh cache if True.
 
         Returns
         -------
