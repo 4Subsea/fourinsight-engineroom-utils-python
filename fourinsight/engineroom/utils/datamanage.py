@@ -247,8 +247,8 @@ class BaseDataSource(ABC):
             Start index of the data. Will be passed on to the :meth:`_get` method.
         end :
             End index of the data. Will be passed on to the :meth:`_get` method.
-        refresh_cache : bool
-            Refresh cache if ``True``.
+        refresh_cache : bool, optional
+            Refresh cache data.
 
         Returns
         -------
