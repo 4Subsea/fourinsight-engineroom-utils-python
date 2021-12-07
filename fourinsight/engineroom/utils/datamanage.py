@@ -312,16 +312,12 @@ class BaseDataSource(ABC):
         df_list = []
         memory_cache_update = {}
         for start_uni_i, end_uni_i in zip(start_end_uni[:-1], start_end_uni[1:]):
-            print(start_uni_i, end_uni_i)
             chunk_id = self._md5hash(self._fingerprint, start_uni_i, end_uni_i)
             if chunk_id in self._memory_cache.keys():
-                print("Get from memory cache")
                 df_i = self._memory_cache[chunk_id]
             elif self._is_cached(chunk_id):
-                print("Get from file cache")
                 df_i = self._cache_read(chunk_id)
             else:
-                print("Get from source")
                 df_i = self._source_get(
                     self._index_converter.to_native_index(start_uni_i),
                     self._index_converter.to_native_index(end_uni_i),
