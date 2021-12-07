@@ -151,7 +151,7 @@ class BaseDataSource(ABC):
         so that they share a common index. The common index will be the first index
         of the neighboring datapoints.
     cache : str, optional
-        Cache folder (see Notes). If ``None``, caching is disabled.
+        Cache folder (see Notes). If ``None`` (default), caching is disabled.
     cache_size :
         Cache size as an index partition (see Notes).
 
@@ -531,7 +531,7 @@ class DrioDataSource(BaseDataSource):
         so that they share a common index. The common index will be the first index
         of the neighboring datapoints.
     cache : str, optional
-        Cache folder (see Notes). If ``None``, caching is disabled.
+        Cache folder (see Notes). If ``None`` (default), caching is disabled.
     cache_size :
         Cache size as an index partition (see Notes).
     **get_kwargs : optional

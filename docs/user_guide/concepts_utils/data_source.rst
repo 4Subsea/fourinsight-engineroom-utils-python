@@ -28,11 +28,12 @@ We aim to add other popular data sources as part of :mod:`fourinsight.engineroom
 However, it is possible (and encouraged) to define custom data sources. A data source class must
 inherit from :class:`~fourinsight.engineroom.utils.datamanage.BaseDataSource`, and override the
 abstract method, :meth:`~fourinsight.engineroom.utils.datamanage.BaseDataSource._get()`,
-and the abstract property, :attr:`~fourinsight.engineroom.utils.datamanage.BaseDataSource.labels`.
+and the abstract properties, :attr:`~fourinsight.engineroom.utils.datamanage.BaseDataSource.labels`
+and :attr:`~fourinsight.engineroom.utils.datamanage.BaseDataSource._fingerprint`.
 
 The following code examples are given with :class:`~fourinsight.engineroom.utils.DrioDataSource`, but
 all the functionality shown will be common for any data source class that inherits from :class:`~fourinsight.engineroom.utils.datamanage.BaseDataSource`.
-The only difference will be how the classes are instantiated. For intsance,
+The only difference will be how the classes are initialized. For instance,
 :class:`~fourinsight.engineroom.utils.DrioDataSource` is initialized with a
 :class:`datareservoirio.Client` instance and a dictionary containing labels and timeseries
 IDs as key/value pairs.
@@ -78,6 +79,27 @@ between neighboring datapoints to merge.
     the different label indexes, do a sorting, and then remove all index steps that are
     smaller than the tolerance. Datapoints are then merged into the common index
     if they are closer than the tolerance limit.
+
+Caching is enabled by providing a `cache` folder and an appropriate `cache_size`.
+Caching will speed-up the data downloading, if the same data is requested multiple
+times. First time some data is retrieved from the source, it will be split up in
+'chunks' and stored in a local folder. Then, the data is more readily available
+next time it is requested.
+
+.. code-block:: python
+
+    source = DrioDataSource(
+        drio_client,
+        labels,
+        cache='.cache'
+        cache_size=pd.to_timedelta("3H")
+    )
+
+.. tip::
+    Due to how the caching routine is designed, it may be useful to set the `refresh_cache`
+    flag to ``True`` first time data is downloaded. This will speed-up the first
+    data download. After the first download, set the flag to ``False`` so that data
+    is retrieved from the cache that was built during the first download.
 
 
 Download data
