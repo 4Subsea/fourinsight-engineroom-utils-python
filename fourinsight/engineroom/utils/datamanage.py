@@ -151,7 +151,7 @@ class BaseDataSource(ABC):
         so that they share a common index. The common index will be the first index
         of the neighboring datapoints.
     cache : str, optional
-        Cache folder (see Notes). If ``None`` (default), caching is disabled.
+        Cache folder. If ``None`` (default), caching is disabled.
     cache_size :
         Cache size as an index partition (see Notes).
 
@@ -168,8 +168,8 @@ class BaseDataSource(ABC):
       available next time it is requested.
 
       The `cache_size` determines how to partition the data in chunks. It describes
-      the size of each cache chunk by providing an index span. The `cache_size` should
-      be given in anything that the :meth:`index_converter.to_universal_delta` can
+      the size of each cache chunk by providing a index span. The `cache_size` should
+      be given as a dtype that the :meth:`index_converter.to_universal_delta` can
       parse.
 
     """
@@ -520,7 +520,7 @@ class DrioDataSource(BaseDataSource):
         so that they share a common index. The common index will be the first index
         of the neighboring datapoints.
     cache : str, optional
-        Cache folder (see Notes). If ``None`` (default), caching is disabled.
+        Cache folder. If ``None`` (default), caching is disabled.
     cache_size :
         Cache size as an index partition (see Notes).
     **get_kwargs : optional
@@ -548,8 +548,8 @@ class DrioDataSource(BaseDataSource):
       available next time it is requested.
 
       The `cache_size` determines how to partition the data in chunks. It describes
-      the size of each cache chunk by providing an index span. The `cache_size` should
-      be given in anything that the :meth:`index_converter.to_universal_delta` can
+      the size of each cache chunk by providing a index span. The `cache_size` should
+      be given as a dtype that the :meth:`index_converter.to_universal_delta` can
       parse.
 
     """
@@ -672,7 +672,7 @@ class CompositeDataSource(BaseDataSource):
         Sequence of (index, source) tuples. The `index` value determines which index
         a `source` is valid from. The source will then be valid until the next item
         in the sequence (see Example). If a source is set to ``None``, empty data will
-        be returned.
+        be returned for that period.
 
     Examples
     --------
