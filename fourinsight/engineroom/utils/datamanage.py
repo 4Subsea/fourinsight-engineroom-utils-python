@@ -358,13 +358,6 @@ class BaseDataSource(ABC):
             return self._sync_data(data, self._tolerance)
 
     @staticmethod
-    def _num_partitions(start, end, partition):
-        num_partitions = (end - start) // partition
-        if (end - start) % partition:
-            num_partitions += 1
-        return num_partitions
-
-    @staticmethod
     def _partition_start_end(start, end, partition, reference):
         start_part = reference + ((start - reference) // partition) * partition
         end_part = reference + ((end - reference) // partition) * partition
