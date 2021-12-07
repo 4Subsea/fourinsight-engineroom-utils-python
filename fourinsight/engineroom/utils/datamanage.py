@@ -22,21 +22,21 @@ import pandas as pd
 
 class BaseIndexConverter(ABC):
     """
-    Abstract class for index converters.
+    Abstract class for 'index converters'.
     """
 
     @abstractmethod
     def to_universal_index(self, index):
-        """Convert index to universal type"""
+        """Convert index to 'universal' type"""
         raise NotImplementedError()
 
     @abstractmethod
     def to_universal_delta(self, delta):
-        """Convert index partition to universal type"""
+        """Convert index partition to 'universal' type"""
         raise NotImplementedError()
 
     def to_native_index(self, index):
-        """Convert index to native type"""
+        """Convert index to 'native' type"""
         return self.to_universal_index(index)
 
     @abstractproperty
@@ -68,11 +68,11 @@ class DatetimeIndexConverter(BaseIndexConverter):
     """
 
     def to_universal_index(self, index):
-        """Convert index to universal type"""
+        """Convert index to 'universal' type"""
         return pd.to_datetime(index, utc=True)
 
     def to_universal_delta(self, delta):
-        """Convert index partition to universal type"""
+        """Convert index partition to 'universal' type"""
         return pd.to_timedelta(delta)
 
     @property
@@ -93,11 +93,11 @@ class IntegerIndexConverter(BaseIndexConverter):
     """
 
     def to_universal_index(self, index):
-        """Convert index to universal type"""
+        """Convert index to 'universal' type"""
         return np.int64(index)
 
     def to_universal_delta(self, delta):
-        """Convert index partition to universal type"""
+        """Convert index partition to 'universal' type"""
         return np.int64(delta)
 
     @property
@@ -118,11 +118,11 @@ class FloatIndexConverter(BaseIndexConverter):
     """
 
     def to_universal_index(self, index):
-        """Convert index to universal type"""
+        """Convert index to 'universal' type"""
         return np.float64(index)
 
     def to_universal_delta(self, delta):
-        """Convert index partition to universal type"""
+        """Convert index partition to 'universal' type"""
         return np.float64(delta)
 
     @property
