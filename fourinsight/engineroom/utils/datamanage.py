@@ -141,39 +141,37 @@ class BaseDataSource(ABC):
     Parameters
     ----------
     index_converter : obj
-        Index converter (instance of class:`BaseIndexConverter`).
+        Index converter (see Notes).
     index_sync : bool, optional
-        If the index should be synced. If True, a valid tolerance must be given.
-    tolerance : int, float or pandas.Timedelta
-        Tolerance limit for syncing (see Notes). If ``index_sync`` is set to True,
-        datapoints that are closer than the tolerance are merged so that they
-        share a common index. The common index will be the first index of the
-        neighboring datapoints.
-    cache : str
-        Cache folder. If None, caching is disabled.
+        If the index should be synced. If ``True``, a valid `tolerance` must be given.
+    tolerance :
+        Tolerance limit for syncing. Should be given in anything that
+        :meth:`index_converter.to_universal_delta` can parse. If `index_sync` is
+        set to ``True``, datapoints that are closer than the `tolerance` are merged
+        so that they share a common index. The common index will be the first index
+        of the neighboring datapoints.
+    cache : str, optional
+        Cache folder (see Notes). If ``None``, caching is disabled.
     cache_size :
-        Cache size as an index partition. Describes the size of each cache chunk.
-        Will be passed on to `index_converter.to_universal_delta`.
+        Cache size as an index partition (see Notes).
 
     Notes
     -----
-    - The `tolerance` must be of a type that is comparable to the data index. E.g.
-      if the data has a ``DatetimeIndex``, the tolerance should be of type
-      ``pandas.Timestamp``. And if the data has a ``Int64Index``, the tolerance
-      should be an integer.
-    - The `index_type` describes how to interpret the data index and convert it
-      to a universal type. By universal type, we mean a data type that is common
-      for all indexes related to the data.
+    - The ``index_converter`` is used to convert index values to a universal type.
+      For datetime-like indices, use a :class:`DatetimeIndexConverter`. For integer-like
+      indices, use a :class:`IntegerIndexConverter`. Other index converters can
+      be set up by inheriting from :class:`BaseIndexConverter`.
 
-      If ``index_type='datetime'``, a datetime-like index is expected. Indices are
-      passed on to :func:`universal_datetime_index` to create a universal index type.
+    - Caching will speed-up the data downloading, if the same data is requested multiple
+      times. First time some data is retrieved from the source, it will be split
+      up in 'chunks' and stored in a local folder. Then, the data is more readily
+      available next time it is requested.
 
-      If ``index_type='integer'``, an integer-like index is expected. Indices are
-      passed on to :func:`universal_integer_index` to create a universal index type.
+      The `cache_size` determines how to partition the data in chunks. It describes
+      the size of each cache chunk by providing an index span. The `cache_size` should
+      be given in anything that the :meth:`index_converter.to_universal_delta` can
+      parse.
 
-      Custom index types are provided through giving a ``callable`` as the `index_type`.
-      The callable should then take a single value or array-like, and convert it
-      to a universal type.
     """
 
     def __init__(
@@ -250,7 +248,7 @@ class BaseDataSource(ABC):
         end :
             End index of the data. Will be passed on to the :meth:`_get` method.
         refresh_cache : bool
-            Refresh cache if True.
+            Refresh cache if ``True``.
 
         Returns
         -------
@@ -521,38 +519,50 @@ class DrioDataSource(BaseDataSource):
         DataReservoir.io client.
     lables : dict
         Labels and timeseries IDs as key/value pairs.
-    index_type : str or callable
-        Index type (see Notes). Should be 'datetime', 'integer' or a callable.
+    index_type : str or obj
+        Index type (see Notes). Should be 'datetime', 'integer' or an `index converter`
+        object.
     index_sync : bool, optional
-        If the index should be synced. If True, a valid tolerance must be given.
-    tolerance : int, float or pandas.Timedelta
-        Tolerance limit for syncing (see Notes). If ``index_sync`` is set to True,
-        datapoints that are closer than the tolerance are merged so that they
-        share a common index. The common index will be the first index of the
-        neighboring datapoints.
+        If the index should be synced. If ``True``, a valid tolerance must be given.
+    tolerance :
+        Tolerance limit for syncing. Should be given in anything that
+        :meth:`index_converter.to_universal_delta` can parse. If `index_sync` is
+        set to ``True``, datapoints that are closer than the `tolerance` are merged
+        so that they share a common index. The common index will be the first index
+        of the neighboring datapoints.
+    cache : str, optional
+        Cache folder (see Notes). If ``None``, caching is disabled.
+    cache_size :
+        Cache size as an index partition (see Notes).
     **get_kwargs : optional
         Keyword arguments that will be passed on to the ``drio_client.get`` method.
 
     Notes
     -----
-    - The `tolerance` must be of a type that is comparable to the data index. E.g.
-      if the data has a ``DatetimeIndex``, the tolerance should be of type
-      ``pandas.Timestamp``. And if the data has a ``Int64Index``, the tolerance
-      should be an integer.
     - The `index_type` describes how to interpret the data index and convert it
       to a universal type. By universal type, we mean a data type that is common
-      for all indexes related to the data.
+      for all indices related to the data.
 
-      If ``index_type='datetime'``, a datetime-like index is expected. Indices are
-      passed on to ``pd.to_datetime`` and then converted to integer with ``np.int64``
-      to create a universal index type.
+      If `index_type` is set to 'datetime', a datetime-like index is expected. Indices
+      are then converted to a universal type using the :class:`DatetimeIndexConverter`.
 
-      If ``index_type='integer'``, an integer-like index is expected. Indices are
-      passed on to ``np.int64`` to create a universal index.
+      If `index_type` is set to 'integer', an integer-like index is expected. Indices
+      are then converted to a universal type using the :class:`IntegerIndexConverter`.
 
-      Custom index types are provided through giving a ``callable`` as the `index_type`.
-      The callable should then take a single value or list-like, and convert it
-      to a universal type.
+      Custom index types are provided through giving an 'index converter' object as
+      the `index_type`. The index converter should inherit from the abstract class,
+      :class:`BaseIndexConverter`.
+
+    - Caching will speed-up the data downloading, if the same data is requested multiple
+      times. First time some data is retrieved from the source, it will be split
+      up in 'chunks' and stored in a local folder. Then, the data is more readily
+      available next time it is requested.
+
+      The `cache_size` determines how to partition the data in chunks. It describes
+      the size of each cache chunk by providing an index span. The `cache_size` should
+      be given in anything that the :meth:`index_converter.to_universal_delta` can
+      parse.
+
     """
 
     def __init__(
@@ -576,6 +586,8 @@ class DrioDataSource(BaseDataSource):
         elif index_type == "integer":
             index_converter = IntegerIndexConverter()
             cache_size = cache_size or 8.64e13
+        elif isinstance(index_type, BaseIndexConverter):
+            index_converter = index_type
         else:
             raise ValueError("'index_type' should be 'datetime' or 'integer'.")
 
@@ -634,10 +646,10 @@ class _NullDataSource(BaseDataSource):
 
     Parameters
     ----------
+    index_converter : obj
+        Index converter.
     labels : list-like
         Data labels.
-    index_type : str or callable
-        Index type. Should be 'datetime', 'integer' or a callable.
     """
 
     def __init__(self, index_converter, labels=None):

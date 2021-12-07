@@ -957,6 +957,22 @@ class Test_DrioDataSource:
         assert isinstance(source._index_converter, IntegerIndexConverter)
         assert source._cache_size == 8.64e13
 
+    def test__init__obj(self):
+        drio_client = Mock()
+        labels = {
+            "a": "timeseriesid-a",
+            "b": "timeseriesid-b",
+            "c": "timeseriesid-c",
+        }
+        source = DrioDataSource(
+            drio_client,
+            labels,
+            index_type=FloatIndexConverter(),
+        )
+
+        assert isinstance(source._index_converter, FloatIndexConverter)
+        assert source._cache_size is None
+
     def test__init__index_type_raises(self):
         drio_client = Mock()
         labels = {
