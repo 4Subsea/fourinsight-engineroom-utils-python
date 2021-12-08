@@ -955,7 +955,7 @@ class Test_DrioDataSource:
         )
 
         assert isinstance(source._index_converter, IntegerIndexConverter)
-        assert source._cache_size == 8.64e13
+        assert source._cache_size is None
 
     def test__init__obj(self):
         drio_client = Mock()

@@ -522,7 +522,8 @@ class DrioDataSource(BaseDataSource):
     cache : str, optional
         Cache folder. If ``None`` (default), caching is disabled.
     cache_size :
-        Cache size as an index partition (see Notes).
+        Cache size as an index partition (see Notes). Defaults to ``'24H'`` if the
+        `index_type` is 'datetime', otherwise ``None`` is default.
     **get_kwargs : optional
         Keyword arguments that will be passed on to the ``drio_client.get`` method.
 
@@ -574,7 +575,6 @@ class DrioDataSource(BaseDataSource):
             cache_size = cache_size or "24H"
         elif index_type == "integer":
             index_converter = IntegerIndexConverter()
-            cache_size = cache_size or 8.64e13
         elif isinstance(index_type, BaseIndexConverter):
             index_converter = index_type
         else:
