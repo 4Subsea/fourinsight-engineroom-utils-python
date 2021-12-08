@@ -452,6 +452,24 @@ class ResultCollector:
             sort=False,
         )
 
+    def append_dataframe(self, dataframe):
+        """
+        Append rows of `dataframe` to the results.
+
+        Columns of `dataframe` must be in the headers.
+
+        Parameters
+        ----------
+        dataframe : pandas.DataFrame
+            The results to append.
+        """
+
+        for row_i, result_i in dataframe.to_dict(orient="index").items():
+            if self._indexing_mode == "auto":
+                row_i = None
+            self.new_row(row_i)
+            self.collect(**result_i)
+
     def pull(self, raise_on_missing=True):
         """
         Pull results from source. Remote source overwrites existing values.
