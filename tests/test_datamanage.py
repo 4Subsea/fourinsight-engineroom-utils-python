@@ -1238,6 +1238,31 @@ class Test_CompositeDataSource:
         source = CompositeDataSource(index_source)
         assert source.labels == ("A", "B", "C")
 
+    def test__fingerprint(self):
+        drio_client = Mock()
+        labels = {
+            "A": "8b1683bb-32a9-4e64-b122-6a0534eff592",
+            "B": "4bf4606b-b18e-408d-9d4d-3f1465ed23f2",
+            "C": "d40fcb53-cce8-4f1a-9772-c5640db29c18",
+        }
+        drio_source = DrioDataSource(drio_client, labels, index_type="datetime")
+        null_source = _NullDataSource(DatetimeIndexConverter(), labels=["A", "B", "C"])
+        index_source = [
+            ("2020-01-01 00:00", drio_source),
+            ("2020-01-01 02:00", null_source),
+            ("2020-01-01 04:00", drio_source),
+            ("2020-01-01 06:00", None),
+        ]
+        source = CompositeDataSource(index_source)
+        out = source._fingerprint
+        expect = md5(
+            (
+                f"{drio_source._fingerprint}_{null_source._fingerprint}"
+                + f"_{drio_source._fingerprint}_{null_source._fingerprint}"
+            ).encode()
+        ).hexdigest()
+        assert out == expect
+
     def test_get(self):
         drio_client = Mock()
         labels = {

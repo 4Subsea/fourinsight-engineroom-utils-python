@@ -725,6 +725,7 @@ class CompositeDataSource(BaseDataSource):
                 "indecies in 'index_source' must be in strictly increasing order."
             )
 
+    @property
     def _fingerprint(self):
         """Fingerprint that uniquely identifies the configuration of the data source."""
         fingerprint_list = [source._fingerprint for source in self._sources]
