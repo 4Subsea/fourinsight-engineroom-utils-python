@@ -81,8 +81,8 @@ between neighboring datapoints to merge.
     if they are closer than the tolerance limit.
 
 Caching is enabled by providing a `cache` folder and an appropriate `cache_size`.
-Caching will speed-up the data downloading, if the same data is requested multiple
-times. First time some data is retrieved from the source, it will be split up in
+Caching will significantly speed-up the data downloading, if the same data is requested
+multiple times. First time some data is retrieved from the source, it is split up in
 'chunks' and stored in a local folder. Then, the data is more readily available
 next time it is requested.
 
@@ -98,7 +98,7 @@ next time it is requested.
 .. tip::
     Due to how the caching routine is designed, it may be useful to set the `refresh_cache`
     flag to ``True`` first time data is downloaded. This will speed-up the first
-    data download. After the first download, set the flag to ``False`` so that data
+    data download. After the first download, set the flag to ``False``, so that data
     is retrieved from the cache that was built during the first download.
 
 
