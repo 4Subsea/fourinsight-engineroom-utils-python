@@ -157,7 +157,7 @@ class BaseDataSource(ABC):
 
     Notes
     -----
-    - The ``index_converter`` is used to convert index values to a universal type.
+    - The `index_converter` is used to convert index values to a universal type.
       For datetime-like indices, use a :class:`DatetimeIndexConverter`. For integer-like
       indices, use a :class:`IntegerIndexConverter`. Other index converters can
       be set up by inheriting from :class:`BaseIndexConverter`.
@@ -530,8 +530,9 @@ class DrioDataSource(BaseDataSource):
     Notes
     -----
     - The `index_type` describes how to interpret the data index and convert it
-      to a universal type. By universal type, we mean a data type that is common
-      for all indices related to the data.
+      to a 'universal type'. By universal type, we mean a data type that is common
+      for all indices related to the data. An internal ``index_converter`` object
+      is set based on the `index_type`.
 
       If `index_type` is set to 'datetime', a datetime-like index is expected. Indices
       are then converted to a universal type using the :class:`DatetimeIndexConverter`.
