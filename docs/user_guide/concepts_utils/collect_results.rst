@@ -23,9 +23,9 @@ The basic usage is illustrated with the examples below.
     # collect some results for the new row
     results.collect(a=1.5, b="some more text")
 
-    # collect multiple rows of results
+    # collect a dataframe of results
     df = pd.DataFrame(data={"a": [2, 5], "b": ["txt", "even more text"]})
-    results.collect_batch(df)
+    results.append(df)
 
     # return the results as a 'pandas.DataFrame'
     df = results.dataframe
@@ -37,7 +37,7 @@ and :meth:`~fourinsight.engineroom.utils.ResultCollector.truncate()`.
 If you are dealing with time-dependent results, and want to 'stamp' the results
 with a datetime value, this is facilitated by setting 'indexing_mode' to 'timestamp'
 during initialization. Then, a datetime value must be passed to :meth:`~fourinsight.engineroom.utils.ResultCollector.new_row()` when
-collecting results. For :meth:`~fourinsight.engineroom.utils.ResultCollector.collect_batch()`, the indexes of the dataframe must be a datetime.
+collecting results. For :meth:`~fourinsight.engineroom.utils.ResultCollector.append()`, the indexes of the dataframe must be a datetime.
 
 .. code-block:: python
 

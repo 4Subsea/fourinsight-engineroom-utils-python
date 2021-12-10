@@ -411,48 +411,7 @@ class ResultCollector:
             value_update = row_update.iloc[0]
         self._dataframe.loc[current_index, list(results.keys())] = value_update
 
-    def collect_batch(self, results):
-        """
-        Collect and store multiple rows of results.
-
-        Parameters
-        ----------
-        results : dataframe
-            The results as a dataframe, where the columns must be in the headers.
-        """
-        index = results.index.inferred_type
-        if self._indexing_mode == "auto" and index != "integer":
-            raise ValueError(
-                "'indexing_mode' is set to 'auto'. " "Results must have integer index"
-            )
-        elif self._indexing_mode == "timestamp" and index != "datetime64":
-            raise ValueError(
-                "'indexing_mode' is set to 'timestamp'. "
-                "Results must have datetime index"
-            )
-
-        if not set(self._headers.keys()).issuperset(results.columns):
-            raise KeyError("Dataframe columns must be in headers.")
-
-        try:
-            df_update = results.astype(
-                {
-                    header: dtype_
-                    for header, dtype_ in self._headers.items()
-                    if header in results.columns
-                }
-            )
-        except ValueError:
-            raise ValueError("Unable to cast 'results' to correct dtype")
-
-        self._dataframe = self._dataframe.append(
-            df_update,
-            verify_integrity=True,
-            ignore_index=self._ignore_index,
-            sort=False,
-        )
-
-    def append_dataframe(self, dataframe):
+    def append(self, dataframe):
         """
         Append rows of `dataframe` to the results.
 

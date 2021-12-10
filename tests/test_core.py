@@ -531,7 +531,7 @@ class Test_ResultCollector:
 
         pd.testing.assert_frame_equal(df_out, df_expect)
 
-    def test_collect_batch(self):
+    def test_append(self):
         headers = {"a": float, "b": str, "c": float, "d": int}
         results = ResultCollector(headers, indexing_mode="auto")
 
@@ -542,7 +542,7 @@ class Test_ResultCollector:
             "d": [None, 1, None],
         }
         df_in = pd.DataFrame(data=data)
-        results.collect_batch(df_in)
+        results.append(df_in)
         df_expect = df_in.astype(
             {"a": "float64", "b": "string", "c": "float64", "d": "Int64"}
         )
@@ -550,7 +550,7 @@ class Test_ResultCollector:
         df_out = results._dataframe
         pd.testing.assert_frame_equal(df_out, df_expect)
 
-    def test_collect_batch_timestamp(self):
+    def test_append_timestamp(self):
         headers = {"a": float, "b": str, "c": float, "d": int}
         results = ResultCollector(headers, indexing_mode="timestamp")
 
@@ -560,128 +560,12 @@ class Test_ResultCollector:
             "c": [1.0, None, 3.0],
             "d": [None, 1, None],
         }
-        index = pd.date_range(start="2021-11-01", end="2021-11-02", periods=3)
+        index = pd.date_range(start="2021-11-01", end="2021-11-02", periods=3, tz="UTC")
         df_in = pd.DataFrame(data=data, index=index)
-        results.collect_batch(df_in)
+        results.append(df_in)
         df_expect = df_in.astype(
             {"a": "float64", "b": "string", "c": "float64", "d": "Int64"}
         )
-
-        df_out = results._dataframe
-        pd.testing.assert_frame_equal(df_out, df_expect)
-
-    def test_collect_batch_raises_ValueError(self):
-        headers = {"a": float, "b": float, "c": float, "d": int}
-        results = ResultCollector(headers, indexing_mode="auto")
-
-        data = {
-            "a": [1.2, 2.3, 3.4],
-            "b": ["string", None, "hi"],
-            "c": [1.0, None, 3.0],
-            "d": [None, 1, None],
-        }
-        df_in = pd.DataFrame(data=data)
-
-        with pytest.raises(ValueError):
-            results.collect_batch(df_in)
-
-    def test_collect_batch_ValueError_timestamp(self):
-        headers = {"a": float, "b": str, "c": float, "d": int}
-        results = ResultCollector(headers, indexing_mode="auto")
-
-        data = {
-            "a": [1.2, 2.3, 3.4],
-            "b": ["string", None, "hi"],
-            "c": [1.0, None, 3.0],
-            "d": [None, 1, None],
-        }
-        index = pd.date_range(start="2021-11-01", end="2021-11-02", periods=3)
-        df_in = pd.DataFrame(data=data, index=index)
-
-        with pytest.raises(ValueError):
-            results.collect_batch(df_in)
-
-    def test_collect_batch_raises_ValueError_integer(self):
-        headers = {"a": float, "b": float, "c": float, "d": int}
-        results = ResultCollector(headers, indexing_mode="timestamp")
-
-        data = {
-            "a": [1.2, 2.3, 3.4],
-            "b": ["string", None, "hi"],
-            "c": [1.0, None, 3.0],
-            "d": [None, 1, None],
-        }
-        df_in = pd.DataFrame(data=data)
-
-        with pytest.raises(ValueError):
-            results.collect_batch(df_in)
-
-    def test_collect_batch_raises_KeyError(self):
-        headers = {"a": float, "b": str, "c": float}
-        results = ResultCollector(headers, indexing_mode="auto")
-
-        data = {
-            "a": [1.2, 2.3, 3.4],
-            "b": ["string", None, "hi"],
-            "c": [1.0, None, 3.0],
-            "d": [None, 1, None],
-        }
-        df_in = pd.DataFrame(data=data)
-
-        with pytest.raises(KeyError):
-            results.collect_batch(df_in)
-
-    def test_collect_batch_one_row(self):
-        headers = {"a": float, "b": str, "c": float, "d": int}
-        results = ResultCollector(headers, indexing_mode="auto")
-
-        data = {
-            "a": [1.2],
-            "b": ["string"],
-            "c": [1.0],
-            "d": [3],
-        }
-        df_in = pd.DataFrame(data=data)
-        results.collect_batch(df_in)
-        df_expect = df_in.astype(
-            {"a": "float64", "b": "string", "c": "float64", "d": "Int64"}
-        )
-
-        df_out = results._dataframe
-        pd.testing.assert_frame_equal(df_out, df_expect)
-
-    def test_collect_batch_single_float(self):
-        headers = {"a": float}
-        results = ResultCollector(headers, indexing_mode="auto")
-
-        data = {"a": [1.2]}
-        df_in = pd.DataFrame(data=data)
-        results.collect_batch(df_in)
-        df_expect = df_in.astype({"a": "float64"})
-
-        df_out = results._dataframe
-        pd.testing.assert_frame_equal(df_out, df_expect)
-
-    def test_collect_batch_single_str(self):
-        headers = {"a": str}
-        results = ResultCollector(headers, indexing_mode="auto")
-
-        data = {"a": ["string"]}
-        df_in = pd.DataFrame(data=data)
-        results.collect_batch(df_in)
-        df_expect = df_in.astype({"a": "string"})
-
-        df_out = results._dataframe
-        pd.testing.assert_frame_equal(df_out, df_expect)
-
-    def test_collect_batch_single_int(self):
-        headers = {"a": int}
-        results = ResultCollector(headers, indexing_mode="auto")
-
-        data = {"a": [3]}
-        df_in = pd.DataFrame(data=data)
-        results.collect_batch(df_in)
-        df_expect = df_in.astype({"a": "Int64"})
 
         df_out = results._dataframe
         pd.testing.assert_frame_equal(df_out, df_expect)
