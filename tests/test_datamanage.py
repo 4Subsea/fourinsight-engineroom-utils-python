@@ -924,7 +924,7 @@ class Test_DrioDataSource:
             labels,
             index_type="datetime",
             index_sync=True,
-            tolerance=1,
+            tolerance="1s",
             cache=cache_dir,
             cache_size=None,
             convert_date=False,
@@ -935,11 +935,11 @@ class Test_DrioDataSource:
         assert source._drio_client == drio_client
         assert source._labels == labels
         assert source._index_sync is True
-        assert source._tolerance == 1
+        assert source._tolerance == pd.to_timedelta("1s")
         assert source._get_kwargs == {"convert_date": False, "raise_empty": True}
         assert isinstance(source._index_converter, DatetimeIndexConverter)
         assert source._cache == Path(cache_dir)
-        assert source._cache_size == "24H"
+        assert source._cache_size == pd.to_timedelta("24H")
 
     def test__init__integer(self):
         drio_client = Mock()

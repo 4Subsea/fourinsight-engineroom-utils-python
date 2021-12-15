@@ -184,9 +184,13 @@ class BaseDataSource(ABC):
     ):
         self._index_converter = index_converter
         self._index_sync = index_sync
-        self._tolerance = tolerance
+        self._tolerance = (
+            self._index_converter.to_universal_delta(tolerance) if tolerance else None
+        )
         self._cache = Path(cache) if cache else None
-        self._cache_size = cache_size
+        self._cache_size = (
+            self._index_converter.to_universal_delta(cache_size) if cache_size else None
+        )
         self._memory_cache = {}
 
         if self._cache and self._cache_size is None:
