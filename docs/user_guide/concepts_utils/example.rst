@@ -12,6 +12,7 @@ of each variable is calculated, collected, and stored in *Azure Blob Storage*.
 A :class:`~fourinsight.engineroom.utils.DrioDataSource` object is used to download the data group, 'A' and 'B',
 from the *DataReservoir.io*. The data is downloaded in 1-hour chunks using the :meth:`~fourinsight.engineroom.utils.DrioDataSource.iter()`
 method and the :meth:`~fourinsight.engineroom.utils.iter_index.date_range()` convenience function.
+Caching is enabled by providing a `cache` folder and an appropriate `cache_size`.
 
 :class:`~fourinsight.engineroom.utils.PersistentDict` is used to keep track of the state parameter, 'TimeOfLastIndex'.
 This state parameter tells the script which results it has already collected, so that the
@@ -48,7 +49,7 @@ are stored in *Azure Blob Storage* using the :class:`~fourinsight.engineroom.uti
         "A": "8b1683bb-32a9-4e64-b122-6a0534eff592",
         "B": "4bf4606b-b18e-408d-9d4d-3f1465ed23f2"
     }
-    source = DrioDataSource(drio_client, data_labels)
+    source = DrioDataSource(drio_client, data_labels, cache='.cache', cache_size='3H')
 
     # Get the application state
     state_handler = LocalFileHandler("state.json")

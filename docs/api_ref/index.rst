@@ -11,3 +11,4 @@ functions and methods.
    result_collector
    data_source/index
    iter_index
+   index_converters/index
