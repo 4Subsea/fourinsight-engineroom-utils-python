@@ -326,7 +326,8 @@ class BaseDataSource(ABC):
                     self._index_converter.to_native_index(start_uni_i),
                     self._index_converter.to_native_index(end_uni_i),
                 )
-                df_i = self._slice(df_i, start_uni_i, end_uni_i)
+                if not df_i.empty:
+                    df_i = self._slice(df_i, start_uni_i, end_uni_i)
                 self._cache_write(chunk_id, df_i.copy(deep=True))
             df_list.append(df_i)
             memory_cache_update[chunk_id] = df_i
