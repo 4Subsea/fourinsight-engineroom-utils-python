@@ -5,6 +5,7 @@ from pathlib import Path
 from unittest.mock import Mock, call, patch
 
 import numpy as np
+from numpy import testing
 import pandas as pd
 import pytest
 
@@ -94,6 +95,32 @@ class Test_BaseDataSource:
         source = BaseDataSourceForTesting(DatetimeIndexConverter())
         with pytest.raises(NotImplementedError):
             source._get("2020-01-01", "2021-01-01")
+
+    def test__slice_empty(self):
+        source = BaseDataSourceForTesting(IntegerIndexConverter())
+        df = pd.DataFrame(data={"a": []}, index=[])
+
+        df_out = source._slice(df, 5, 10)
+        pd.testing.assert_frame_equal(df, df_out)
+
+    def test__slice_integerindex(self):
+        source = BaseDataSourceForTesting(IntegerIndexConverter())
+        df = pd.DataFrame(data={"a": [1, 1, 2, 3, 5]}, index=[0, 1, 2, 3, 4])
+
+        df_out = source._slice(df, 1, 3)
+        df_expected = pd.DataFrame(data={"a": [1, 2]}, index=[1, 2])
+        pd.testing.assert_frame_equal(df_out, df_expected)
+
+    def test__slice_datetimeindex(self):
+        source = BaseDataSourceForTesting(DatetimeIndexConverter())
+        index = pd.date_range("2020-01-01 00:00", freq="1min", periods=5)
+        df = pd.DataFrame(data={"a": [1, 1, 2, 3, 5]}, index=index)
+
+        df_out = source._slice(
+            df, pd.Timestamp("2020-01-01 00:01"), pd.Timestamp("2020-01-01 00:03")
+        )
+        df_expected = pd.DataFrame(data={"a": [1, 2]}, index=index[1:3])
+        pd.testing.assert_frame_equal(df_out, df_expected)
 
     def test__sync_data_datetimeindex(self):
         index_a = pd.date_range("2020-01-01 00:00", "2020-02-01 00:00", freq="5s")
