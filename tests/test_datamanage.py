@@ -5,7 +5,6 @@ from pathlib import Path
 from unittest.mock import Mock, call, patch
 
 import numpy as np
-from numpy import testing
 import pandas as pd
 import pytest
 
