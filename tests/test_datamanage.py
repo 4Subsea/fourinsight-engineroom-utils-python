@@ -98,6 +98,7 @@ class Test_BaseDataSource:
     def test__slice_empty(self):
         source = BaseDataSourceForTesting(IntegerIndexConverter())
         df = pd.DataFrame(data={"a": []}, index=[])
+        df.index = df.index.astype(int)
 
         df_out = source._slice(df, 5, 10)
         pd.testing.assert_frame_equal(df, df_out)
