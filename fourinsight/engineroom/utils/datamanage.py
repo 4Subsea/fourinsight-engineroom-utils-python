@@ -395,7 +395,7 @@ class BaseDataSource(ABC):
     def _slice(df, start, end):
         """Slice dataframe and exclude endpoint"""
         df = df.loc[start:end]
-        if df.index[-1] == end:
+        if not df.empty and (df.index[-1] == end):
             df = df.iloc[:-1]
         return df
 
