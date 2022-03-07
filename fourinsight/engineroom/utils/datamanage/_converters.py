@@ -1,6 +1,6 @@
 __all__ = ["BaseIndexConverter", "IntegerIndexConverter", "DatetimeIndexConverter"]
 
-from abc import abstractmethod, abstractproperty, ABC
+from abc import ABC, abstractmethod, abstractproperty
 
 import numpy as np
 import pandas as pd

@@ -1,6 +1,5 @@
-from . import _converters
+from . import _converters, _datasources
 from ._converters import *
-from . import _datasources
 from ._datasources import *
 
 __all__ = _datasources.__all__.copy()

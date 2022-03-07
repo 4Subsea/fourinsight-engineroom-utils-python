@@ -1,5 +1,4 @@
-from . import iter_index
-from . import core
+from . import core, iter_index
 from .core import *
 from .datamanage import CompositeDataSource, DrioDataSource
 

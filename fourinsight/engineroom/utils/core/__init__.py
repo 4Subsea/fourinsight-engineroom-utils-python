@@ -1,6 +1,5 @@
-from . import _core
+from . import _core, _handlers
 from ._core import *
-from . import _handlers
 from ._handlers import *
 
 __all__ = _core.__all__.copy()

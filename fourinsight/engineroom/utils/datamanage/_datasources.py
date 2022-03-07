@@ -21,7 +21,11 @@ except ImportError:
 import numpy as np
 import pandas as pd
 
-from ._converters import BaseIndexConverter, IntegerIndexConverter, DatetimeIndexConverter
+from ._converters import (
+    BaseIndexConverter,
+    DatetimeIndexConverter,
+    IntegerIndexConverter,
+)
 
 
 class BaseDataSource(ABC):

@@ -6,7 +6,7 @@ from collections.abc import MutableMapping
 
 import pandas as pd
 
-from ._handlers import NullHandler, BaseHandler
+from ._handlers import BaseHandler, NullHandler
 
 
 class PersistentDict(MutableMapping):
