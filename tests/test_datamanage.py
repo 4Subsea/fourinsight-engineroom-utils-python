@@ -1370,8 +1370,6 @@ class Test_CompositeDataSource:
                 "C": pd.Series([1.0, 2.0, 3.0, 1.0, 2.0, 3.0], index=idx_expect),
             }
 
-            print(data_out)
-            print(pd.DataFrame(data_expect))
             pd.testing.assert_frame_equal(data_out, pd.DataFrame(data_expect))
 
             mock_get1.assert_called_once_with("2020-01-01 00:00", "2020-01-01 02:00")
