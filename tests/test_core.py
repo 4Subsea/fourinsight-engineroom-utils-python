@@ -172,7 +172,9 @@ class Test_LocalFileHandler:
 
 
 class Test_AzureBlobHandler:
-    @patch("fourinsight.engineroom.utils.core._handlers.BlobClient.from_connection_string")
+    @patch(
+        "fourinsight.engineroom.utils.core._handlers.BlobClient.from_connection_string"
+    )
     def test__init__(self, mock_from_connection_string):
         handler = AzureBlobHandler(
             "some_connection_string", "some_container_name", "some_blob_name"

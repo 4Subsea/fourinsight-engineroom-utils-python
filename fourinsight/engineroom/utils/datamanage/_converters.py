@@ -1,4 +1,9 @@
-__all__ = ["BaseIndexConverter", "IntegerIndexConverter", "FloatIndexConverter", "DatetimeIndexConverter"]
+__all__ = [
+    "BaseIndexConverter",
+    "IntegerIndexConverter",
+    "FloatIndexConverter",
+    "DatetimeIndexConverter",
+]
 
 from abc import ABC, abstractmethod, abstractproperty
 
