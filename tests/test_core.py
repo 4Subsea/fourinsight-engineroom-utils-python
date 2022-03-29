@@ -403,13 +403,13 @@ class Test_ResultCollector:
 
         results.new_row()
         df_expect = pd.DataFrame(
-            columns=("a", "b", "c"), index=pd.Int64Index([0])
+            columns=("a", "b", "c"), index=pd.Index([0], dtype="int64")
         ).astype({"a": "float64", "b": "string", "c": "Int64"})
         pd.testing.assert_frame_equal(results._dataframe, df_expect)
 
         results.new_row()
         df_expect = pd.DataFrame(
-            columns=("a", "b", "c"), index=pd.Int64Index([0, 1])
+            columns=("a", "b", "c"), index=pd.Index([0, 1], dtype="int64")
         ).astype({"a": "float64", "b": "string", "c": "Int64"})
         pd.testing.assert_frame_equal(results._dataframe, df_expect)
 
@@ -472,7 +472,7 @@ class Test_ResultCollector:
                 "c": [None, 1.0, None],
                 "d": [None, 1, None],
             },
-            index=pd.Int64Index([0, 1, 2]),
+            index=pd.Index([0, 1, 2], dtype="int64"),
         ).astype({"a": "float64", "b": "string", "c": "float64", "d": "Int64"})
 
         pd.testing.assert_frame_equal(df_out, df_expect)
@@ -496,7 +496,7 @@ class Test_ResultCollector:
         df_out = results._dataframe
         df_expect = pd.DataFrame(
             data={"a": [1.1]},
-            index=pd.Int64Index([0]),
+            index=pd.Index([0], dtype="int64"),
         ).astype({"a": "float64"})
 
         pd.testing.assert_frame_equal(df_out, df_expect)
@@ -511,7 +511,7 @@ class Test_ResultCollector:
         df_out = results._dataframe
         df_expect = pd.DataFrame(
             data={"a": [1]},
-            index=pd.Int64Index([0]),
+            index=pd.Index([0], dtype="int64"),
         ).astype({"a": "Int64"})
 
         pd.testing.assert_frame_equal(df_out, df_expect)
@@ -526,7 +526,7 @@ class Test_ResultCollector:
         df_out = results._dataframe
         df_expect = pd.DataFrame(
             data={"a": ["one"]},
-            index=pd.Int64Index([0]),
+            index=pd.Index([0], dtype="int64"),
         ).astype({"a": "string"})
 
         pd.testing.assert_frame_equal(df_out, df_expect)
@@ -587,7 +587,7 @@ class Test_ResultCollector:
                 "c": [None, None, None],
                 "d": [None, None, None],
             },
-            index=pd.Int64Index([0, 1, 2]),
+            index=pd.Index([0, 1, 2], dtype="int64"),
         ).astype({"a": "float64", "b": "string", "c": "float64", "d": "string"})
 
         pd.testing.assert_frame_equal(df_out, df_expect)
@@ -716,7 +716,7 @@ class Test_ResultCollector:
                 "c": [np.nan, np.nan],
                 "d": [np.nan, np.nan],
             },
-            index=pd.Int64Index([0, 1]),
+            index=pd.Index([0, 1], dtype="int64"),
         ).astype({"a": "Int64", "b": "string", "c": "float64", "d": "string"})
 
         pd.testing.assert_frame_equal(df_out, df_expect)
@@ -758,7 +758,7 @@ class Test_ResultCollector:
                 "c": [None, 2.0],
                 "d": [None, "23.4"],
             },
-            index=pd.Int64Index([0, 1]),
+            index=pd.Index([0, 1], dtype="int64"),
         ).astype({"a": "Int64", "b": "string", "c": "float64", "d": "string"})
 
         pd.testing.assert_frame_equal(df_out, df_expect)
@@ -786,7 +786,7 @@ class Test_ResultCollector:
                 "c": [1, 2, 4, 5],
                 "d": [None, None, None, None],
             },
-            index=pd.Int64Index([0, 1, 2, 3]),
+            index=pd.Index([0, 1, 2, 3], dtype="int64"),
         ).astype({"a": "float64", "b": "string", "c": "Int64", "d": "float64"})
 
         pd.testing.assert_frame_equal(df_out, df_expect)
@@ -814,7 +814,7 @@ class Test_ResultCollector:
                 "c": [1, 5],
                 "d": [None, None],
             },
-            index=pd.Int64Index([0, 1]),
+            index=pd.Index([0, 1], dtype="int64"),
         ).astype({"a": "float64", "b": "string", "c": "Int64", "d": "float64"})
 
         pd.testing.assert_frame_equal(df_out, df_expect)
@@ -1052,7 +1052,7 @@ class Test_ResultCollector:
                 "c": [2, 3, 4],
                 "d": [None, None, None],
             },
-            index=pd.Int64Index([0, 1, 2]),
+            index=pd.Index([0, 1, 2], dtype="int64"),
         ).astype({"a": "float64", "b": "string", "c": "Int64", "d": "float64"})
 
         pd.testing.assert_frame_equal(df_out, df_expect)
@@ -1080,7 +1080,7 @@ class Test_ResultCollector:
                 "c": [1, 2, 3, 4],
                 "d": [None, None, None, None],
             },
-            index=pd.Int64Index([0, 1, 2, 3]),
+            index=pd.Index([0, 1, 2, 3], dtype="int64"),
         ).astype({"a": "float64", "b": "string", "c": "Int64", "d": "float64"})
 
         pd.testing.assert_frame_equal(df_out, df_expect)
@@ -1108,7 +1108,7 @@ class Test_ResultCollector:
                 "c": [2, 3, 4, 5],
                 "d": [None, None, None, None],
             },
-            index=pd.Int64Index([0, 1, 2, 3]),
+            index=pd.Index([0, 1, 2, 3], dtype="int64"),
         ).astype({"a": "float64", "b": "string", "c": "Int64", "d": "float64"})
 
         pd.testing.assert_frame_equal(df_out, df_expect)
@@ -1136,7 +1136,7 @@ class Test_ResultCollector:
                 "c": [1, 2, 3, 4, 5],
                 "d": [None, None, None, None, None],
             },
-            index=pd.Int64Index([0, 1, 2, 3, 4]),
+            index=pd.Index([0, 1, 2, 3, 4], dtype="int64"),
         ).astype({"a": "float64", "b": "string", "c": "Int64", "d": "float64"})
 
         pd.testing.assert_frame_equal(df_out, df_expect)
