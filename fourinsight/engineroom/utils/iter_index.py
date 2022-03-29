@@ -6,7 +6,7 @@ def date_range(
     end=None,
     periods=None,
     freq=None,
-    closed=None,
+    inclusive=None,
     **kwargs,
 ):
     """
@@ -22,9 +22,8 @@ def date_range(
         Number of periods to generate.
     freq : str or DateOffset, default 'D'
         Frequency.
-    closed : {None, 'left', 'right'}, optional
-        Make the interval closed with respect to the given frequency to
-        the 'left', 'right', or both sides (None, the default).
+    inclusive : {"both", "neither", "left", "right"}, default "both"
+        Include boundaries; whether to set each bound as closed or open.
     **kwargs :
         Additional keyword arguments that will be passed on to ``pandas.date_range()``.
 
@@ -36,6 +35,6 @@ def date_range(
         Sequence of end values as `pandas.Timestamp`.
     """
     start_end = pd.date_range(
-        start=start, end=end, periods=periods, freq=freq, closed=closed, **kwargs
+        start=start, end=end, periods=periods, freq=freq, inclusive=inclusive, **kwargs
     )
     return list(start_end[:-1]), list(start_end[1:])
