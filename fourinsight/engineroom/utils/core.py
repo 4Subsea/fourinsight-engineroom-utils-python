@@ -458,9 +458,9 @@ class ResultCollector:
         if (
             not df.index.empty
             and (self._indexing_mode == "auto")
-            and not (isinstance(df.index, pd.Int64Index))
+            and not (df.index.dtype == "int64")
         ):
-            raise ValueError("Index must be 'Int64Index'.")
+            raise ValueError("Index dtype must be 'int64'.")
         elif (
             not df.index.empty
             and (self._indexing_mode == "timestamp")
