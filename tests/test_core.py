@@ -697,7 +697,11 @@ class Test_ResultCollector:
         with open(tmp_path / "results.csv", mode="r") as f:
             csv_out = f.read()
 
-        csv_expect = ",a,b,c,d\n2020-01-01 00:00:00+00:00,1.1,test,,\n2020-01-01 01:00:00+00:00,2.2,value,,\n"
+        csv_expect = (
+            ",a,b,c,d\n"
+            "2020-01-01 00:00:00+00:00,1.1,test,,\n"
+            "2020-01-01 01:00:00+00:00,2.2,value,,\n"
+        )
         assert csv_out == csv_expect
 
     def test_dataframe_auto(self):
