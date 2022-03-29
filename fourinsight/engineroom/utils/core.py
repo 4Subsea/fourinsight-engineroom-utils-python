@@ -372,8 +372,12 @@ class ResultCollector:
         row_new = pd.DataFrame(
             {header: None for header in self._headers}, index=[index]
         ).astype(self._headers)
-        self._dataframe = self._dataframe.append(
-            row_new, verify_integrity=True, ignore_index=self._ignore_index, sort=False
+
+        self._dataframe = pd.concat(
+            [self._dataframe, row_new],
+            verify_integrity=True,
+            ignore_index=self._ignore_index,
+            sort=False,
         )
 
     def collect(self, **results):
@@ -454,9 +458,9 @@ class ResultCollector:
         if (
             not df.index.empty
             and (self._indexing_mode == "auto")
-            and not (isinstance(df.index, pd.Int64Index))
+            and not (df.index.dtype == "int64")
         ):
-            raise ValueError("Index must be 'Int64Index'.")
+            raise ValueError("Index dtype must be 'int64'.")
         elif (
             not df.index.empty
             and (self._indexing_mode == "timestamp")
