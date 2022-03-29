@@ -372,8 +372,11 @@ class ResultCollector:
         row_new = pd.DataFrame(
             {header: None for header in self._headers}, index=[index]
         ).astype(self._headers)
-        self._dataframe = self._dataframe.append(
-            row_new, verify_integrity=True, ignore_index=self._ignore_index, sort=False
+        self._dataframe = pd.concat(
+            [self._dataframe, row_new],
+            verify_integrity=True,
+            ignore_index=self._ignore_index,
+            sort=False,
         )
 
     def collect(self, **results):
