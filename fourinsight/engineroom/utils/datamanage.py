@@ -572,8 +572,11 @@ class DrioDataSource(BaseDataSource):
         **get_kwargs,
     ):
         self._drio_client = drio_client
-        self._labels = labels
         self._get_kwargs = get_kwargs
+
+        for label, id in labels.items():
+            labels[label] = id.strip()
+        self._labels = labels
 
         if index_type == "datetime":
             index_converter = DatetimeIndexConverter()
