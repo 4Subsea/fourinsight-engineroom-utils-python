@@ -3,6 +3,7 @@ import types
 from hashlib import md5
 from pathlib import Path
 from unittest.mock import Mock, call, patch
+from black import assert_equivalent
 
 import numpy as np
 import pandas as pd
@@ -1048,6 +1049,17 @@ class Test_DrioDataSource:
         }
         source = DrioDataSource(Mock(), labels)
         assert set(source.labels) == set(["a", "b", "c"])
+
+    def test__labels_whitespace(self):
+        labels = {
+            "a": "timeseriesid-a  ",
+            "b": "  timeseriesid-b",
+            "c": "timeseriesid-c",
+        }
+        source = DrioDataSource(Mock(), labels)
+        new_list = list(source._labels.values())
+        # assert type(new_list) is list
+        assert (' ' in new_list) is False
 
     def test__get(self):
         drio_client = Mock()
