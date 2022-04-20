@@ -1058,7 +1058,6 @@ class Test_DrioDataSource:
         }
         source = DrioDataSource(Mock(), labels)
         new_list = list(source._labels.values())
-        # assert type(new_list) is list
         assert (' ' in new_list) is False
 
     def test__get(self):
