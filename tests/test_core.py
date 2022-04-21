@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from azure.core.exceptions import ResourceNotFoundError
+
 from fourinsight.engineroom.utils import (
     AzureBlobHandler,
     LocalFileHandler,
