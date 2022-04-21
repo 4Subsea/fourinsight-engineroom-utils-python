@@ -7,14 +7,9 @@ import numpy as np
 import pandas as pd
 import pytest
 from azure.core.exceptions import ResourceNotFoundError
-
-from fourinsight.engineroom.utils import (
-    AzureBlobHandler,
-    LocalFileHandler,
-    NullHandler,
-    PersistentDict,
-    ResultCollector,
-)
+from fourinsight.engineroom.utils import (AzureBlobHandler, LocalFileHandler,
+                                          NullHandler, PersistentDict,
+                                          ResultCollector)
 from fourinsight.engineroom.utils.core import BaseHandler
 
 REMOTE_FILE_PATH = Path(__file__).parent / "testdata/a_test_file.json"

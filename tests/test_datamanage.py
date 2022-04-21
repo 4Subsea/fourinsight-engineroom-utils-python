@@ -8,13 +8,11 @@ import numpy as np
 import pandas as pd
 import pytest
 from fourinsight.engineroom.utils import CompositeDataSource, DrioDataSource
-from fourinsight.engineroom.utils.datamanage import (
-    BaseDataSource,
-    DatetimeIndexConverter,
-    FloatIndexConverter,
-    IntegerIndexConverter,
-    _NullDataSource,
-)
+from fourinsight.engineroom.utils.datamanage import (BaseDataSource,
+                                                     DatetimeIndexConverter,
+                                                     FloatIndexConverter,
+                                                     IntegerIndexConverter,
+                                                     _NullDataSource)
 
 
 class BaseDataSourceForTesting(BaseDataSource):
@@ -1056,7 +1054,7 @@ class Test_DrioDataSource:
         }
         source = DrioDataSource(Mock(), labels)
         new_list = list(source._labels.values())
-        assert (' ' in new_list) is False
+        assert (" " in new_list) is False
 
     def test__get(self):
         drio_client = Mock()
