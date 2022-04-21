@@ -8,11 +8,13 @@ import numpy as np
 import pandas as pd
 import pytest
 from fourinsight.engineroom.utils import CompositeDataSource, DrioDataSource
-from fourinsight.engineroom.utils.datamanage import (BaseDataSource,
-                                                     DatetimeIndexConverter,
-                                                     FloatIndexConverter,
-                                                     IntegerIndexConverter,
-                                                     _NullDataSource)
+from fourinsight.engineroom.utils.datamanage import (
+    BaseDataSource,
+    DatetimeIndexConverter,
+    FloatIndexConverter,
+    IntegerIndexConverter,
+    _NullDataSource,
+)
 
 
 class BaseDataSourceForTesting(BaseDataSource):
