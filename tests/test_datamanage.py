@@ -3,7 +3,6 @@ import types
 from hashlib import md5
 from pathlib import Path
 from unittest.mock import Mock, call, patch
-from black import assert_equivalent
 
 import numpy as np
 import pandas as pd
