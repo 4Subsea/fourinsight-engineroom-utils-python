@@ -1049,6 +1049,23 @@ class Test_DrioDataSource:
         source = DrioDataSource(Mock(), labels)
         assert set(source.labels) == set(["a", "b", "c"])
 
+    def test__labels_whitespace(self):
+        labels_in = {
+            "a": "timeseriesid-a  ",
+            "b": "  timeseriesid-b",
+            "c": "timeseriesid-c",
+        }
+        source = DrioDataSource(Mock(), labels_in)
+        labels_out = source._labels
+
+        labels_expect = {
+            "a": "timeseriesid-a",
+            "b": "timeseriesid-b",
+            "c": "timeseriesid-c",
+        }
+
+        assert labels_out == labels_expect
+
     def test__get(self):
         drio_client = Mock()
         drio_client.get.return_value = pd.Series(
