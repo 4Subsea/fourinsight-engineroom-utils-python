@@ -1050,14 +1050,21 @@ class Test_DrioDataSource:
         assert set(source.labels) == set(["a", "b", "c"])
 
     def test__labels_whitespace(self):
-        labels = {
+        labels_in = {
             "a": "timeseriesid-a  ",
             "b": "  timeseriesid-b",
             "c": "timeseriesid-c",
         }
-        source = DrioDataSource(Mock(), labels)
-        new_list = list(source._labels.values())
-        assert (" " in new_list) is False
+        source = DrioDataSource(Mock(), labels_in)
+        labels_out = source._labels
+
+        labels_expect = {
+            "a": "timeseriesid-a",
+            "b": "timeseriesid-b",
+            "c": "timeseriesid-c",
+        }
+
+        assert labels_out == labels_expect
 
     def test__get(self):
         drio_client = Mock()
