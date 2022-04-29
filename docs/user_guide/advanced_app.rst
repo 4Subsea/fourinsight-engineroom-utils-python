@@ -15,18 +15,19 @@ A more comprehensive folder structure for advanced applications:
 
     advanced_example_app/
     ├── README.md
-    └── src/
-        ├── .config/
-        │   ├── config_a.json
-        │   └── config_b.json
-        ├── app/
-        │   ├── __init__.py
-        │   ├── module_a.py
-        │   └── module_b.py
-        ├── packages/
-        │   └── private_package.whl
-        ├── run.py
-        └── requirements.txt
+    ├── src/
+    │   ├── .config/
+    │   │   ├── config_a.json
+    │   │   └── config_b.json
+    │   ├── app/
+    │   │   ├── __init__.py
+    │   │   ├── module_a.py
+    │   │   └── module_b.py
+    │   ├── packages/
+    │   │   └── private_package.whl
+    │   ├── run.py
+    │   └── requirements.txt
+    └── tests/
 
 Divide application into smaller sub-modules
 -------------------------------------------
@@ -43,7 +44,7 @@ It is good practice to separate the application code and the configuration param
 This ensures overview and easy altering of the configuration.
 
 One way to store configuration parameters, is to keep them in `JSON` files and
-read these files in the application code. These files may be stores in folder
+read these files in the application code. These files may be stored in a folder
 under `src`, e.g. ``src/.config/config_a.json`` as suggested above.
 
 Another way of storing configuration parameters, is to define
@@ -67,7 +68,12 @@ in the application as pip-installable `wheel` files. Remember to add these packa
     -f ./packages
     private_package
 
-
+Test your application
+---------------------
+To validate that the application works as expected, it is important to write unit
+tests and integration tests for your application. Test files should be stored in
+the ``tests/`` folder. It is good practice to separate the test files from the application
+source code. 
 
 
 .. _PyPI: https://pypi.org/
