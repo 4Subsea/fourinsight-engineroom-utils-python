@@ -9,13 +9,13 @@ import pytest
 from azure.core.exceptions import ResourceNotFoundError
 
 from fourinsight.engineroom.utils import (
+    BaseHandler,
     AzureBlobHandler,
     LocalFileHandler,
     NullHandler,
     PersistentDict,
     ResultCollector,
 )
-from fourinsight.engineroom.utils.core import BaseHandler
 
 REMOTE_FILE_PATH = Path(__file__).parent / "testdata/a_test_file.json"
 
@@ -36,7 +36,7 @@ def persistent_dict(local_file_handler_empty):
 
 
 @pytest.fixture
-@patch("fourinsight.engineroom.utils.core.BlobClient.from_connection_string")
+@patch("fourinsight.engineroom.utils._core.BlobClient.from_connection_string")
 def azure_blob_handler_mocked(mock_from_connection_string):
     connection_string = "some_connection_string"
     container_name = "some_container_name"
@@ -172,7 +172,7 @@ class Test_LocalFileHandler:
 
 
 class Test_AzureBlobHandler:
-    @patch("fourinsight.engineroom.utils.core.BlobClient.from_connection_string")
+    @patch("fourinsight.engineroom.utils._core.BlobClient.from_connection_string")
     def test__init__(self, mock_from_connection_string):
         handler = AzureBlobHandler(
             "some_connection_string", "some_container_name", "some_blob_name"
