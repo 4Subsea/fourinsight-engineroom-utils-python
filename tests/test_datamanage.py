@@ -9,10 +9,10 @@ import pandas as pd
 import pytest
 
 from fourinsight.engineroom.utils import (
-    CompositeDataSource,
-    DrioDataSource,
     BaseDataSource,
+    CompositeDataSource,
     DatetimeIndexConverter,
+    DrioDataSource,
     FloatIndexConverter,
     IntegerIndexConverter,
 )

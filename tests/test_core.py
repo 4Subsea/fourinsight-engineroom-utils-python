@@ -9,8 +9,8 @@ import pytest
 from azure.core.exceptions import ResourceNotFoundError
 
 from fourinsight.engineroom.utils import (
-    BaseHandler,
     AzureBlobHandler,
+    BaseHandler,
     LocalFileHandler,
     NullHandler,
     PersistentDict,
