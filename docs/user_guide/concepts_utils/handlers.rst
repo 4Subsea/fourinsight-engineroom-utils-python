@@ -4,9 +4,9 @@ Handlers
 ========
 
 Some of the core functionality provided by :mod:`fourinsight.engineroom.utils` relies
-on handlers that facilitate downloading and uploading of text content from a source.
+on handlers that facilitate downloading and uploading of text content from/to a source.
 The source can be a local file, an Azure Storage Blob, or any other suitable storage
-place. Two handlers, the :class:`~fourinsight.engineroom.utils.LocalFileHandler` and the :class:`~fourinsight.engineroom.utils.AzureBlobHandler`
+place. Two handlers, the :class:`~fourinsight.engineroom.utils.LocalFileHandler` and the :class:`~fourinsight.engineroom.utils.AzureBlobHandler`,
 are available out-of-the-box. :ref:`Custom handlers<custom_handlers>` are easily set up by inheriting from
 :class:`~fourinsight.engineroom.utils.BaseHandler`.
 
@@ -30,7 +30,7 @@ The :class:`~fourinsight.engineroom.utils.AzureBlobHandler` is used to store tex
 
 The handlers behave like 'streams', and provide all the normal stream capabilities. Downloading and uploading is done  by a push/pull
 strategy; content is retrieved from the source by a :meth:`~fourinsight.engineroom.utils.BaseHandler.pull()` request, and uploaded
-to the source by a :meth:`~fourinsight.engineroom.utils.BaseHandler.push()`. Correspondingly reading and writing to the handler is
+to the source by a :meth:`~fourinsight.engineroom.utils.BaseHandler.push()`. Correspondingly, reading and writing to the handler is
 done using :meth:`~io.TextIOWrapper.read()` and :meth:`~io.TextIOWrapper.write()`.
 
 For reading from handlers:
