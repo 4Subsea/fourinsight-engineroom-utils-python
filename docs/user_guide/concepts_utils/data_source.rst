@@ -26,13 +26,13 @@ regardless of the source.
 We aim to add other popular data sources as part of :mod:`fourinsight.engineroom.utils`.
 
 However, it is possible (and encouraged) to define custom data sources. A data source class must
-inherit from :class:`~fourinsight.engineroom.utils.datamanage.BaseDataSource`, and override the
-abstract method, :meth:`~fourinsight.engineroom.utils.datamanage.BaseDataSource._get()`,
-and the abstract properties, :attr:`~fourinsight.engineroom.utils.datamanage.BaseDataSource.labels`
-and :attr:`~fourinsight.engineroom.utils.datamanage.BaseDataSource._fingerprint`.
+inherit from :class:`~fourinsight.engineroom.utils.BaseDataSource`, and override the
+abstract method, :meth:`~fourinsight.engineroom.utils.BaseDataSource._get()`,
+and the abstract properties, :attr:`~fourinsight.engineroom.utils.BaseDataSource.labels`
+and :attr:`~fourinsight.engineroom.utils.BaseDataSource._fingerprint`.
 
 The following code examples are given with :class:`~fourinsight.engineroom.utils.DrioDataSource`, but
-all the functionality shown will be common for any data source class that inherits from :class:`~fourinsight.engineroom.utils.datamanage.BaseDataSource`.
+all the functionality shown will be common for any data source class that inherits from :class:`~fourinsight.engineroom.utils.BaseDataSource`.
 The only difference will be how the classes are initialized. For instance,
 :class:`~fourinsight.engineroom.utils.DrioDataSource` is initialized with a
 :class:`datareservoirio.Client` instance and a dictionary containing labels and timeseries
@@ -81,7 +81,7 @@ between neighboring datapoints to merge.
     if they are closer than the tolerance limit.
 
 Caching is enabled by providing a `cache` folder and an appropriate `cache_size`.
-Caching will significantly speed-up the data downloading, if the same data is requested
+Caching will significantly speed-up the data downloading if the same data is requested
 multiple times. First time some data is retrieved from the source, it is split up in
 'chunks' and stored in a local folder. Then, the data is more readily available
 next time it is requested.
@@ -105,7 +105,7 @@ next time it is requested.
 Download data
 -------------
 
-The :meth:`~fourinsight.engineroom.utils.datamanage.BaseDataSource.get()` method is used to download data from the source between two index values.
+The :meth:`~fourinsight.engineroom.utils.BaseDataSource.get()` method is used to download data from the source between two index values.
 
 .. code-block:: python
 
@@ -114,7 +114,7 @@ The :meth:`~fourinsight.engineroom.utils.datamanage.BaseDataSource.get()` method
 
 Iterators
 ---------
-The :meth:`~fourinsight.engineroom.utils.datamanage.BaseDataSource.iter()` method is used to iterate over 'chunks' of data. Lists of start and
+The :meth:`~fourinsight.engineroom.utils.BaseDataSource.iter()` method is used to iterate over 'chunks' of data. Lists of start and
 end indecies are required as input.
 
 .. code-block:: python
