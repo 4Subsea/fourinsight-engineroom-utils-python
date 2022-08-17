@@ -6,7 +6,7 @@ This tutorial is a walkthrough on creating a simple Python application for `4Ins
 It will show how to structure, package, and upload your application.
 
 
-Project structure
+Project Structure
 -----------------
 
 We will set up a simple Python application named `example_app`. The application will

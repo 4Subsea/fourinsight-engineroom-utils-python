@@ -102,7 +102,7 @@ next time it is requested.
     is retrieved from the cache that was built during the first download.
 
 
-Download data
+Download Data
 -------------
 
 The :meth:`~fourinsight.engineroom.utils.BaseDataSource.get()` method is used to download data from the source between two index values.

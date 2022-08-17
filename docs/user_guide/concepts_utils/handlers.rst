@@ -83,7 +83,7 @@ and :meth:`pandas.DataFrame.to_csv()`:
 
 .. _custom_handlers:
 
-Custom handlers
+Custom Handlers
 ---------------
 
 The custom handler must inherit from :class:`~fourinsight.engineroom.utils.BaseHandler`, and override

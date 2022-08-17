@@ -1,4 +1,4 @@
-API reference
+API Reference
 =============
 This section gives an overview of all public ``fourinsight.engineroom.utils`` objects,
 functions and methods.

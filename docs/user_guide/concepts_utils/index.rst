@@ -1,6 +1,6 @@
 .. _concepts-utilities:
 
-Concepts and utilities
+Concepts and Utilities
 ======================
 This section will introduce concepts and utilites that are useful when developing
 reliable and efficient applications. Our objective is to take care of the tedious stuff,
