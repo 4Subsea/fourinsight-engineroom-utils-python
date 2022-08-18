@@ -1,4 +1,4 @@
-Collect and Store Results
+Collect and store results
 =========================
 The :class:`~fourinsight.engineroom.utils.ResultCollector` is a useful tool when you want to collect and store results.
 The basic usage is illustrated with the examples below.

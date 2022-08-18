@@ -1,4 +1,4 @@
-Data Source
+Data source
 ===========
 
 Timeseries data (or other types of sequential data) are often considered in "groups", since
@@ -102,7 +102,7 @@ next time it is requested.
     is retrieved from the cache that was built during the first download.
 
 
-Download Data
+Download data
 -------------
 
 The :meth:`~fourinsight.engineroom.utils.BaseDataSource.get()` method is used to download data from the source between two index values.

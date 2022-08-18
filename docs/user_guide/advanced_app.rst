@@ -1,12 +1,12 @@
 .. _advanced-application:
 
-Advanced Applications
+Advanced applications
 =====================
 
 Here are more recommendatations and suggestion that may be useful as your application grows in capability
 and complexity.
 
-Project Structure
+Project structure
 -----------------
 
 A more comprehensive folder structure for advanced applications:
@@ -29,7 +29,7 @@ A more comprehensive folder structure for advanced applications:
     │   └── requirements.txt
     └── tests/
 
-Divide Application into Smaller Sub-modules
+Divide application into smaller sub-modules
 -------------------------------------------
 In larger applications, it may be useful to divide the application into several
 sub-modules. It is good practice to keep such sub-modules in an importable 'app'
@@ -38,7 +38,7 @@ from there.
 
 .. _separate-config:
 
-Separate the Configuration from the Code
+Separate the configuration from the code
 ----------------------------------------
 It is good practice to separate the application code and the configuration parameters.
 This ensures overview and easy altering of the configuration.
@@ -56,7 +56,7 @@ application code!
 Note that these are just two examples of how to store configuration, but there may
 be other ways that fit your purpose better.
 
-Include Private Packages as `wheel` Files
+Include private packages as `wheel` files
 -----------------------------------------
 Sometimes your application requires Python packages that are not available through
 `PyPI`_ or any other repository accesible with ``pip``. Such packages can be included
@@ -68,7 +68,7 @@ in the application as pip-installable `wheel` files. Remember to add these packa
     -f ./packages
     private_package
 
-Test Your Application
+Test your application
 ---------------------
 To validate that the application works as expected, it is important to write unit
 tests and integration tests for your application. Test files should be stored in
