@@ -1,4 +1,4 @@
-Index Converters
+Index converters
 ================
 
 .. toctree::

@@ -1,4 +1,4 @@
-Data Source
+Data source
 ===========
 
 .. toctree::
