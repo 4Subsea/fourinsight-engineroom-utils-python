@@ -1,6 +1,6 @@
 .. _simple-application:
 
-Hello World!
+Hello world!
 ============
 This tutorial is a walkthrough on creating a simple Python application for `4Insight EngineRoom`_.
 It will show how to structure, package, and upload your application.

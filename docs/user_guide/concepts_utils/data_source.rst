@@ -1,4 +1,4 @@
-Data Source
+Data source
 ===========
 
 Timeseries data (or other types of sequential data) are often considered in "groups", since

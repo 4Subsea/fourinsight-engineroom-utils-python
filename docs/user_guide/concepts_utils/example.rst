@@ -3,7 +3,7 @@
 Example
 =======
 
-Here is an example of `run.py` that utilize some of the utilities in :mod:`fourinsight.engineroom.utils`.
+Here is an example of `run.py` that use some of the utilities in :mod:`fourinsight.engineroom.utils`.
 
 In this example, two timeseries 'A' and 'B' are downloaded from the *DataReservoir.io*.
 Another variable, 'C', is then calculated from 'A' and 'B'. Then, the 1-hour standard deviation

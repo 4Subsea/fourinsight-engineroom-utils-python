@@ -13,7 +13,7 @@ process.
 Here, a thorough walkthrough of useful concepts and included utilities is given. Some best practices
 are also suggested along the way!
 
-However, don't let the suggerstions and recommendataions provided here be a road block
+However, don't let the suggestions and recommendations provided here be a road block
 on your path to new insight! One size does not fit all! :mod:`fourinsight.engineroom.utils` is just
 meant to aid you in the development of your own *EngineRoom* application. If you don't find any of the
 concepts and utilities useful, then don't use them! *EngineRoom* will still be able to run your Python
