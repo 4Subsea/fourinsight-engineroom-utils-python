@@ -1,14 +1,16 @@
-API Reference
+
+.. _api:
+
 =============
-This section gives an overview of all public ``fourinsight.engineroom.utils`` objects,
-functions and methods.
+API reference
+=============
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
-   handlers/index
-   persistent_dict
-   result_collector
-   data_source/index
+   handlers
+   indexconverters
+   persistentdict
+   datasource 
    iter_index
-   index_converters/index
+   resultcollector 
