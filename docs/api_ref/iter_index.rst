@@ -1,5 +1,15 @@
+
+.. _iter_index-api:
+
+==========
 iter_index
 ==========
 
-.. automodule:: fourinsight.engineroom.utils.iter_index
-    :members:
+.. currentmodule:: fourinsight.engineroom.utils.iter_index
+
+
+.. autosummary::
+    :toctree:
+    :template: function.rst
+
+    date_range
