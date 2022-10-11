@@ -23,7 +23,7 @@ sys.path.insert(0, os.path.abspath("../src/"))
 # -- Project information -----------------------------------------------------
 _TEMPLATE_VERSION = "2.0.0"
 
-project = "fourinsight_engineroom_utils"
+project = "fourinsight-engineroom-utils"
 copyright = f"{date.today().year}, 4Subsea"
 author = "4Subsea"
 
