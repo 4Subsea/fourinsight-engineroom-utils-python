@@ -2,7 +2,7 @@ black
 build
 flake8
 isort
-pydata-sphinx-theme
+pydata-sphinx-theme == 0.11.0
 pytest
 pytest-cov
-sphinx
+sphinx == 5.3.0
