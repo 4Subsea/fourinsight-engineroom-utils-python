@@ -50,7 +50,6 @@ autosummary_generate = True
 
 
 def linkcode_resolve(domain, info):
-
     if domain != "py":
         return None
     if not info["module"]:
@@ -60,27 +59,16 @@ def linkcode_resolve(domain, info):
 
     for part in info["fullname"].split("."):
         obj = getattr(obj, part)
-
     obj = inspect.unwrap(obj)
 
-    # Inspect cannot find source file for properties and descriptors
+    try:
+        path = os.path.relpath(inspect.getfile(obj))
+        src, lineno = inspect.getsourcelines(obj)
 
-    if isinstance(obj, property):
-        return None
+        path = f"{github_repo}blob/main/{path}#L{lineno}-L{lineno + len(src) - 1}"
 
-    if inspect.ismethoddescriptor(obj):
-        return None
-
-    if inspect.ismemberdescriptor(obj):
-        return None
-
-    if inspect.isgetsetdescriptor(obj):
-        return None
-
-    path = os.path.relpath(inspect.getfile(obj))
-    src, lineno = inspect.getsourcelines(obj)
-
-    path = f"{github_repo}blob/main/{path}#L{lineno}-L{lineno + len(src) - 1}"
+    except:
+        path = None
     return path
 
 
