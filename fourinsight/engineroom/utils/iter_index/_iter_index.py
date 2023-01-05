@@ -34,6 +34,9 @@ def date_range(
     end : list
         Sequence of end values as `pandas.Timestamp`.
     """
+    if periods:
+        periods += 1
+
     start_end = pd.date_range(
         start=start, end=end, periods=periods, freq=freq, inclusive=inclusive, **kwargs
     )
