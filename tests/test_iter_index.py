@@ -24,7 +24,7 @@ class Test_date_range:
             start=start, end=end, periods=periods
         )
 
-        date_range = pd.date_range(start=start, end=end, periods=periods)
+        date_range = pd.date_range(start=start, end=end, periods=periods + 1)
         start_expect, end_expect = date_range[:-1], date_range[1:]
 
         assert (start_out == start_expect).all()
