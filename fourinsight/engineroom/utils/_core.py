@@ -476,7 +476,7 @@ class ResultCollector:
         """
         self._handler.seek(0)
         self._handler.truncate()
-        self._dataframe.to_csv(self._handler, sep=",", index=True, line_terminator="\n")
+        self._dataframe.to_csv(self._handler, sep=",", index=True, lineterminator="\n")
         self._handler.push()
 
     @property

@@ -128,3 +128,17 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+docs/api_ref/fourinsight.engineroom.utils.AzureBlobHandler.rst
+docs/api_ref/fourinsight.engineroom.utils.ResultCollector.rst
+docs/api_ref/fourinsight.engineroom.utils.BaseDataSource.rst
+docs/api_ref/fourinsight.engineroom.utils.BaseIndexConverter.rst
+docs/api_ref/fourinsight.engineroom.utils.CompositeDataSource.rst
+docs/api_ref/fourinsight.engineroom.utils.BaseHandler.rst
+docs/api_ref/fourinsight.engineroom.utils.DatetimeIndexConverter.rst
+docs/api_ref/fourinsight.engineroom.utils.DrioDataSource.rst
+docs/api_ref/fourinsight.engineroom.utils.FloatIndexConverter.rst
+docs/api_ref/fourinsight.engineroom.utils.IntegerIndexConverter.rst
+docs/api_ref/fourinsight.engineroom.utils.iter_index.date_range.rst
+docs/api_ref/fourinsight.engineroom.utils.LocalFileHandler.rst
+docs/api_ref/fourinsight.engineroom.utils.NullHandler.rst
+docs/api_ref/fourinsight.engineroom.utils.PersistentDict.rst
