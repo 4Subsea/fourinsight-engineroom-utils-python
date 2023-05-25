@@ -397,7 +397,10 @@ class ResultCollector:
         current_index = self._dataframe.index[-1]
 
         try:
-            row_update = pd.DataFrame(data=results, index=[current_index],).astype(
+            row_update = pd.DataFrame(
+                data=results,
+                index=[current_index],
+            ).astype(
                 {
                     header: dtype_
                     for header, dtype_ in self._headers.items()
@@ -433,7 +436,7 @@ class ResultCollector:
             self.new_row(row_i)
             self.collect(**result_i)
 
-    def pull(self, raise_on_missing=True):
+    def pull(self, raise_on_missing=True, strict=True):
         """
         Pull results from source. Remote source overwrites existing values.
 
@@ -448,27 +451,46 @@ class ResultCollector:
             return
 
         self._handler.seek(0)
-        df = pd.read_csv(
+        df_source = pd.read_csv(
             self._handler, index_col=0, parse_dates=True, dtype=self._headers
         )
 
-        if not (set(df.columns) == set(self._headers.keys())):
+        if set(df_source.columns) != set(self._headers.keys()):
+            source_headers_complete = False
+        else:
+            source_headers_complete = True
+
+        if strict and not source_headers_complete:
             raise ValueError("Header is not valid.")
 
         if (
-            not df.index.empty
+            not df_source.index.empty
             and (self._indexing_mode == "auto")
-            and not (df.index.dtype == "int64")
+            and not (df_source.index.dtype == "int64")
         ):
             raise ValueError("Index dtype must be 'int64'.")
         elif (
-            not df.index.empty
+            not df_source.index.empty
             and (self._indexing_mode == "timestamp")
-            and not (isinstance(df.index, pd.DatetimeIndex))
+            and not (isinstance(df_source.index, pd.DatetimeIndex))
         ):
             raise ValueError("Index must be 'DatetimeIndex'.")
 
-        self._dataframe = df
+        if source_headers_complete:
+            self._dataframe = df_source
+        else:
+            cols_intersection = self.dataframe.columns.intersection(df_source.columns)
+            cols_difference = self.dataframe.columns.difference(df_source.columns)
+            headers_difference = {key: self._headers[key] for key in cols_difference}
+            self._dataframe = pd.concat(
+                [
+                    df_source[cols_intersection],
+                    pd.DataFrame(columns=headers_difference.keys()).astype(
+                        headers_difference
+                    ),
+                ],
+                axis=1,
+            )
 
     def push(self):
         """
