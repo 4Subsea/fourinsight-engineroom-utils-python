@@ -479,14 +479,13 @@ class ResultCollector:
         if source_headers_complete:
             self._dataframe = df_source
         else:
-            cols_intersection = self.dataframe.columns.intersection(df_source.columns)
-            cols_difference = self.dataframe.columns.difference(df_source.columns)
-            headers_difference = {key: self._headers[key] for key in cols_difference}
+            cols_in_source = self.dataframe.columns.intersection(df_source.columns)
+            cols_not_in_source = self.dataframe.columns.difference(df_source.columns)
             self._dataframe = pd.concat(
                 [
-                    df_source[cols_intersection],
-                    pd.DataFrame(columns=headers_difference.keys()).astype(
-                        headers_difference
+                    df_source[cols_in_source],
+                    pd.DataFrame(columns=cols_not_in_source).astype(
+                        {key: self._headers[key] for key in cols_not_in_source}
                     ),
                 ],
                 axis=1,
