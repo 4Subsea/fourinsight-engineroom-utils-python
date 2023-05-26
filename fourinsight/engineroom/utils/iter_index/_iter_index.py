@@ -6,7 +6,7 @@ def date_range(
     end=None,
     periods=None,
     freq=None,
-    inclusive=None,
+    inclusive="both",
     **kwargs,
 ):
     """
