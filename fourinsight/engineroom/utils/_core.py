@@ -444,6 +444,12 @@ class ResultCollector:
         ----------
         raise_on_missing : bool
             Raise exception if results can not be pulled from source.
+        strict : bool
+            Whether to be strict with respect to headers in the source or not. Setting
+            `strict=True` (default) will require that the source has the exact same
+            headers as the `ResultCollector`. Setting `strict=False` will allow pulling
+            of partial results (i.e., headers that does not have results in source,
+            will be populated with `None` values).
         """
 
         self._handler.pull(raise_on_missing=raise_on_missing)
