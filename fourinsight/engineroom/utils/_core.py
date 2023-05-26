@@ -483,7 +483,7 @@ class ResultCollector:
             raise ValueError("Index must be 'DatetimeIndex'.")
 
         if source_headers_complete:
-            self._dataframe = df_source
+            self._dataframe = df_source[self._headers.keys()]
         else:
             cols_in_source = self.dataframe.columns.intersection(df_source.columns)
             cols_not_in_source = self.dataframe.columns.difference(df_source.columns)
@@ -495,7 +495,7 @@ class ResultCollector:
                     ),
                 ],
                 axis=1,
-            )
+            )[self._headers.keys()]
 
     def push(self):
         """

@@ -682,9 +682,22 @@ class Test_ResultCollector:
         results_b = ResultCollector(headers_b, handler=handler)
         results_b.pull(strict=False)
 
-        df_out = results_b.dataframe
+        results_b.push()
+        results_a.pull(strict=False)
 
-        df_expect = pd.DataFrame(
+        df_out_a = results_a.dataframe
+        df_out_b = results_b.dataframe
+
+        df_expect_a = pd.DataFrame(
+            data={
+                "a": [None, None],
+                "b": ["foo", "bar"],
+                "c": [3, 6],
+            },
+            index=pd.Index([0, 1], dtype="int64"),
+        ).astype({"a": "float64", "b": "string", "c": "Int64"})
+
+        df_expect_b = pd.DataFrame(
             data={
                 "b": ["foo", "bar"],
                 "c": [3, 6],
@@ -694,7 +707,8 @@ class Test_ResultCollector:
         ).astype({"b": "string", "c": "Int64", "d": "float64"})
 
         # Remove `check_index_type=False` when issue with index type in `pull` is fixed
-        pd.testing.assert_frame_equal(df_out, df_expect, check_index_type=False)
+        pd.testing.assert_frame_equal(df_out_a, df_expect_a, check_index_type=False)
+        pd.testing.assert_frame_equal(df_out_b, df_expect_b, check_index_type=False)
 
     def test_pull_strict_raises(self, tmp_path):
         handler = LocalFileHandler(tmp_path / "results.csv")
