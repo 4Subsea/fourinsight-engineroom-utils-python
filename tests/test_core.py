@@ -287,7 +287,6 @@ class Test_PersistentDict:
 
     def test__setitem_jsonencode(self, persistent_dict):
         with patch.object(persistent_dict, "_jsonencoder") as mock_jsonencoder:
-
             persistent_dict["a"] = 1
             mock_jsonencoder.assert_called_once_with(1)
 
