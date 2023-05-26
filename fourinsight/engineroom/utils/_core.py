@@ -461,12 +461,7 @@ class ResultCollector:
             self._handler, index_col=0, parse_dates=True, dtype=self._headers
         )
 
-        if set(df_source.columns) != set(self._headers.keys()):
-            source_headers_complete = False
-        else:
-            source_headers_complete = True
-
-        if strict and not source_headers_complete:
+        if strict and set(df_source.columns) != set(self._headers.keys()):
             raise ValueError("Header is not valid.")
 
         if (
@@ -482,15 +477,10 @@ class ResultCollector:
         ):
             raise ValueError("Index must be 'DatetimeIndex'.")
 
-        if source_headers_complete:
-            df_new = df_source[self._headers.keys()]
-        else:
-            cols_in_source = self.dataframe.columns.intersection(df_source.columns)
-            cols_not_in_source = self.dataframe.columns.difference(df_source.columns)
-            df_new = df_source[cols_in_source]
-            df_new[cols_not_in_source] = None
+        columns_missing = self.dataframe.columns.difference(df_source.columns)
+        df_source[columns_missing] = None
 
-        self._dataframe = df_new[self._headers.keys()].astype(self._headers)
+        self._dataframe = df_source[self._headers.keys()].astype(self._headers)
 
     def push(self):
         """
