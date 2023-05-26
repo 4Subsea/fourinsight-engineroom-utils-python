@@ -6,7 +6,7 @@ def date_range(
     end=None,
     periods=None,
     freq=None,
-    inclusive=None,
+    inclusive="both",
     **kwargs,
 ):
     """
@@ -36,6 +36,9 @@ def date_range(
     """
     if periods:
         periods += 1
+
+    if inclusive is None:
+        inclusive = "both"
 
     start_end = pd.date_range(
         start=start, end=end, periods=periods, freq=freq, inclusive=inclusive, **kwargs
