@@ -667,6 +667,22 @@ class Test_ResultCollector:
         with pytest.raises(FileNotFoundError):
             results.pull(raise_on_missing=True)
 
+    def test_pull_strict_raises(self, tmp_path):
+        handler = LocalFileHandler(tmp_path / "results.csv")
+
+        headers_a = {"a": float, "b": str, "c": int}
+        results_a = ResultCollector(headers_a, handler=handler)
+        results_a.new_row()
+        results_a.collect(a=1.2, b="foo", c=3)
+        results_a.new_row()
+        results_a.collect(a=4.5, b="bar", c=6)
+        results_a.push()
+
+        headers_b = {"b": str, "c": int, "d": float}   # different headers
+        results_b = ResultCollector(headers_b, handler=handler)
+        with pytest.raises(ValueError):
+            results_b.pull()
+
     def test_push_auto(self, tmp_path):
         handler = LocalFileHandler(tmp_path / "results.csv")
         headers = {"a": float, "b": str, "c": float, "d": str}
