@@ -397,7 +397,10 @@ class ResultCollector:
         current_index = self._dataframe.index[-1]
 
         try:
-            row_update = pd.DataFrame(data=results, index=[current_index],).astype(
+            row_update = pd.DataFrame(
+                data=results,
+                index=[current_index],
+            ).astype(
                 {
                     header: dtype_
                     for header, dtype_ in self._headers.items()
@@ -476,7 +479,14 @@ class ResultCollector:
         """
         self._handler.seek(0)
         self._handler.truncate()
-        self._dataframe.to_csv(self._handler, sep=",", index=True, line_terminator="\n")
+        try:
+            self._dataframe.to_csv(
+                self._handler, sep=",", index=True, lineterminator="\n"
+            )
+        except TypeError:  # for backward compatibility (remove after 2024-06-01)
+            self._dataframe.to_csv(
+                self._handler, sep=",", index=True, line_terminator="\n"
+            )
         self._handler.push()
 
     @property
