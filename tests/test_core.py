@@ -667,6 +667,65 @@ class Test_ResultCollector:
         with pytest.raises(FileNotFoundError):
             results.pull(raise_on_missing=True)
 
+    def test_pull_strict(self, tmp_path):
+        handler = LocalFileHandler(tmp_path / "results.csv")
+
+        headers_a = {"a": float, "b": str, "c": int}
+        results_a = ResultCollector(headers_a, handler=handler)
+        results_a.new_row()
+        results_a.collect(a=1.2, b="foo", c=3)
+        results_a.new_row()
+        results_a.collect(a=4.5, b="bar", c=6)
+        results_a.push()
+
+        headers_b = {"b": str, "c": int, "d": float}  # partially different headers
+        results_b = ResultCollector(headers_b, handler=handler)
+        results_b.pull(strict=False)
+
+        results_b.push()
+        results_a.pull(strict=False)
+
+        df_out_a = results_a.dataframe
+        df_out_b = results_b.dataframe
+
+        df_expect_a = pd.DataFrame(
+            data={
+                "a": [None, None],
+                "b": ["foo", "bar"],
+                "c": [3, 6],
+            },
+            index=pd.Index([0, 1], dtype="int64"),
+        ).astype({"a": "float64", "b": "string", "c": "Int64"})
+
+        df_expect_b = pd.DataFrame(
+            data={
+                "b": ["foo", "bar"],
+                "c": [3, 6],
+                "d": [None, None],
+            },
+            index=pd.Index([0, 1], dtype="int64"),
+        ).astype({"b": "string", "c": "Int64", "d": "float64"})
+
+        # Remove `check_index_type=False` when issue with index type in `pull` is fixed
+        pd.testing.assert_frame_equal(df_out_a, df_expect_a, check_index_type=False)
+        pd.testing.assert_frame_equal(df_out_b, df_expect_b, check_index_type=False)
+
+    def test_pull_strict_raises(self, tmp_path):
+        handler = LocalFileHandler(tmp_path / "results.csv")
+
+        headers_a = {"a": float, "b": str, "c": int}
+        results_a = ResultCollector(headers_a, handler=handler)
+        results_a.new_row()
+        results_a.collect(a=1.2, b="foo", c=3)
+        results_a.new_row()
+        results_a.collect(a=4.5, b="bar", c=6)
+        results_a.push()
+
+        headers_b = {"b": str, "c": int, "d": float}  # different headers
+        results_b = ResultCollector(headers_b, handler=handler)
+        with pytest.raises(ValueError):
+            results_b.pull()
+
     def test_push_auto(self, tmp_path):
         handler = LocalFileHandler(tmp_path / "results.csv")
         headers = {"a": float, "b": str, "c": float, "d": str}

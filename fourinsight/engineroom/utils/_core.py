@@ -436,7 +436,7 @@ class ResultCollector:
             self.new_row(row_i)
             self.collect(**result_i)
 
-    def pull(self, raise_on_missing=True):
+    def pull(self, raise_on_missing=True, strict=True):
         """
         Pull results from source. Remote source overwrites existing values.
 
@@ -444,6 +444,12 @@ class ResultCollector:
         ----------
         raise_on_missing : bool
             Raise exception if results can not be pulled from source.
+        strict : bool
+            Whether to be strict with respect to headers in the source or not. Setting
+            `strict=True` (default) will require that the source has the exact same
+            headers as the `ResultCollector`. Setting `strict=False` will allow pulling
+            of partial results (i.e., headers that does not have results in source,
+            will be populated with `None` values).
         """
 
         self._handler.pull(raise_on_missing=raise_on_missing)
@@ -451,27 +457,30 @@ class ResultCollector:
             return
 
         self._handler.seek(0)
-        df = pd.read_csv(
+        df_source = pd.read_csv(
             self._handler, index_col=0, parse_dates=True, dtype=self._headers
         )
 
-        if not (set(df.columns) == set(self._headers.keys())):
+        if strict and set(df_source.columns) != set(self._headers.keys()):
             raise ValueError("Header is not valid.")
 
         if (
-            not df.index.empty
+            not df_source.index.empty
             and (self._indexing_mode == "auto")
-            and not (df.index.dtype == "int64")
+            and not (df_source.index.dtype == "int64")
         ):
             raise ValueError("Index dtype must be 'int64'.")
         elif (
-            not df.index.empty
+            not df_source.index.empty
             and (self._indexing_mode == "timestamp")
-            and not (isinstance(df.index, pd.DatetimeIndex))
+            and not (isinstance(df_source.index, pd.DatetimeIndex))
         ):
             raise ValueError("Index must be 'DatetimeIndex'.")
 
-        self._dataframe = df
+        columns_missing = self.dataframe.columns.difference(df_source.columns)
+        df_source[columns_missing] = None
+
+        self._dataframe = df_source[self._headers.keys()].astype(self._headers)
 
     def push(self):
         """
