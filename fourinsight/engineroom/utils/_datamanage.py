@@ -799,9 +799,9 @@ class CompositeDataSource(BaseDataSource):
             for (start_i, end_i), source_i in zip(pairwise(index_list), sources_list)
         ]
 
-        data_list = [df.dropna(how='all', axis=1) for df in data_list if not df.empty]
+        data_list = [df.dropna(how="all", axis=1) for df in data_list if not df.empty]
 
         if not data_list:
             return pd.DataFrame([], columns=self._labels)
-        
+
         return pd.concat(data_list).infer_objects()
