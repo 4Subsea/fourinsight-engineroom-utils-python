@@ -373,12 +373,17 @@ class ResultCollector:
             {header: None for header in self._headers}, index=[index]
         ).astype(self._headers)
 
-        self._dataframe = pd.concat(
-            [self._dataframe, row_new],
-            verify_integrity=True,
-            ignore_index=self._ignore_index,
-            sort=False,
-        )
+        if not self._dataframe.empty and not row_new.empty:
+            self._dataframe = pd.concat(
+                [self._dataframe, row_new],
+                verify_integrity=True,
+                ignore_index=self._ignore_index,
+                sort=False,
+            )
+        elif not self._dataframe.empty:
+            self._dataframe = self._dataframe
+        elif not row_new.empty:
+            self._dataframe = row_new
 
     def collect(self, **results):
         """
