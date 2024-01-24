@@ -7,7 +7,7 @@ class Test_date_range:
     def test_start_end_freq(self):
         start = "2020-01-01 00:00"
         end = "2020-01-01 05:00"
-        freq = "1H"
+        freq = "1h"
         start_out, end_out = iter_index.date_range(start=start, end=end, freq=freq)
 
         date_range = pd.date_range(start=start, end=end, freq=freq)

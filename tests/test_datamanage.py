@@ -689,7 +689,7 @@ class Test_BaseDataSource:
     def test_partition_start_end_datetime(self):
         start = pd.to_datetime("2020-01-01 03:00", utc=True)
         end = pd.to_datetime("2020-01-01 09:00", utc=True)
-        partition = pd.to_timedelta("3H")
+        partition = pd.to_timedelta("3h")
         reference = pd.to_datetime("2020-01-01 02:00", utc=True)
         out = BaseDataSourceForTesting._partition_start_end(
             start, end, partition, reference
@@ -705,7 +705,7 @@ class Test_BaseDataSource:
     def test__is_cached_false(self, tmp_path):
         cache_dir = tmp_path / ".cache"
         source = BaseDataSourceForTesting(
-            DatetimeIndexConverter(), cache=cache_dir, cache_size="1H"
+            DatetimeIndexConverter(), cache=cache_dir, cache_size="1h"
         )
         assert cache_dir.exists()
         assert source._is_cached("filename") is False
@@ -713,7 +713,7 @@ class Test_BaseDataSource:
     def test__is_cached_true(self, tmp_path):
         cache_dir = tmp_path / ".cache"
         source = BaseDataSourceForTesting(
-            DatetimeIndexConverter(), cache=cache_dir, cache_size="1H"
+            DatetimeIndexConverter(), cache=cache_dir, cache_size="1h"
         )
         assert cache_dir.exists()
         (cache_dir / "filename").touch()
@@ -722,7 +722,7 @@ class Test_BaseDataSource:
     def test__cache_read(self, tmp_path):
         cache_dir = tmp_path / ".cache"
         source = BaseDataSourceForTesting(
-            DatetimeIndexConverter(), cache=cache_dir, cache_size="1H"
+            DatetimeIndexConverter(), cache=cache_dir, cache_size="1h"
         )
 
         df = pd.DataFrame(data={"filename": [2, 4, 6], "a": [1, 2, 3]})
@@ -735,7 +735,7 @@ class Test_BaseDataSource:
     def test__cache_write(self, tmp_path):
         cache_dir = tmp_path / ".cache"
         source = BaseDataSourceForTesting(
-            DatetimeIndexConverter(), cache=cache_dir, cache_size="1H"
+            DatetimeIndexConverter(), cache=cache_dir, cache_size="1h"
         )
 
         df = pd.DataFrame(data={"a": [1, 2, 3]}, index=[2, 4, 6])
@@ -967,7 +967,7 @@ class Test_DrioDataSource:
         assert source._get_kwargs == {"convert_date": False, "raise_empty": True}
         assert isinstance(source._index_converter, DatetimeIndexConverter)
         assert source._cache == Path(cache_dir)
-        assert source._cache_size == pd.to_timedelta("24H")
+        assert source._cache_size == pd.to_timedelta("24h")
 
     def test__init__integer(self):
         drio_client = Mock()
@@ -1579,15 +1579,15 @@ class Test_DatetimeIndexConverter:
         np.testing.assert_array_equal(out, expect)
 
     def test_to_universal_delta(self):
-        out = DatetimeIndexConverter().to_universal_delta("3H")
-        expect = pd.to_timedelta("3H")
+        out = DatetimeIndexConverter().to_universal_delta("3h")
+        expect = pd.to_timedelta("3h")
         assert out == expect
 
     def test_to_universal_delta_arraylike(self):
         out = DatetimeIndexConverter().to_universal_delta(
-            ["3H", "24H", pd.to_timedelta("2D")]
+            ["3h", "24h", pd.to_timedelta("2D")]
         )
-        expect = pd.to_timedelta(["3H", "24H", pd.to_timedelta("2D")])
+        expect = pd.to_timedelta(["3h", "24h", pd.to_timedelta("2D")])
         np.testing.assert_array_equal(out, expect)
 
     def test_to_native_index(self):

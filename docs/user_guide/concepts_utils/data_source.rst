@@ -92,7 +92,7 @@ next time it is requested.
         drio_client,
         labels,
         cache='.cache'
-        cache_size=pd.to_timedelta("3H")
+        cache_size=pd.to_timedelta("3h")
     )
 
 .. tip::
@@ -137,7 +137,7 @@ the index is datetime-like, fixed-frequency start and end index pairs can be gen
 
 
     start, end = iter_index.date_range(
-        start="2020-01-01 00:00", end="2020-02-01 00:00", freq="1H"
+        start="2020-01-01 00:00", end="2020-02-01 00:00", freq="1h"
     )
 
     for index_i, data_i in source.iter(start, end):

@@ -73,7 +73,7 @@ are stored in *Azure Blob Storage* using the :class:`~fourinsight.engineroom.uti
     end = pd.to_datetime("now", utc=True)
 
     # Iterate over the data in 1-hour chunks
-    for index_i, data_i in source.iter(*iter_index.date_range(start, end, freq="1H")):
+    for index_i, data_i in source.iter(*iter_index.date_range(start, end, freq="1h")):
         results.new_row(index_i)
 
         series_a = data_i["A"]
