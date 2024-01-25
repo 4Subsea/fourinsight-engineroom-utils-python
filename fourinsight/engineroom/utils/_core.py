@@ -458,7 +458,11 @@ class ResultCollector:
 
         self._handler.seek(0)
         df_source = pd.read_csv(
-            self._handler, index_col=0, parse_dates=True, dtype=self._headers
+            self._handler,
+            index_col=0,
+            parse_dates=True,
+            dtype=self._headers,
+            date_format="ISO8601",
         )
 
         if strict and set(df_source.columns) != set(self._headers.keys()):

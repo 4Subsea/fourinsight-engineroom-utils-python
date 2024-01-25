@@ -526,7 +526,7 @@ class DrioDataSource(BaseDataSource):
     cache : str, optional
         Cache folder. If ``None`` (default), caching is disabled.
     cache_size :
-        Cache size as an index partition (see Notes). Defaults to ``'24H'`` if the
+        Cache size as an index partition (see Notes). Defaults to ``'24h'`` if the
         `index_type` is 'datetime', otherwise ``None`` is default.
     **get_kwargs : optional
         Keyword arguments that will be passed on to the ``drio_client.get`` method.
@@ -578,7 +578,7 @@ class DrioDataSource(BaseDataSource):
 
         if index_type == "datetime":
             index_converter = DatetimeIndexConverter()
-            cache_size = cache_size or "24H"
+            cache_size = cache_size or "24h"
         elif index_type == "integer":
             index_converter = IntegerIndexConverter()
         elif isinstance(index_type, BaseIndexConverter):
@@ -798,4 +798,10 @@ class CompositeDataSource(BaseDataSource):
             source_i.get(start_i, end_i, refresh_cache=refresh_cache)
             for (start_i, end_i), source_i in zip(pairwise(index_list), sources_list)
         ]
+
+        data_list = [df.dropna(how="all", axis=1) for df in data_list if not df.empty]
+
+        if not data_list:
+            return pd.DataFrame([], columns=self._labels)
+
         return pd.concat(data_list).infer_objects()
