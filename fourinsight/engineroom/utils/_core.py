@@ -494,11 +494,11 @@ class ResultCollector:
         self._handler.truncate()
         try:
             self._dataframe.to_csv(
-                self._handler, sep=",", index=True, line_terminator="\n"
+                self._handler, sep=",", index=True, lineterminator="\n"
             )
         except TypeError:  # for backward compatibility (remove after 2024-06-01)
             self._dataframe.to_csv(
-                self._handler, sep=",", index=True, lineterminator="\n"
+                self._handler, sep=",", index=True, line_terminator="\n"
             )
         self._handler.push()
 
