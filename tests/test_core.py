@@ -953,11 +953,9 @@ class Test_ResultCollector:
         results.truncate(before="2020-01-01 01:00", after="2020-01-01 03:00")
         df_out = results.dataframe
         df_expect = pd.DataFrame(
-            data={
-            },
+            data={},
             index=pd.DatetimeIndex(
-                [
-                ],
+                [],
                 tz="utc",
             ),
         ).astype({"a": "float64", "b": "string", "c": "Int64", "d": "float64"})
