@@ -536,6 +536,8 @@ class ResultCollector:
         after : int or datetime-like, optional
             Delete results with index greater than this value.
         """
+        if self._dataframe.empty == True:
+            return
         index_drop = []
         if before:
             index_drop.extend(self._dataframe.index[(self._dataframe.index < before)])

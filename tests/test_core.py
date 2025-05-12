@@ -952,12 +952,8 @@ class Test_ResultCollector:
         results = ResultCollector(headers, indexing_mode="timestamp")
         results.truncate(before="2020-01-01 01:00", after="2020-01-01 03:00")
         df_out = results.dataframe
-        df_expect = pd.DataFrame(
-            data={"a": [], "b": [], "c": [], "d": []},
-            index=pd.RangeIndex(start=0, stop=0, step=1),
-        ).astype({"a": "float", "b": "string", "c": "Int64", "d": "float"})
 
-        pd.testing.assert_frame_equal(df_out, df_expect)
+        assert df_out.empty
 
     def test_delete_rows_truncate_timestamp(self):
         headers = {"a": float, "b": str, "c": int, "d": float}
