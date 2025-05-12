@@ -374,7 +374,10 @@ class ResultCollector:
         ).astype(self._headers)
 
         self._dataframe = pd.concat(
-            [self._dataframe, row_new],
+            [
+                self._dataframe if not self._dataframe.empty else None,
+                row_new if not row_new.empty else None,
+            ],
             verify_integrity=True,
             ignore_index=self._ignore_index,
             sort=False,
