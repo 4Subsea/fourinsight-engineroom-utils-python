@@ -964,7 +964,6 @@ class Test_ResultCollector:
 
         pd.testing.assert_frame_equal(df_out, df_expect)
 
-
     def test_delete_rows_truncate_timestamp(self):
         headers = {"a": float, "b": str, "c": int, "d": float}
         results = ResultCollector(headers, indexing_mode="timestamp")
