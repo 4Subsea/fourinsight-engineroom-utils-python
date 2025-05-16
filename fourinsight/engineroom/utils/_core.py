@@ -374,7 +374,10 @@ class ResultCollector:
         ).astype(self._headers)
 
         self._dataframe = pd.concat(
-            [self._dataframe, row_new],
+            [
+                self._dataframe if not self._dataframe.empty else None,
+                row_new if not row_new.empty else None,
+            ],
             verify_integrity=True,
             ignore_index=self._ignore_index,
             sort=False,
@@ -536,6 +539,8 @@ class ResultCollector:
         after : int or datetime-like, optional
             Delete results with index greater than this value.
         """
+        if self._dataframe.empty:
+            return
         index_drop = []
         if before:
             index_drop.extend(self._dataframe.index[(self._dataframe.index < before)])
