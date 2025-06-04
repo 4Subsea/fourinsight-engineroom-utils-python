@@ -548,3 +548,50 @@ class ResultCollector:
             index_drop.extend(self._dataframe.index[(self._dataframe.index > after)])
         if index_drop:
             self.delete_rows(index_drop)
+
+def load_past_er_results(app_id, session, path=None, download_all=False, output_folder="output"):
+    """
+    Load past EngineRoom results from a specified application and path and 
+    store locally in the same output folder
+
+    ##TODO## include proper url encoding for safe queries of subfolders
+
+    Parameters
+    ----------
+    app_id : str
+        The EngineRoom application ID.
+    session : 4insight session object
+        Authorized 4insight session.
+    path : str or Path, optional
+        The file path within the EngineRoom output folder.
+        Ignored if download_all is True.
+    download_all : bool, optional
+        If True, download all results in the output folder. Defaults to False.
+    output_folder : str, optional
+        Name of the EngineRoom output folder. Defaults to "output".
+
+    """
+    #ensure output folder exist
+    output_folder = Path(f"./{output_folder}")
+    output_folder.mkdir(parents=True, exist_ok=True)
+
+    if download_all == True:
+        existing_oputput_files = session.get(f"https://api.4insight.io/v1.0/Applications/{app_id}/results")
+        existing_oputput_files.raise_for_status()
+        for file in existing_oputput_files.json():
+            path = file["fileName"]
+            _path = output_folder / path
+            output_url = f"https://api.4insight.io/v1.0/Applications/{app_id}/results/{path}/download"
+            previous_results = session.get(output_url)
+            previous_results.raise_for_status()
+
+            with open(_path, "wb") as download_file:
+                download_file.write(previous_results.content)
+    else:
+        _path = output_folder / path
+        output_url = f"https://api.4insight.io/v1.0/Applications/{app_id}/results/{path}/download"
+        previous_results = session.get(output_url)
+        previous_results.raise_for_status()
+
+        with open(_path, "wb") as download_file:
+            download_file.write(previous_results.content)
