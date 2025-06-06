@@ -1,9 +1,9 @@
 import json
+import urllib.parse
 from abc import abstractmethod
 from collections.abc import MutableMapping
 from io import BytesIO, TextIOWrapper
 from pathlib import Path
-import urllib.parse
 
 import pandas as pd
 from azure.core.exceptions import ResourceNotFoundError
@@ -553,16 +553,20 @@ class ResultCollector:
 
 def _get_all_previous_file_names(app_id, session):
     """query all available results file from the EngineRoom application. Returns list of dicts"""
-    response = session.get(f"https://api.4insight.io/v1.0/Applications/{app_id}/results")
+    response = session.get(
+        f"https://api.4insight.io/v1.0/Applications/{app_id}/results"
+    )
     response.raise_for_status()
     results = response.json()
     if not results:
         raise ValueError(f"No results found for application ID {app_id}.")
     return results
 
+
 def _build_download_url(app_id, navigable_file_name):
     safe_name = urllib.parse.quote(navigable_file_name)
     return f"https://api.4insight.io/v1.0/Applications/{app_id}/results/{safe_name}/download"
+
 
 def _download_and_save_file(session, download_url, save_path):
     save_path.parent.mkdir(parents=True, exist_ok=True)
@@ -571,9 +575,12 @@ def _download_and_save_file(session, download_url, save_path):
     with open(save_path, "wb") as f:
         f.write(response.content)
 
-def load_previous_engineroom_results(app_id, session, path=None, download_all=False, output_folder="output"):
+
+def load_previous_engineroom_results(
+    app_id, session, path=None, download_all=False, output_folder="output"
+):
     """
-    Load past EngineRoom results from a specified application and path and 
+    Load past EngineRoom results from a specified application and
     store locally in the same output folder
 
     Parameters
