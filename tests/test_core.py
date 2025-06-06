@@ -1240,9 +1240,10 @@ class Test_ResultCollector:
 
 class Test_load_previous_engineroom_results:
     def test__build_download_url(previous_file_names):
+        app_id = "123456789"
         filename = previous_file_names[0]["fileName"]
         safe_name = previous_file_names[0]["navigableFileName"]
-        url = load_previous_engineroom_results._build_download_url(filename)
+        url = _build_download_url(app_id,filename)
         assert url == f"https://api.4insight.io/v1.0/Applications/{app_id}/results/{safe_name}/download"
 
     def test_raise_when_no_files_available():
