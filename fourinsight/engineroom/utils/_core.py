@@ -550,12 +550,31 @@ class ResultCollector:
         if index_drop:
             self.delete_rows(index_drop)
 
+
+def _get_all_previous_file_names(app_id, session):
+    """query all available results file from the EngineRoom application. Returns list of dicts"""
+    response = session.get(f"https://api.4insight.io/v1.0/Applications/{app_id}/results")
+    response.raise_for_status()
+    results = response.json()
+    if not results:
+        raise ValueError(f"No results found for application ID {app_id}.")
+    return results
+
+def _build_download_url(app_id, navigable_file_name):
+    safe_name = urllib.parse.quote(navigable_file_name)
+    return f"https://api.4insight.io/v1.0/Applications/{app_id}/results/{safe_name}/download"
+
+def _download_and_save_file(session, download_url, save_path):
+    save_path.parent.mkdir(parents=True, exist_ok=True)
+    response = session.get(download_url)
+    response.raise_for_status()
+    with open(save_path, "wb") as f:
+        f.write(response.content)
+
 def load_previous_engineroom_results(app_id, session, path=None, download_all=False, output_folder="output"):
     """
     Load past EngineRoom results from a specified application and path and 
     store locally in the same output folder
-
-    ##TODO## include proper url encoding for safe queries of subfolders
 
     Parameters
     ----------
@@ -573,39 +592,20 @@ def load_previous_engineroom_results(app_id, session, path=None, download_all=Fa
 
     """
     output_folder = Path(output_folder)
+    available_results = _get_all_previous_file_names(app_id, session)
 
-    existing_oputput_files = session.get(f"https://api.4insight.io/v1.0/Applications/{app_id}/results")
-    existing_oputput_files.raise_for_status()
-    
-    if not existing_oputput_files.json():
-        raise ValueError(f"No results found for application ID {app_id}.")
+    available_file_names = [file["fileName"] for file in available_results]
+    navigable_file_names = [file["navigableFileName"] for file in available_results]
 
-    available_file_names = [file["fileName"] for file in existing_oputput_files.json()]
-    navigable_file_names = [file["navigableFileName"] for file in existing_oputput_files.json()]
-
-    if download_all == True:
-        for path in available_file_names:
-            _path = output_folder / path
-            _path.parent.mkdir(parents=True, exist_ok=True)
-
-            navigable_file_name = urllib.parse.quote(navigable_file_names[available_file_names.index(path)])
-
-            output_url = f"https://api.4insight.io/v1.0/Applications/{app_id}/results/{navigable_file_name}/download"
-            previous_results = session.get(output_url)
-            previous_results.raise_for_status()
-
-            with open(_path, "wb") as download_file:
-                download_file.write(previous_results.content)
+    if download_all:
+        for file_name, nav_name in zip(available_file_names, navigable_file_names):
+            file_path = output_folder / file_name
+            download_url = _build_download_url(app_id, nav_name)
+            _download_and_save_file(session, download_url, file_path)
     else:
         if path not in available_file_names:
             raise ValueError(f"{path} not found in application {app_id} results.")
-        _path = output_folder / path
-        _path.parent.mkdir(parents=True, exist_ok=True)
-        
-        navigable_file_name = urllib.parse.quote(navigable_file_names[available_file_names.index(path)])
-        output_url = f"https://api.4insight.io/v1.0/Applications/{app_id}/results/{navigable_file_name}/download"
-        previous_results = session.get(output_url)
-        previous_results.raise_for_status()
-
-        with open(_path, "wb") as download_file:
-            download_file.write(previous_results.content)
+        idx = available_file_names.index(path)
+        file_path = output_folder / path
+        download_url = _build_download_url(app_id, navigable_file_names[idx])
+        _download_and_save_file(session, download_url, file_path)
