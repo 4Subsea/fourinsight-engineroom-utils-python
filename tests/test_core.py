@@ -1,7 +1,8 @@
 import json
 from io import BytesIO, TextIOWrapper
+import urllib.parse
+
 from pathlib import Path
-from typing import Literal
 from unittest.mock import Mock, patch
 
 import numpy as np
@@ -17,14 +18,13 @@ from fourinsight.engineroom.utils import (
     PersistentDict,
     ResultCollector,
 )
-
 from fourinsight.engineroom.utils._core import _build_download_url
 
 REMOTE_FILE_PATH = Path(__file__).parent / "testdata/a_test_file.json"
 
 
 @pytest.fixture
-def local_file_handler_empty(tmp_path: Path):
+def local_file_handler_empty(tmp_path):
     return LocalFileHandler(tmp_path / "test.json")
 
 
@@ -34,25 +34,8 @@ def local_file_handler_w_content():
 
 
 @pytest.fixture
-def persistent_dict(local_file_handler_empty: LocalFileHandler):
+def persistent_dict(local_file_handler_empty):
     return PersistentDict(local_file_handler_empty)
-
-
-@pytest.fixture
-def previous_file_names():
-    filenames = [
-        {
-            "fileName": "config.json",
-            "navigableFileName": "config.json",
-            "lastModified": "2024-12-02T13: 20: 27+00: 00",
-        },
-        {
-            "fileName": "SN00569 - 23AT/2024-12-02_131637/sensor_info/sensor_info.csv",
-            "navigableFileName": "SN00569 - 23AT*2024-12-02_131637*sensor_info*sensor_info.csv",
-            "lastModified": "2024-12-02T13: 20: 27+00: 00",
-        }
-    ]
-    return filenames
 
 
 @pytest.fixture
@@ -73,6 +56,23 @@ def azure_blob_handler_mocked(mock_from_connection_string):
     )
 
     return handler
+
+
+@pytest.fixture
+def previous_file_names():
+    filenames = [
+        {
+            "fileName": "config.json",
+            "navigableFileName": "config.json",
+            "safeName": "config.json",
+        },
+        {
+            "fileName": "SN00569 - 23AT/2024-12-02_131637/sensor_info/sensor_info.csv",
+            "navigableFileName": "SN00569 - 23AT*2024-12-02_131637*sensor_info*sensor_info.csv",
+            "safeName": urllib.parse.quote("SN00569 - 23AT*2024-12-02_131637*sensor_info*sensor_info.csv")
+        }
+    ]
+    return filenames
 
 
 class Test_BaseHandler:
@@ -138,7 +138,7 @@ class Test_NullHandler:
         assert isinstance(handler, BaseHandler)
         assert handler._SOURCE_NOT_FOUND_ERROR is NotImplementedError
 
-    def test__repr__(self, azure_blob_handler_mocked: AzureBlobHandler[str, str, str]):
+    def test__repr__(self, azure_blob_handler_mocked):
         assert str(NullHandler()) == "NullHandler"
 
     def test_pull_raises(self):
@@ -165,7 +165,7 @@ class Test_LocalFileHandler:
         assert isinstance(handler, BaseHandler)
         assert handler._SOURCE_NOT_FOUND_ERROR is FileNotFoundError
 
-    def test_pull(self, local_file_handler_w_content: LocalFileHandler[Path]):
+    def test_pull(self, local_file_handler_w_content):
         handler = local_file_handler_w_content
         assert handler.getvalue() == ""
         handler.pull()
@@ -184,7 +184,7 @@ class Test_LocalFileHandler:
         with pytest.raises(FileNotFoundError):
             handler.pull(raise_on_missing=True)
 
-    def test_push(self, tmp_path: Path):
+    def test_push(self, tmp_path):
         handler = LocalFileHandler(tmp_path / "test.json")
         handler.write("Some random content")
         handler.push()
@@ -206,15 +206,13 @@ class Test_AzureBlobHandler:
             "some_connection_string", "some_container_name", "some_blob_name"
         )
 
-    def test__repr__(self, azure_blob_handler_mocked: AzureBlobHandler[str, str, str]):
+    def test__repr__(self, azure_blob_handler_mocked):
         assert (
             str(azure_blob_handler_mocked)
             == "AzureBlobHandler some_container_name/some_blob_name"
         )
 
-    def test__init__fixture(
-        self, azure_blob_handler_mocked: AzureBlobHandler[str, str, str]
-    ):
+    def test__init__fixture(self, azure_blob_handler_mocked):
         handler = azure_blob_handler_mocked
         assert handler._conn_str == "some_connection_string"
         assert handler._container_name == "some_container_name"
@@ -222,7 +220,7 @@ class Test_AzureBlobHandler:
         assert handler._SOURCE_NOT_FOUND_ERROR is ResourceNotFoundError
         assert isinstance(handler._blob_client, Mock)
 
-    def test_pull(self, azure_blob_handler_mocked: AzureBlobHandler[str, str, str]):
+    def test_pull(self, azure_blob_handler_mocked):
         handler = azure_blob_handler_mocked
         handler.pull()
         assert (
@@ -233,9 +231,7 @@ class Test_AzureBlobHandler:
             handler.buffer
         )
 
-    def test_pull_non_existing(
-        self, azure_blob_handler_mocked: AzureBlobHandler[str, str, str]
-    ):
+    def test_pull_non_existing(self, azure_blob_handler_mocked):
         handler = azure_blob_handler_mocked
 
         def raise_resource_not_found(*args, **kwargs):
@@ -245,9 +241,7 @@ class Test_AzureBlobHandler:
         handler.pull(raise_on_missing=False)
         assert handler.getvalue() == ""
 
-    def test_pull_non_existing_raises(
-        self, azure_blob_handler_mocked: AzureBlobHandler[str, str, str]
-    ):
+    def test_pull_non_existing_raises(self, azure_blob_handler_mocked):
         handler = azure_blob_handler_mocked
 
         def raise_resource_not_found(*args, **kwargs):
@@ -258,7 +252,7 @@ class Test_AzureBlobHandler:
         with pytest.raises(ResourceNotFoundError):
             handler.pull(raise_on_missing=True)
 
-    def test_push(self, azure_blob_handler_mocked: AzureBlobHandler[str, str, str]):
+    def test_push(self, azure_blob_handler_mocked):
         handler = azure_blob_handler_mocked
 
         content = "Some random content."
@@ -271,7 +265,7 @@ class Test_AzureBlobHandler:
 
 
 class Test_PersistentDict:
-    def test__init__(self, local_file_handler_empty: LocalFileHandler):
+    def test__init__(self, local_file_handler_empty):
         handler = local_file_handler_empty
         persistent_dict = PersistentDict(handler)
         assert persistent_dict._PersistentDict__dict == {}
@@ -286,17 +280,17 @@ class Test_PersistentDict:
         assert persistent_dict._PersistentDict__dict == {}
         assert isinstance(persistent_dict._handler, NullHandler)
 
-    def test__repr__(self, persistent_dict: PersistentDict):
+    def test__repr__(self, persistent_dict):
         assert str(persistent_dict) == "{}"
         persistent_dict.update({"a": 1.0, "b": "test"})
         assert str(persistent_dict) == "{'a': 1.0, 'b': 'test'}"
 
-    def test__delitem__(self, persistent_dict: PersistentDict):
+    def test__delitem__(self, persistent_dict):
         persistent_dict.update({"a": 1.0, "b": "test"})
         del persistent_dict["a"]
         persistent_dict._PersistentDict__dict == {"b": "test"}
 
-    def test__getitem__(self, persistent_dict: PersistentDict):
+    def test__getitem__(self, persistent_dict):
         persistent_dict.update({"a": 1.0, "b": "test"})
         assert persistent_dict["a"] == 1.0
         assert persistent_dict["b"] == "test"
@@ -304,33 +298,33 @@ class Test_PersistentDict:
         with pytest.raises(KeyError):
             persistent_dict["non-existing-key"]
 
-    def test__setitem__(self, persistent_dict: PersistentDict):
+    def test__setitem__(self, persistent_dict):
         persistent_dict["a"] = "some value"
         persistent_dict["b"] = "some other value"
 
         assert persistent_dict["a"] == "some value"
         assert persistent_dict["b"] == "some other value"
 
-    def test__setitem_jsonencode(self, persistent_dict: PersistentDict):
+    def test__setitem_jsonencode(self, persistent_dict):
         with patch.object(persistent_dict, "_jsonencoder") as mock_jsonencoder:
             persistent_dict["a"] = 1
             mock_jsonencoder.assert_called_once_with(1)
 
-    def test__setitem___datetime_raises(self, persistent_dict: PersistentDict):
+    def test__setitem___datetime_raises(self, persistent_dict):
         with pytest.raises(TypeError):
             persistent_dict["timestamp"] = pd.to_datetime("2020-01-01 00:00")
 
-    def test__len__(self, persistent_dict: PersistentDict):
+    def test__len__(self, persistent_dict):
         assert len(persistent_dict) == 0
         persistent_dict.update({"a": 1, "b": None})
         assert len(persistent_dict) == 2
 
-    def test_update(self, persistent_dict: PersistentDict):
+    def test_update(self, persistent_dict):
         assert persistent_dict._PersistentDict__dict == {}
         persistent_dict.update({"a": 1.0, "b": "test"})
         assert persistent_dict._PersistentDict__dict == {"a": 1.0, "b": "test"}
 
-    def test_pull(self, local_file_handler_w_content: LocalFileHandler[Path]):
+    def test_pull(self, local_file_handler_w_content):
         handler = local_file_handler_w_content
         persistent_dict = PersistentDict(handler)
         persistent_dict.pull()
@@ -357,7 +351,7 @@ class Test_PersistentDict:
         with pytest.raises(FileNotFoundError):
             persistent_dict.pull(raise_on_missing=True)
 
-    def test_push(self, tmp_path: Path):
+    def test_push(self, tmp_path):
         handler = LocalFileHandler(tmp_path / "test.json")
         persistent_dict = PersistentDict(handler)
 
@@ -371,7 +365,7 @@ class Test_PersistentDict:
 
         assert content_out == content
 
-    def test_push_empty(self, tmp_path: Path):
+    def test_push_empty(self, tmp_path):
         handler = LocalFileHandler(tmp_path / "test.json")
         persistent_dict = PersistentDict(handler)
 
@@ -397,7 +391,7 @@ class Test_ResultCollector:
         pd.testing.assert_frame_equal(results._dataframe, df_expect)
 
     @pytest.mark.parametrize("mode", ["auto", "timestamp"])
-    def test__init__auto(self, mode: Literal["auto"] | Literal["timestamp"]):
+    def test__init__auto(self, mode):
         headers = {"a": float, "b": str}
         results = ResultCollector(headers, indexing_mode=mode)
         assert results._indexing_mode == mode
@@ -411,7 +405,7 @@ class Test_ResultCollector:
         with pytest.raises(ValueError):
             ResultCollector({"a": tuple})
 
-    def test__init__handler(self, local_file_handler_empty: LocalFileHandler):
+    def test__init__handler(self, local_file_handler_empty):
         handler = local_file_handler_empty
         headers = {"a": float, "b": str}
         results = ResultCollector(headers, handler=handler)
@@ -693,7 +687,7 @@ class Test_ResultCollector:
         with pytest.raises(FileNotFoundError):
             results.pull(raise_on_missing=True)
 
-    def test_pull_strict(self, tmp_path: Path):
+    def test_pull_strict(self, tmp_path):
         handler = LocalFileHandler(tmp_path / "results.csv")
 
         headers_a = {"a": float, "b": str, "c": int}
@@ -736,7 +730,7 @@ class Test_ResultCollector:
         pd.testing.assert_frame_equal(df_out_a, df_expect_a, check_index_type=False)
         pd.testing.assert_frame_equal(df_out_b, df_expect_b, check_index_type=False)
 
-    def test_pull_strict_raises(self, tmp_path: Path):
+    def test_pull_strict_raises(self, tmp_path):
         handler = LocalFileHandler(tmp_path / "results.csv")
 
         headers_a = {"a": float, "b": str, "c": int}
@@ -752,7 +746,7 @@ class Test_ResultCollector:
         with pytest.raises(ValueError):
             results_b.pull()
 
-    def test_push_auto(self, tmp_path: Path):
+    def test_push_auto(self, tmp_path):
         handler = LocalFileHandler(tmp_path / "results.csv")
         headers = {"a": float, "b": str, "c": float, "d": str}
         results = ResultCollector(headers, handler=handler, indexing_mode="auto")
@@ -768,7 +762,7 @@ class Test_ResultCollector:
         csv_expect = ",a,b,c,d\n0,1.1,test,,\n1,2.2,value,,\n"
         assert csv_out == csv_expect
 
-    def test_push_timestamp(self, tmp_path: Path):
+    def test_push_timestamp(self, tmp_path):
         handler = LocalFileHandler(tmp_path / "results.csv")
         headers = {"a": float, "b": str, "c": float, "d": str}
         results = ResultCollector(headers, handler=handler, indexing_mode="timestamp")
@@ -1239,21 +1233,23 @@ class Test_ResultCollector:
 
 
 class Test_load_previous_engineroom_results:
-    def test__build_download_url(previous_file_names):
-        app_id = "123456789"
-        filename = previous_file_names[0]["fileName"]
-        safe_name = previous_file_names[0]["navigableFileName"]
-        url = _build_download_url(app_id,filename)
-        assert url == f"https://api.4insight.io/v1.0/Applications/{app_id}/results/{safe_name}/download"
-
-    def test_raise_when_no_files_available():
+    def test__build_download_url(self, previous_file_names):
+        app_id = "12345"       
+        for i in range(len(previous_file_names)):
+            navigable_filename = previous_file_names[i]["navigableFileName"]
+            safe_name = previous_file_names[i]["safeName"]
+            url = _build_download_url(app_id, navigable_filename)
+            assert url == f"https://api.4insight.io/v1.0/Applications/{app_id}/results/{safe_name}/download"
+    
+    def test_raise_when_no_files_available(self):
         pass
 
-    def test_downlaod_all():
+    def test_downlaod_all(self):
         pass
 
-    def test_download_single_file():
+    def test_download_single_file(self):
         pass
 
-    def test_raise_when_file_not_found():
+    def test_raise_when_file_not_found(self):
         pass
+		
