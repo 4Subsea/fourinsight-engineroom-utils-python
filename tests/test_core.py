@@ -20,7 +20,7 @@ from fourinsight.engineroom.utils import (
     ResultCollector,
 )
 
-from fourinsight.engineroom.utils._core import (_build_download_url, _download_and_save_file)
+from fourinsight.engineroom.utils._core import (_build_download_url, _download_and_save_file, _get_all_previous_file_names)
 
 REMOTE_FILE_PATH = Path(__file__).parent / "testdata/a_test_file.json"
 
@@ -1280,9 +1280,38 @@ class Test__download_and_save_file:
         mock_mkdir.assert_called_once_with(parents=True, exist_ok=True)
 
 
+class Test__get_all_previous_file_names:
+    def setup_method(self):
+        # Common mocks
+        self.mock_session = MagicMock()
+        self.mock_response = MagicMock()
+        
+        self.mock_response.raise_for_status.return_value = None
+        self.mock_session.get.return_value = self.mock_response
+
+        self.url = "https://4insight.io/engineroom/result1.csv"
+        self.path = Path("output/results1.csv")
+
+    def test_successful_response(self, previous_file_names):
+        self.mock_response.json.return_value = previous_file_names
+        app_id = "app123"
+        results = _get_all_previous_file_names(app_id, self.mock_session)
+        assert results == previous_file_names
+        self.mock_session.get.assert_called_once_with(f"https://api.4insight.io/v1.0/Applications/{app_id}/results")
+        self.mock_response.raise_for_status.assert_called_once()
+
+    def test_empty_results_raises_value_error(self):
+        self.mock_response.json.return_value = []
+        app_id = "app123"
+        with pytest.raises(ValueError, match=f"No results found for application ID {app_id}."):
+            _get_all_previous_file_names(app_id, self.mock_session)
+
 class Test_load_previous_engineroom_results:
 
-    def test_raise_when_no_files_available(self):
+    @patch("load_previous_engineroom_results._get_all_previous_file_names")
+    def test_raise_when_no_files_available(self, mock_get_all_previous_file_names):
+        mock_get_all_previous_file_names.return_value = []
+        
         pass
 
     def test_downlaod_all(self):
