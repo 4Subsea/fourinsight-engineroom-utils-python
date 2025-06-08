@@ -3,7 +3,8 @@ from io import BytesIO, TextIOWrapper
 import urllib.parse
 
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, MagicMock, mock_open
+
 
 import numpy as np
 import pandas as pd
@@ -18,7 +19,8 @@ from fourinsight.engineroom.utils import (
     PersistentDict,
     ResultCollector,
 )
-from fourinsight.engineroom.utils._core import _build_download_url
+
+from fourinsight.engineroom.utils._core import (_build_download_url, _download_and_save_file)
 
 REMOTE_FILE_PATH = Path(__file__).parent / "testdata/a_test_file.json"
 
@@ -1232,15 +1234,54 @@ class Test_ResultCollector:
         pd.testing.assert_frame_equal(df_out, df_expect)
 
 
+def test__build_download_url(previous_file_names):
+    app_id = "12345"       
+    for i in range(len(previous_file_names)):
+        navigable_filename = previous_file_names[i]["navigableFileName"]
+        safe_name = previous_file_names[i]["safeName"]
+        url = _build_download_url(app_id, navigable_filename)
+        assert url == f"https://api.4insight.io/v1.0/Applications/{app_id}/results/{safe_name}/download"
+
+
+class Test__download_and_save_file:
+    def setup_method(self):
+        # Common mocks
+        self.mock_session = MagicMock()
+        self.mock_response = MagicMock()
+        self.mock_response.content = b"this is the files"
+        self.mock_session.get.return_value = self.mock_response
+
+        self.url = "https://4insight.io/engineroom/result1.csv"
+        self.path = Path("output/results1.csv")
+
+    @patch("fourinsight.engineroom.utils._core.open", new_callable=mock_open)
+    @patch.object(Path, "mkdir")
+    def test_download_success(self, mock_mkdir, mock_file):
+        _download_and_save_file(self.mock_session, self.url, self.path)
+
+        self.mock_session.get.assert_called_once_with(self.url)
+        self.mock_response.raise_for_status.assert_called_once()
+        mock_file.assert_called_once_with(self.path, "wb")
+        mock_file().write.assert_called_once_with(b"this is the files")
+        mock_mkdir.assert_called_once_with(parents=True, exist_ok=True)
+
+    @patch("fourinsight.engineroom.utils._core.open", new_callable=mock_open)
+    @patch.object(Path, "mkdir")
+    def test_raises_exception_on_http_error(self, mock_mkdir, mock_file):
+        self.mock_response.raise_for_status.side_effect = RuntimeError("HTTP error")
+
+        with pytest.raises(RuntimeError, match="HTTP error"):
+            _download_and_save_file(self.mock_session, self.url, self.path)
+
+    @patch("fourinsight.engineroom.utils._core.open", new_callable=mock_open)
+    @patch.object(Path, "mkdir")
+    def test_creates_directory_if_missing(self, mock_mkdir, mock_file):
+        _download_and_save_file(self.mock_session, self.url, self.path)
+        mock_mkdir.assert_called_once_with(parents=True, exist_ok=True)
+
+
 class Test_load_previous_engineroom_results:
-    def test__build_download_url(self, previous_file_names):
-        app_id = "12345"       
-        for i in range(len(previous_file_names)):
-            navigable_filename = previous_file_names[i]["navigableFileName"]
-            safe_name = previous_file_names[i]["safeName"]
-            url = _build_download_url(app_id, navigable_filename)
-            assert url == f"https://api.4insight.io/v1.0/Applications/{app_id}/results/{safe_name}/download"
-    
+
     def test_raise_when_no_files_available(self):
         pass
 
