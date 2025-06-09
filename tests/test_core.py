@@ -1,10 +1,8 @@
 import json
-from io import BytesIO, TextIOWrapper
 import urllib.parse
-
+from io import BytesIO, TextIOWrapper
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock, mock_open, ANY
-
+from unittest.mock import ANY, MagicMock, Mock, mock_open, patch
 
 import numpy as np
 import pandas as pd
@@ -18,10 +16,13 @@ from fourinsight.engineroom.utils import (
     NullHandler,
     PersistentDict,
     ResultCollector,
-    load_previous_engineroom_results
+    load_previous_engineroom_results,
 )
-
-from fourinsight.engineroom.utils._core import (_build_download_url, _download_and_save_file, _get_all_previous_file_names)
+from fourinsight.engineroom.utils._core import (
+    _build_download_url,
+    _download_and_save_file,
+    _get_all_previous_file_names,
+)
 
 REMOTE_FILE_PATH = Path(__file__).parent / "testdata/a_test_file.json"
 
@@ -72,8 +73,10 @@ def previous_file_names():
         {
             "fileName": "SN00569 - 23AT/2024-12-02_131637/sensor_info/sensor_info.csv",
             "navigableFileName": "SN00569 - 23AT*2024-12-02_131637*sensor_info*sensor_info.csv",
-            "safeName": urllib.parse.quote("SN00569 - 23AT*2024-12-02_131637*sensor_info*sensor_info.csv")
-        }
+            "safeName": urllib.parse.quote(
+                "SN00569 - 23AT*2024-12-02_131637*sensor_info*sensor_info.csv"
+            ),
+        },
     ]
     return filenames
 
@@ -1236,12 +1239,15 @@ class Test_ResultCollector:
 
 
 def test__build_download_url(previous_file_names):
-    app_id = "12345"       
+    app_id = "12345"
     for i in range(len(previous_file_names)):
         navigable_filename = previous_file_names[i]["navigableFileName"]
         safe_name = previous_file_names[i]["safeName"]
         url = _build_download_url(app_id, navigable_filename)
-        assert url == f"https://api.4insight.io/v1.0/Applications/{app_id}/results/{safe_name}/download"
+        assert (
+            url
+            == f"https://api.4insight.io/v1.0/Applications/{app_id}/results/{safe_name}/download"
+        )
 
 
 class Test__download_and_save_file:
@@ -1286,7 +1292,7 @@ class Test__get_all_previous_file_names:
         # Common mocks
         self.mock_session = MagicMock()
         self.mock_response = MagicMock()
-        
+
         self.mock_response.raise_for_status.return_value = None
         self.mock_session.get.return_value = self.mock_response
 
@@ -1298,54 +1304,79 @@ class Test__get_all_previous_file_names:
         app_id = "app123"
         results = _get_all_previous_file_names(app_id, self.mock_session)
         assert results == previous_file_names
-        self.mock_session.get.assert_called_once_with(f"https://api.4insight.io/v1.0/Applications/{app_id}/results")
+        self.mock_session.get.assert_called_once_with(
+            f"https://api.4insight.io/v1.0/Applications/{app_id}/results"
+        )
         self.mock_response.raise_for_status.assert_called_once()
 
     def test_empty_results_raises_value_error(self):
         self.mock_response.json.return_value = []
         app_id = "app123"
-        with pytest.raises(ValueError, match=f"No results found for application ID {app_id}."):
+        with pytest.raises(
+            ValueError, match=f"No results found for application ID {app_id}."
+        ):
             _get_all_previous_file_names(app_id, self.mock_session)
+
 
 class Test_load_previous_engineroom_results:
     def setup_method(self):
         self.mock_session = MagicMock()
         self.mock_response = MagicMock()
-        
+
         self.mock_response.raise_for_status.return_value = None
         self.mock_session.get.return_value = self.mock_response
 
         self.url = "https://4insight.io/engineroom/result1.csv"
         self.path = Path("output/results1.csv")
 
-
     @patch("fourinsight.engineroom.utils._core._download_and_save_file")
     @patch("fourinsight.engineroom.utils._core._get_all_previous_file_names")
-    def test_download_all(self, mock__get_all_previous_file_names, mock__download_and_save_file, previous_file_names):
+    def test_download_all(
+        self,
+        mock__get_all_previous_file_names,
+        mock__download_and_save_file,
+        previous_file_names,
+    ):
         mock__get_all_previous_file_names.return_value = previous_file_names
 
         load_previous_engineroom_results("app123", self.mock_session, download_all=True)
         assert mock__get_all_previous_file_names.call_count == 1
         assert mock__download_and_save_file.call_count == len(previous_file_names)
         for i in range(len(previous_file_names)):
-            mock__download_and_save_file.assert_any_call(self.mock_session, ANY, Path("output")/ previous_file_names[i]["fileName"])
-
+            mock__download_and_save_file.assert_any_call(
+                self.mock_session,
+                ANY,
+                Path("output") / previous_file_names[i]["fileName"],
+            )
 
     @patch("fourinsight.engineroom.utils._core._download_and_save_file")
     @patch("fourinsight.engineroom.utils._core._get_all_previous_file_names")
-    def test_download_single_file(self, mock__get_all_previous_file_names, mock__download_and_save_file, previous_file_names):
+    def test_download_single_file(
+        self,
+        mock__get_all_previous_file_names,
+        mock__download_and_save_file,
+        previous_file_names,
+    ):
         mock__get_all_previous_file_names.return_value = previous_file_names
-        
-        load_previous_engineroom_results("app123", self.mock_session, previous_file_names[1]["fileName"])
+
+        load_previous_engineroom_results(
+            "app123", self.mock_session, previous_file_names[1]["fileName"]
+        )
         assert mock__get_all_previous_file_names.call_count == 1
-        mock__download_and_save_file.assert_called_once_with(self.mock_session, ANY, Path("output")/ previous_file_names[1]["fileName"])
+        mock__download_and_save_file.assert_called_once_with(
+            self.mock_session, ANY, Path("output") / previous_file_names[1]["fileName"]
+        )
 
     @patch("fourinsight.engineroom.utils._core._get_all_previous_file_names")
-    def test_raise_when_file_not_found(self, mock__get_all_previous_file_names, previous_file_names):
+    def test_raise_when_file_not_found(
+        self, mock__get_all_previous_file_names, previous_file_names
+    ):
         mock__get_all_previous_file_names.return_value = previous_file_names
 
-        with pytest.raises(ValueError, match="missing_file.json not found in application app123 results."):
-            load_previous_engineroom_results("app123", self.mock_session, "missing_file.json")
-
-	
-
+        with pytest.raises(
+            ValueError,
+            match="missing_file.json not found in application app123 results.",
+        ):
+            load_previous_engineroom_results(
+                "app123", self.mock_session, "missing_file.json"
+            )
