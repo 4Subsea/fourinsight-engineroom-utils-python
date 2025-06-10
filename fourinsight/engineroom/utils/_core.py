@@ -564,7 +564,6 @@ def _get_all_previous_file_names(app_id, session):
     response.raise_for_status()
     results = response.json()
     if not results:
-        # raise ValueError(f"No results found for application ID {app_id}.")
         warnings.warn(f"No results found for application ID {app_id}.", UserWarning)
     return results
 
@@ -619,7 +618,6 @@ def load_previous_engineroom_results(
             _download_and_save_file(session, download_url, file_path)
     else:
         if path not in available_file_names:
-            # raise ValueError(f"{path} not found in application {app_id} results.")
             warnings.warn(
                 f"{path} not found in application {app_id} results.", UserWarning
             )
