@@ -26,12 +26,7 @@ from fourinsight.engineroom.utils._core import (
 )
 
 REMOTE_FILE_PATH = Path(__file__).parent / "testdata/a_test_file.json"
-
-with open(
-    Path(__file__).parent.parent / "fourinsight/engineroom/utils/_constants.json"
-) as f:
-    _CONSTANTS = json.load(f)
-API_BASE_URL = _CONSTANTS["API_BASE_URL"]
+API_BASE_URL = "https://api.4insight.io"
 
 
 @pytest.fixture
