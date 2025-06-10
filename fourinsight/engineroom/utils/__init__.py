@@ -7,6 +7,7 @@ from ._core import (
     PersistentDict,
     PersistentJSON,
     ResultCollector,
+    load_previous_engineroom_results,
 )
 from ._datamanage import (
     BaseDataSource,
@@ -36,4 +37,5 @@ __all__ = [
     "PersistentDict",
     "PersistentJSON",
     "ResultCollector",
+    "load_previous_engineroom_results",
 ]

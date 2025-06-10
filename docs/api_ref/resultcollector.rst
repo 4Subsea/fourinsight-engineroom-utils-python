@@ -12,4 +12,5 @@ ResultCollector
     :toctree:
     :template: class.rst
 
+    load_previous_engineroom_results
     ResultCollector

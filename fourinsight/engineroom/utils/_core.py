@@ -1,4 +1,6 @@
 import json
+import urllib.parse
+import warnings
 from abc import abstractmethod
 from collections.abc import MutableMapping
 from io import BytesIO, TextIOWrapper
@@ -7,6 +9,8 @@ from pathlib import Path
 import pandas as pd
 from azure.core.exceptions import ResourceNotFoundError
 from azure.storage.blob import BlobClient
+
+from ._constants import API_BASE_URL
 
 
 class BaseHandler(TextIOWrapper):
@@ -548,3 +552,73 @@ class ResultCollector:
             index_drop.extend(self._dataframe.index[(self._dataframe.index > after)])
         if index_drop:
             self.delete_rows(index_drop)
+
+
+def _get_all_previous_file_names(app_id, session):
+    """query all available results file from the EngineRoom application. Returns list of dicts"""
+    response = session.get(f"{API_BASE_URL}/v1.0/Applications/{app_id}/results")
+    response.raise_for_status()
+    results = response.json()
+    if not results:
+        warnings.warn(f"No results found for application ID {app_id}.", UserWarning)
+    return results
+
+
+def _build_download_url(app_id, navigable_file_name):
+    safe_name = urllib.parse.quote(navigable_file_name)
+    return f"{API_BASE_URL}/v1.0/Applications/{app_id}/results/{safe_name}/download"
+
+
+def _download_and_save_file(session, download_url, save_path):
+    save_path.parent.mkdir(parents=True, exist_ok=True)
+    response = session.get(download_url)
+    response.raise_for_status()
+    with open(save_path, "wb") as f:
+        f.write(response.content)
+
+
+def load_previous_engineroom_results(
+    app_id, session, path=None, download_all=False, output_folder="output"
+):
+    """
+    Load past EngineRoom results from a specified application and
+    store locally in the same output folder
+
+    Parameters
+    ----------
+    app_id : str
+        The EngineRoom application ID.
+    session : 4insight session object
+        Authorized 4insight session.
+    path : str or Path, optional
+        The file path within the EngineRoom output folder.
+        Ignored if download_all is True.
+    download_all : bool, optional
+        If True, download all results in the output folder. Defaults to False.
+    output_folder : str, optional
+        Name of the EngineRoom output folder. Defaults to "output".
+
+    """
+    output_folder = Path(output_folder)
+    available_results = _get_all_previous_file_names(app_id, session)
+    if not available_results:
+        return
+
+    available_file_names = [file["fileName"] for file in available_results]
+    navigable_file_names = [file["navigableFileName"] for file in available_results]
+
+    if download_all:
+        for file_name, nav_name in zip(available_file_names, navigable_file_names):
+            file_path = output_folder / file_name
+            download_url = _build_download_url(app_id, nav_name)
+            _download_and_save_file(session, download_url, file_path)
+    else:
+        if path not in available_file_names:
+            warnings.warn(
+                f"{path} not found in application {app_id} results.", UserWarning
+            )
+        else:
+            idx = available_file_names.index(path)
+            file_path = output_folder / path
+            download_url = _build_download_url(app_id, navigable_file_names[idx])
+            _download_and_save_file(session, download_url, file_path)

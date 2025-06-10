@@ -1,5 +1,30 @@
 Collect and store results
 =========================
+Aapplication results can be stored inside a dedicated folder, so that the application output is easily available after app execution
+
+Application results can be any set of files (or files hierarchy), that is produced by your application, for example output CSV files
+containing processed data. Results are moved to a permanent store after every execution, regardless of exit code.
+
+Output files are appended to the result set from previous execution. If your application creates a file with the same name, it will
+override the previous result file. If you need to append to a file from a previous execution, the file must be loaded into the 
+application first. This can be achieved using :meth:`~fourinsight.engineroom.utils.load_previous_engineroom_results`, which will
+load the results from the permanent store into the application.
+
+
+.. code-block:: python
+
+    from fourinsight.api import UserSession
+    from fourinsight.engineroom.utils import load_previous_engineroom_results
+
+    session = UserSession()
+
+    #download all available results
+    load_previous_engineroom_results(ENGINE_ROOM_APP_ID, session, download_all=True)
+
+    #download specific results file
+    load_previous_engineroom_results(ENGINE_ROOM_APP_ID, session, path="config.json")
+
+
 The :class:`~fourinsight.engineroom.utils.ResultCollector` is a useful tool when you want to collect and store results.
 The basic usage is illustrated with the examples below.
 
