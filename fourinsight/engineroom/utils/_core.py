@@ -9,6 +9,10 @@ import pandas as pd
 from azure.core.exceptions import ResourceNotFoundError
 from azure.storage.blob import BlobClient
 
+with open(Path(__file__).parent / "_constants.json", "r") as f:
+    _CONSTANTS = json.load(f)
+API_BASE_URL = _CONSTANTS["API_BASE_URL"]
+
 
 class BaseHandler(TextIOWrapper):
     """
@@ -565,7 +569,7 @@ def _get_all_previous_file_names(app_id, session):
 
 def _build_download_url(app_id, navigable_file_name):
     safe_name = urllib.parse.quote(navigable_file_name)
-    return f"https://api.4insight.io/v1.0/Applications/{app_id}/results/{safe_name}/download"
+    return f"{API_BASE_URL}/v1.0/Applications/{app_id}/results/{safe_name}/download"
 
 
 def _download_and_save_file(session, download_url, save_path):

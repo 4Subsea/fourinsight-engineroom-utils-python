@@ -26,6 +26,12 @@ from fourinsight.engineroom.utils._core import (
 
 REMOTE_FILE_PATH = Path(__file__).parent / "testdata/a_test_file.json"
 
+with open(
+    Path(__file__).parent.parent / "fourinsight/engineroom/utils/_constants.json"
+) as f:
+    _CONSTANTS = json.load(f)
+API_BASE_URL = _CONSTANTS["API_BASE_URL"]
+
 
 @pytest.fixture
 def local_file_handler_empty(tmp_path):
@@ -1246,7 +1252,7 @@ def test__build_download_url(previous_file_names):
         url = _build_download_url(app_id, navigable_filename)
         assert (
             url
-            == f"https://api.4insight.io/v1.0/Applications/{app_id}/results/{safe_name}/download"
+            == f"{API_BASE_URL}/v1.0/Applications/{app_id}/results/{safe_name}/download"
         )
 
 
