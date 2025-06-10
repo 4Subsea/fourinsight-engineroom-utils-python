@@ -3,6 +3,7 @@ import urllib.parse
 from io import BytesIO, TextIOWrapper
 from pathlib import Path
 from unittest.mock import ANY, MagicMock, Mock, mock_open, patch
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -1315,11 +1316,11 @@ class Test__get_all_previous_file_names:
         )
         self.mock_response.raise_for_status.assert_called_once()
 
-    def test_empty_results_raises_value_error(self):
+    def test_empty_results_returns_warning(self):
         self.mock_response.json.return_value = []
         app_id = "app123"
-        with pytest.raises(
-            ValueError, match=f"No results found for application ID {app_id}."
+        with pytest.warns(
+            UserWarning, match=f"No results found for application ID {app_id}."
         ):
             _get_all_previous_file_names(app_id, self.mock_session)
 
@@ -1379,8 +1380,8 @@ class Test_load_previous_engineroom_results:
     ):
         mock__get_all_previous_file_names.return_value = previous_file_names
 
-        with pytest.raises(
-            ValueError,
+        with pytest.warns(
+            UserWarning,
             match="missing_file.json not found in application app123 results.",
         ):
             load_previous_engineroom_results(

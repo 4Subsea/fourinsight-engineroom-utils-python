@@ -4,6 +4,7 @@ from abc import abstractmethod
 from collections.abc import MutableMapping
 from io import BytesIO, TextIOWrapper
 from pathlib import Path
+import warnings
 
 import pandas as pd
 from azure.core.exceptions import ResourceNotFoundError
@@ -563,7 +564,8 @@ def _get_all_previous_file_names(app_id, session):
     response.raise_for_status()
     results = response.json()
     if not results:
-        raise ValueError(f"No results found for application ID {app_id}.")
+        # raise ValueError(f"No results found for application ID {app_id}.")
+        warnings.warn(f"No results found for application ID {app_id}.", UserWarning)
     return results
 
 
@@ -604,7 +606,9 @@ def load_previous_engineroom_results(
     """
     output_folder = Path(output_folder)
     available_results = _get_all_previous_file_names(app_id, session)
-
+    if not available_results:
+        return
+    
     available_file_names = [file["fileName"] for file in available_results]
     navigable_file_names = [file["navigableFileName"] for file in available_results]
 
@@ -615,8 +619,10 @@ def load_previous_engineroom_results(
             _download_and_save_file(session, download_url, file_path)
     else:
         if path not in available_file_names:
-            raise ValueError(f"{path} not found in application {app_id} results.")
-        idx = available_file_names.index(path)
-        file_path = output_folder / path
-        download_url = _build_download_url(app_id, navigable_file_names[idx])
-        _download_and_save_file(session, download_url, file_path)
+            # raise ValueError(f"{path} not found in application {app_id} results.")
+            warnings.warn(f"{path} not found in application {app_id} results.", UserWarning)
+        else:
+            idx = available_file_names.index(path)
+            file_path = output_folder / path
+            download_url = _build_download_url(app_id, navigable_file_names[idx])
+            _download_and_save_file(session, download_url, file_path)
