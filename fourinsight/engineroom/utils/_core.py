@@ -10,9 +10,7 @@ import pandas as pd
 from azure.core.exceptions import ResourceNotFoundError
 from azure.storage.blob import BlobClient
 
-with open(Path(__file__).parent / "_constants.json", "r") as f:
-    _CONSTANTS = json.load(f)
-API_BASE_URL = _CONSTANTS["API_BASE_URL"]
+from ._constants import API_BASE_URL
 
 
 class BaseHandler(TextIOWrapper):
