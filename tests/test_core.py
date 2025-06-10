@@ -1307,7 +1307,7 @@ class Test__get_all_previous_file_names:
         results = _get_all_previous_file_names(app_id, self.mock_session)
         assert results == previous_file_names
         self.mock_session.get.assert_called_once_with(
-            f"https://api.4insight.io/v1.0/Applications/{app_id}/results"
+            f"{API_BASE_URL}/v1.0/Applications/{app_id}/results"
         )
         self.mock_response.raise_for_status.assert_called_once()
 

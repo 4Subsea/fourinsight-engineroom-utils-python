@@ -557,7 +557,7 @@ class ResultCollector:
 def _get_all_previous_file_names(app_id, session):
     """query all available results file from the EngineRoom application. Returns list of dicts"""
     response = session.get(
-        f"https://api.4insight.io/v1.0/Applications/{app_id}/results"
+        f"{API_BASE_URL}/v1.0/Applications/{app_id}/results"
     )
     response.raise_for_status()
     results = response.json()
