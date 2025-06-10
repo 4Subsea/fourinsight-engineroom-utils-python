@@ -1,9 +1,9 @@
 import json
 import urllib.parse
+import warnings
 from io import BytesIO, TextIOWrapper
 from pathlib import Path
 from unittest.mock import ANY, MagicMock, Mock, mock_open, patch
-import warnings
 
 import numpy as np
 import pandas as pd

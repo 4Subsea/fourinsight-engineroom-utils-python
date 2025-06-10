@@ -1,10 +1,10 @@
 import json
 import urllib.parse
+import warnings
 from abc import abstractmethod
 from collections.abc import MutableMapping
 from io import BytesIO, TextIOWrapper
 from pathlib import Path
-import warnings
 
 import pandas as pd
 from azure.core.exceptions import ResourceNotFoundError
@@ -608,7 +608,7 @@ def load_previous_engineroom_results(
     available_results = _get_all_previous_file_names(app_id, session)
     if not available_results:
         return
-    
+
     available_file_names = [file["fileName"] for file in available_results]
     navigable_file_names = [file["navigableFileName"] for file in available_results]
 
@@ -620,7 +620,9 @@ def load_previous_engineroom_results(
     else:
         if path not in available_file_names:
             # raise ValueError(f"{path} not found in application {app_id} results.")
-            warnings.warn(f"{path} not found in application {app_id} results.", UserWarning)
+            warnings.warn(
+                f"{path} not found in application {app_id} results.", UserWarning
+            )
         else:
             idx = available_file_names.index(path)
             file_path = output_folder / path
