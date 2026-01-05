@@ -1239,6 +1239,38 @@ class Test_ResultCollector:
 
         pd.testing.assert_frame_equal(df_out, df_expect)
 
+    def test_error_parsing(self):
+        header_names = [
+            "OrganizationName",
+            "timestamp",
+            "timestamp_end",
+            "dcount_ExternalId",
+            "serviceAccount",
+        ]
+
+        file_name = Path(__file__).parent / "testdata/drio_sdk_usage_mod.csv"
+        
+        headers = {header: str for header in header_names}
+        handler = LocalFileHandler(file_name)
+        collector = ResultCollector(headers, handler=handler)
+        collector.pull(raise_on_missing=True, strict=True)
+        df = collector.dataframe
+
+        df_expected = pd.read_csv(
+            file_name,
+            index_col=0,
+        )
+
+        assert (
+            df_expected.iloc[-1]["dcount_ExternalId"]
+            == df.iloc[-1]["dcount_ExternalId"]
+        )
+
+        assert (
+            df_expected.iloc[0]["OrganizationName"]
+            == df.iloc[0]["OrganizationName"]
+        )
+
 
 def test__build_download_url(previous_file_names):
     app_id = "12345"
