@@ -1277,7 +1277,7 @@ class Test_ResultCollector:
             "serviceAccount",
         ]
 
-        file_name = Path(__file__).parent / "testdata/drio_sdk_usage_mod.csv"
+        file_name = Path(__file__).parent / "testdata/drio_sdk_usage_mod2.csv"
 
         headers = {header: str for header in header_names}
         handler = LocalFileHandler(file_name)
