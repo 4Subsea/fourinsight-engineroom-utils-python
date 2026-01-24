@@ -1257,8 +1257,7 @@ class Test_ResultCollector:
         df = collector.dataframe
 
         df_expected = pd.read_csv(
-            file_name,
-            index_col=0,
+            file_name, index_col=0, encoding="utf-8", dtype=headers
         )
 
         assert (
@@ -1289,6 +1288,7 @@ class Test_ResultCollector:
             file_name,
             index_col=0,
             dtype=headers,
+            encoding="utf-8",
         )
 
         assert df_expected.iloc[-1]["serviceAccount"] == df.iloc[-1]["serviceAccount"]
