@@ -1267,7 +1267,7 @@ class Test_ResultCollector:
 
         assert df_expected.iloc[0]["OrganizationName"] == df.iloc[0]["OrganizationName"]
 
-    def test_error_parsing2(self):
+    def test_parsing_norwegian_letters(self):
         header_names = [
             "OrganizationName",
             "timestamp",
