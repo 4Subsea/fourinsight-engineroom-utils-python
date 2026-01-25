@@ -1239,7 +1239,7 @@ class Test_ResultCollector:
 
         pd.testing.assert_frame_equal(df_out, df_expect)
 
-    def test_error_parsing(self):
+    def test_csv_parsing_matches_pandas(self):
         header_names = [
             "OrganizationName",
             "timestamp",
