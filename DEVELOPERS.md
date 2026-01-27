@@ -29,9 +29,16 @@ python -m build --outdir ./build
 ```
 sphinx-build -W -b html ./docs ./build/docs
 ```
-
+## Install deps for running tests
+```
+pip install -e
+```
 ## Run tests
 
 ```
 tox
+```
+or 
+```
+pytest
 ```
