@@ -143,7 +143,7 @@ class LocalFileHandler(BaseHandler):
         return f"LocalFileHandler {self._path.resolve()}"
 
     def _pull(self):
-        self.write(open(self._path, mode="r", encoding=self.encoding).read())
+        return self.write(open(self._path, mode="r", encoding=self.encoding).read())
 
     def _push(self):
         self._path.parent.mkdir(parents=True, exist_ok=True)
