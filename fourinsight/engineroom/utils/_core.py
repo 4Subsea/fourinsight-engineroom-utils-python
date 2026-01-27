@@ -45,7 +45,7 @@ class BaseHandler(TextIOWrapper):
         current_pos = self.tell()
         self.seek(0)
         try:
-            characters_written = self._pull()
+            self._pull()
         except self._SOURCE_NOT_FOUND_ERROR as e:
             if raise_on_missing:
                 self.seek(current_pos)
@@ -54,8 +54,8 @@ class BaseHandler(TextIOWrapper):
                 self.truncate(0)
         else:
             self.flush()
-            pos = self.tell()   
-            self.truncate(pos) 
+            pos = self.tell()
+            self.truncate(pos)
 
     def push(self):
         """
