@@ -143,7 +143,6 @@ class LocalFileHandler(BaseHandler):
         return f"LocalFileHandler {self._path.resolve()}"
 
     def _pull(self):
-        # return self.write(open(self._path, mode="r", encoding=self.encoding).read())
         with open(self._path, mode="r", encoding=self.encoding) as f:
             content = f.read()
         self.seek(0)
