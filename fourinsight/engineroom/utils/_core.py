@@ -42,18 +42,16 @@ class BaseHandler(TextIOWrapper):
         raise_on_missing : bool
             Raise exception if content can not be pulled from source.
         """
-        current_pos = self.tell()
         self.seek(0)
+        self.truncate(0)
         try:
-            characters_written = self._pull()
+            self._pull()
         except self._SOURCE_NOT_FOUND_ERROR as e:
+            self.seek(0)
             if raise_on_missing:
-                self.seek(current_pos)
                 raise e
             else:
-                self.truncate(0)
-        else:
-            self.truncate(characters_written)
+                pass
 
     def push(self):
         """
