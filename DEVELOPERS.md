@@ -31,7 +31,7 @@ sphinx-build -W -b html ./docs ./build/docs
 ```
 ## Install deps for running tests
 ```
-pip install -e
+pip install -e .
 ```
 ## Run tests
 
