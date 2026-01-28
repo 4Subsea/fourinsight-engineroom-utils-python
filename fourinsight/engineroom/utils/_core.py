@@ -45,7 +45,7 @@ class BaseHandler(TextIOWrapper):
         current_pos = self.tell()
         self.seek(0)
         try:
-            characters_written = self._pull()
+            self._pull()
         except self._SOURCE_NOT_FOUND_ERROR as e:
             if raise_on_missing:
                 self.seek(current_pos)
@@ -53,7 +53,9 @@ class BaseHandler(TextIOWrapper):
             else:
                 self.truncate(0)
         else:
-            self.truncate(characters_written)
+            self.flush()
+            pos = self.tell()
+            self.truncate(pos)
 
     def push(self):
         """
@@ -143,11 +145,11 @@ class LocalFileHandler(BaseHandler):
         return f"LocalFileHandler {self._path.resolve()}"
 
     def _pull(self):
-        return self.write(open(self._path, mode="r").read())
+        return self.write(open(self._path, mode="r", encoding=self.encoding).read())
 
     def _push(self):
         self._path.parent.mkdir(parents=True, exist_ok=True)
-        with open(self._path, mode="w") as f:
+        with open(self._path, mode="w", encoding=self.encoding) as f:
             f.write(self.getvalue())
 
 
@@ -343,6 +345,7 @@ class ResultCollector:
             raise ValueError("Indexing mode must be 'auto' or 'timestamp'.")
 
         self._dataframe = pd.DataFrame(columns=headers.keys()).astype(self._headers)
+        self.encoding = getattr(self._handler, "encoding", "utf-8")
 
     def __repr__(self):
         return repr(self._dataframe)
@@ -470,6 +473,7 @@ class ResultCollector:
             parse_dates=True,
             dtype=self._headers,
             date_format="ISO8601",
+            encoding=self.encoding,
         )
 
         if strict and set(df_source.columns) != set(self._headers.keys()):
@@ -501,11 +505,19 @@ class ResultCollector:
         self._handler.truncate()
         try:
             self._dataframe.to_csv(
-                self._handler, sep=",", index=True, lineterminator="\n"
+                self._handler,
+                sep=",",
+                index=True,
+                lineterminator="\n",
+                encoding=self.encoding,
             )
         except TypeError:  # for backward compatibility (remove after 2024-06-01)
             self._dataframe.to_csv(
-                self._handler, sep=",", index=True, line_terminator="\n"
+                self._handler,
+                sep=",",
+                index=True,
+                line_terminator="\n",
+                encoding=self.encoding,
             )
         self._handler.push()
 
