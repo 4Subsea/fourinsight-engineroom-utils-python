@@ -635,7 +635,11 @@ class DrioDataSource(BaseDataSource):
                 aggregation_period = kwargs.pop("aggregation_period", "tick")
                 aggregation_function = kwargs.pop("aggregation_function", "mean")
                 return self._drio_client.get_samples_aggregate(
-                    ts_id, start=start, end=end, aggregation_period=aggregation_period, aggregation_function=aggregation_function
+                    ts_id,
+                    start=start,
+                    end=end,
+                    aggregation_period=aggregation_period,
+                    aggregation_function=aggregation_function,
                 )
 
         elif self.storage == "archive":

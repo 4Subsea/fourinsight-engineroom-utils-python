@@ -1119,7 +1119,7 @@ class Test_DrioDataSource:
                 ),
             ]
         )
-    
+
     def test__get_warm_storage(self):
         # Mock the drio_client
         drio_client = Mock()
@@ -1139,9 +1139,9 @@ class Test_DrioDataSource:
             drio_client,
             labels,
             storage="warm",
-            convert_date=True,   
-            raise_empty=False,   
-            aggregation_period="1h",   
+            convert_date=True,
+            raise_empty=False,
+            aggregation_period="1h",
             aggregation_function="min",
         )
 
@@ -1168,21 +1168,21 @@ class Test_DrioDataSource:
                     start="<start-time>",
                     end="<end-time>",
                     aggregation_period="1h",
-                    aggregation_function="min"
+                    aggregation_function="min",
                 ),
                 call(
                     "timeseriesid-b",
                     start="<start-time>",
                     end="<end-time>",
                     aggregation_period="1h",
-                    aggregation_function="min"
+                    aggregation_function="min",
                 ),
                 call(
                     "timeseriesid-c",
                     start="<start-time>",
                     end="<end-time>",
                     aggregation_period="1h",
-                    aggregation_function="min"
+                    aggregation_function="min",
                 ),
             ]
         )
@@ -1201,11 +1201,7 @@ class Test_DrioDataSource:
 
         # Instantiate DrioDataSource with storage="warm", no overrides
         source = DrioDataSource(
-            drio_client,
-            labels,
-            storage="warm",
-            convert_date=True,
-            raise_empty=False
+            drio_client, labels, storage="warm", convert_date=True, raise_empty=False
         )
 
         # Call _get with defaults
@@ -1227,19 +1223,17 @@ class Test_DrioDataSource:
                     start="<start>",
                     end="<end>",
                     aggregation_period="tick",
-                    aggregation_function="mean"
+                    aggregation_function="mean",
                 ),
                 call(
                     "ts-y",
                     start="<start>",
                     end="<end>",
                     aggregation_period="tick",
-                    aggregation_function="mean"
+                    aggregation_function="mean",
                 ),
             ]
         )
-
-    
 
 
 class Test_NullDataSource:
