@@ -1079,7 +1079,7 @@ class Test_DrioDataSource:
             "c": "timeseriesid-c",
         }
         source = DrioDataSource(
-            drio_client, labels, convert_date=True, raise_empty=False
+            drio_client, labels, storage="archive", convert_date=True, raise_empty=False
         )
 
         data_out = source._get("<start-time>", "<end-time>")
