@@ -1119,6 +1119,127 @@ class Test_DrioDataSource:
                 ),
             ]
         )
+    
+    def test__get_warm_storage(self):
+        # Mock the drio_client
+        drio_client = Mock()
+        drio_client.get_samples_aggregate.return_value = pd.Series(
+            data=[1.1, 1.2, 1.3], index=[1.0, 2.0, 3.0]
+        )
+
+        # Labels to request
+        labels = {
+            "a": "timeseriesid-a",
+            "b": "timeseriesid-b",
+            "c": "timeseriesid-c",
+        }
+
+        # Instantiate DrioDataSource with storage="warm" and constructor kwargs
+        source = DrioDataSource(
+            drio_client,
+            labels,
+            storage="warm",
+            convert_date=True,   
+            raise_empty=False,   
+            aggregation_period="1h",   
+            aggregation_function="min",
+        )
+
+        # Call _get (no kwargs allowed per your current design)
+        data_out = source._get("<start-time>", "<end-time>")
+
+        # Expected output
+        data_expect = {
+            "a": pd.Series(data=[1.1, 1.2, 1.3], index=[1.0, 2.0, 3.0]),
+            "b": pd.Series(data=[1.1, 1.2, 1.3], index=[1.0, 2.0, 3.0]),
+            "c": pd.Series(data=[1.1, 1.2, 1.3], index=[1.0, 2.0, 3.0]),
+        }
+
+        # Assert returned data is correct
+        assert data_out.keys() == data_expect.keys()
+        for key, series_expect in data_expect.items():
+            pd.testing.assert_series_equal(series_expect, data_out[key])
+
+        # Assert get_samples_aggregate called with correct parameters
+        drio_client.get_samples_aggregate.assert_has_calls(
+            [
+                call(
+                    "timeseriesid-a",
+                    start="<start-time>",
+                    end="<end-time>",
+                    aggregation_period="1h",
+                    aggregation_function="min"
+                ),
+                call(
+                    "timeseriesid-b",
+                    start="<start-time>",
+                    end="<end-time>",
+                    aggregation_period="1h",
+                    aggregation_function="min"
+                ),
+                call(
+                    "timeseriesid-c",
+                    start="<start-time>",
+                    end="<end-time>",
+                    aggregation_period="1h",
+                    aggregation_function="min"
+                ),
+            ]
+        )
+
+    def test__get_warm_defaults(self):
+        # Mock the drio_client
+        drio_client = Mock()
+        drio_client.get_samples_aggregate.return_value = pd.Series(
+            data=[10, 20, 30], index=[1, 2, 3]
+        )
+
+        labels = {
+            "x": "ts-x",
+            "y": "ts-y",
+        }
+
+        # Instantiate DrioDataSource with storage="warm", no overrides
+        source = DrioDataSource(
+            drio_client,
+            labels,
+            storage="warm",
+            convert_date=True,
+            raise_empty=False
+        )
+
+        # Call _get with defaults
+        data_out = source._get("<start>", "<end>")
+
+        # Expected series
+        expected = pd.Series([10, 20, 30], index=[1, 2, 3])
+
+        # Assert keys and values
+        assert data_out.keys() == labels.keys()
+        for key in labels:
+            pd.testing.assert_series_equal(data_out[key], expected)
+
+        # Assert get_samples_aggregate called with default aggregation values
+        drio_client.get_samples_aggregate.assert_has_calls(
+            [
+                call(
+                    "ts-x",
+                    start="<start>",
+                    end="<end>",
+                    aggregation_period="tick",
+                    aggregation_function="mean"
+                ),
+                call(
+                    "ts-y",
+                    start="<start>",
+                    end="<end>",
+                    aggregation_period="tick",
+                    aggregation_function="mean"
+                ),
+            ]
+        )
+
+    
 
 
 class Test_NullDataSource:
