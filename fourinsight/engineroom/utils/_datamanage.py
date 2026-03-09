@@ -566,7 +566,7 @@ class DrioDataSource(BaseDataSource):
         self,
         drio_client,
         labels,
-        storage="warm",
+        storage="archive",
         index_type="datetime",
         index_sync=False,
         tolerance=None,
