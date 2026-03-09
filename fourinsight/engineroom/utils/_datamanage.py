@@ -510,10 +510,11 @@ class DrioDataSource(BaseDataSource):
     ----------
     drio_client : obj
         DataReservoir.io client.
-    lables : dict
+    labels : dict
         Labels and timeseries IDs as key/value pairs.
     storage : str, optional
-        If 'warm' (default), drio is fetched from warm storage. If 'archive', data is fetched from the archive.
+        Where to fetch data from. If 'archive' (default), data is fetched from the archive.
+        If 'warm' (experimental), data is fetched from warm storage, which supports aggregated queries.
     index_type : str or obj
         Index type (see Notes). Should be 'datetime', 'integer' or an `index converter`
         object.
@@ -559,6 +560,9 @@ class DrioDataSource(BaseDataSource):
       the size of each cache chunk by providing a index span. The `cache_size` should
       be given as a dtype that the :meth:`index_converter.to_universal_delta` can
       parse.
+
+    - The 'warm' storage option is experimental and its behavior may change in
+      future releases.
 
     """
 
