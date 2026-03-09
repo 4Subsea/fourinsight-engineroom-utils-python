@@ -510,8 +510,11 @@ class DrioDataSource(BaseDataSource):
     ----------
     drio_client : obj
         DataReservoir.io client.
-    lables : dict
+    labels : dict
         Labels and timeseries IDs as key/value pairs.
+    storage : str, optional
+        Where to fetch data from. If 'archive' (default), data is fetched from the archive.
+        If 'warm' (experimental), data is fetched from warm storage, which supports aggregated queries.
     index_type : str or obj
         Index type (see Notes). Should be 'datetime', 'integer' or an `index converter`
         object.
@@ -558,12 +561,16 @@ class DrioDataSource(BaseDataSource):
       be given as a dtype that the :meth:`index_converter.to_universal_delta` can
       parse.
 
+    - The 'warm' storage option is experimental and its behavior may change in
+      future releases.
+
     """
 
     def __init__(
         self,
         drio_client,
         labels,
+        storage="archive",
         index_type="datetime",
         index_sync=False,
         tolerance=None,
@@ -572,6 +579,7 @@ class DrioDataSource(BaseDataSource):
         **get_kwargs,
     ):
         self._drio_client = drio_client
+        self.storage = storage
         self._get_kwargs = get_kwargs
 
         self._labels = {lab: id.strip() for lab, id in labels.items()}
@@ -585,6 +593,9 @@ class DrioDataSource(BaseDataSource):
             index_converter = index_type
         else:
             raise ValueError("'index_type' should be 'datetime' or 'integer'.")
+
+        if storage not in ["warm", "archive"]:
+            raise ValueError("storage must be either 'warm' or 'archive'")
 
         super().__init__(
             index_converter,
@@ -622,10 +633,24 @@ class DrioDataSource(BaseDataSource):
             Label and data as key/value pairs. The data is returned as ``pandas.Series``
             objects.
         """
+        if self.storage == "warm":
+
+            def get_fun(ts_id, start, end, **kwargs):
+                aggregation_period = kwargs.pop("aggregation_period", "tick")
+                aggregation_function = kwargs.pop("aggregation_function", "mean")
+                return self._drio_client.get_samples_aggregate(
+                    ts_id,
+                    start=start,
+                    end=end,
+                    aggregation_period=aggregation_period,
+                    aggregation_function=aggregation_function,
+                )
+
+        elif self.storage == "archive":
+            get_fun = self._drio_client.get
+
         return {
-            label: self._drio_client.get(
-                ts_id, start=start, end=end, **self._get_kwargs
-            )
+            label: get_fun(ts_id, start=start, end=end, **self._get_kwargs)
             for label, ts_id in self._labels.items()
         }
 
