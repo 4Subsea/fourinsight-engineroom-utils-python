@@ -52,6 +52,9 @@ def azure_blob_handler_mocked(mock_from_connection_string):
     blob_name = "some_blob_name"
     handler = AzureBlobHandler(connection_string, container_name, blob_name)
 
+    handler._blob_client.container_name = "some_container_name"
+    handler._blob_client.blob_name = "some_blob_name"
+
     remote_content = open(REMOTE_FILE_PATH, mode="r").read()
     handler._blob_client.download_blob.return_value.readinto.side_effect = (
         lambda buffer: handler.write(remote_content)
@@ -270,6 +273,34 @@ class Test_AzureBlobHandler:
         handler._blob_client.upload_blob.assert_called_once_with(
             content, overwrite=True
         )
+
+    @patch("fourinsight.engineroom.utils._core.ContainerClient")
+    def test_blob_client_is_constructed_from_url(self, mock_container_client_cls):
+        AzureBlobHandler.from_container_url("some container", "state/state.json")
+        mock_container_client_cls.from_container_url.assert_called_once_with(
+            "some container"
+        )
+
+    @patch("fourinsight.engineroom.utils._core.ContainerClient")
+    def test_blob_client_gets_correct_blob(self, mock_container_client_cls):
+        AzureBlobHandler.from_container_url("some container", "state/state.json")
+        mock_container_client_cls.from_container_url().get_blob_client.assert_called_once_with(
+            "state/state.json"
+        )
+
+    @patch("fourinsight.engineroom.utils._core.ContainerClient")
+    def test_repr(self, mock_container_client_cls):
+        mock_blob_client = MagicMock()
+        mock_blob_client.container_name = "my-project"
+        mock_blob_client.blob_name = "state/state.json"
+        mock_container_client_cls.from_container_url().get_blob_client.return_value = (
+            mock_blob_client
+        )
+
+        handler = AzureBlobHandler.from_container_url(
+            "some container", "state/state.json"
+        )
+        assert repr(handler) == "AzureBlobHandler my-project/state/state.json"
 
 
 class Test_PersistentDict:
