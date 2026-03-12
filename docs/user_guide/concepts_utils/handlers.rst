@@ -26,7 +26,11 @@ The :class:`~fourinsight.engineroom.utils.AzureBlobHandler` is used to store tex
     from fourinsight.engineroom.utils import AzureBlobHandler
 
 
-    handler = AzureBlobHandler(<connection-string>, <container-name>, <blob-name>)
+     # Instantiate from a connection string
+    handler = AzureBlobHandler(conn_str, container_name, blob_name)
+
+    # Instantiate from a container-level SAS URL
+    handler = AzureBlobHandler.from_container_url(container_url, blob_name)
 
 The handlers behave like 'streams', and provide all the normal stream capabilities. Downloading and uploading is done  by a push/pull
 strategy; content is retrieved from the source by a :meth:`~fourinsight.engineroom.utils.BaseHandler.pull()` request, and uploaded
