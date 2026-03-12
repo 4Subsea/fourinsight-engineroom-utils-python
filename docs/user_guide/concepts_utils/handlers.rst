@@ -26,7 +26,7 @@ The :class:`~fourinsight.engineroom.utils.AzureBlobHandler` is used to store tex
     from fourinsight.engineroom.utils import AzureBlobHandler
 
 
-     # Instantiate from a connection string
+    # Instantiate from a connection string
     handler = AzureBlobHandler(conn_str, container_name, blob_name)
 
     # Instantiate from a container-level SAS URL
