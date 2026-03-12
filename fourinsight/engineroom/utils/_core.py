@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pandas as pd
 from azure.core.exceptions import ResourceNotFoundError
-from azure.storage.blob import BlobClient
+from azure.storage.blob import BlobClient, ContainerClient
 
 from ._constants import API_BASE_URL
 
@@ -188,8 +188,37 @@ class AzureBlobHandler(BaseHandler):
         )
         super().__init__(encoding=encoding, newline=newline)
 
+    @classmethod
+    def from_container_url(
+        cls, container_url, blob_name, encoding="utf-8", newline="\n"
+    ):
+        """
+        Instantiate from a container-level SAS URL.
+
+        Parameters
+        ----------
+        container_url : str
+            Full SAS URL for the container, e.g.
+            ``"https://<account>.blob.core.windows.net/<container>?sv=...&sig=..."``.
+        blob_name : str
+            The name of the blob with which to interact.
+        encoding : str
+            Defaults to 'utf-8'.
+        newline : str
+            Defaults to '\\n'.
+        """
+
+        instance = cls.__new__(cls)
+        instance._blob_client = ContainerClient.from_container_url(
+            container_url
+        ).get_blob_client(blob_name)
+        instance._blob_name = blob_name
+        BaseHandler.__init__(instance, encoding=encoding, newline=newline)
+        return instance
+
     def __repr__(self):
-        return f"AzureBlobHandler {self._container_name}/{self._blob_name}"
+        # return f"AzureBlobHandler {self._container_name}/{self._blob_name}"
+        return f"AzureBlobHandler {self._blob_client.container_name}/{self._blob_client.blob_name}"
 
     def _pull(self):
         return self._blob_client.download_blob().readinto(self.buffer)
